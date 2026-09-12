@@ -3,9 +3,14 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\LoginNotificationMail;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -30,18 +35,58 @@ class AuthenticatedSessionController extends Controller
             'password' => ['required', 'string'],
         ]);
 
+        $loginInput = trim($credentials['email']);
+        $password = $credentials['password'];
         $remember = $request->boolean('remember');
 
-        // Check if email or username is provided
-        $loginField = filter_var($credentials['email'], FILTER_VALIDATE_EMAIL) ? 'email' : 'name';
+        // Look up user by email or username
+        $user = User::where('email', $loginInput)
+            ->orWhere('username', $loginInput)
+            ->first();
 
-        if (! Auth::attempt([$loginField => $credentials['email'], 'password' => $credentials['password']], $remember)) {
+        if (! $user || ! $user->password || ! Hash::check($password, $user->password)) {
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
             ]);
         }
 
+        // Check account approval and active status
+        if ($user->isPending()) {
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda masih menunggu persetujuan admin.',
+            ]);
+        }
+
+        if ($user->isRejected()) {
+            $reason = $user->rejection_reason ? ' Alasan: '.$user->rejection_reason : '';
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda telah ditolak oleh admin.'.$reason,
+            ]);
+        }
+
+        if ($user->isInactive()) {
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda telah dinonaktifkan oleh admin.',
+            ]);
+        }
+
+        if (! $user->isAdmin()) {
+            throw ValidationException::withMessages([
+                'email' => 'Hanya akun Admin yang diizinkan mengakses Admin Panel.',
+            ]);
+        }
+
+        Auth::login($user, $remember);
+
         $request->session()->regenerate();
+
+        try {
+            Mail::to($user->email)->send(
+                new LoginNotificationMail($user, $request->ip(), $request->userAgent())
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send login notification: '.$e->getMessage());
+        }
 
         return redirect()->intended(route('dashboard'));
     }

@@ -1,346 +1,640 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useMemo } from 'react';
+import { Head, Link, router } from '@inertiajs/react';
 import {
     FolderKanban,
-    FileText,
-    Layers,
+    FileCheck2,
+    FileEdit,
     ShieldCheck,
     Plus,
     ArrowUpRight,
     Search,
-    Filter,
-    CheckCircle2,
-    Clock,
-    FileCode,
-    Sparkles,
+    Eye,
+    Edit3,
+    Download,
     ExternalLink,
     ChevronRight,
-    Lock,
+    Layers,
+    Calendar,
+    QrCode,
+    Building2,
+    CheckCircle2,
+    Clock,
+    TrendingUp,
+    Globe,
+    SlidersHorizontal,
+    FileText,
+    Copy,
+    Trash2,
+    X,
+    Fingerprint,
+    Lightbulb,
+    Wrench,
+    Share2,
+    Tag
 } from 'lucide-react';
 import { useApp } from '../../Context/AppContext';
+import { useAlert } from '../../Context/AlertContext';
 import AdminLayout from '../../Layouts/AdminLayout';
+import ProjectPreview from '../../Components/Admin/ProjectPreview';
+import { stripHtml } from '../../Utils/text';
 
-export default function Dashboard({ auth, stats, recent_projects }) {
+export default function Dashboard({ auth, stats, category_distribution = [], recent_projects = [] }) {
     const { t, language } = useApp();
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterCategory, setFilterCategory] = useState('all');
+    const { showConfirm } = useAlert();
+
+    const d = t?.admin?.dashboard || {};
 
     const user = auth?.user || { name: 'Administrator', email: 'admin@stasrg.internal', role: 'admin' };
 
-    const filteredProjects = (recent_projects || []).filter((project) => {
-        const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            project.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            project.lead.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesCategory = filterCategory === 'all' || project.category === filterCategory;
-        return matchesSearch && matchesCategory;
-    });
+    // State for local table search and status filtering
+    const [projectSearch, setProjectSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [previewModalProject, setPreviewModalProject] = useState(null);
 
-    const categories = ['all', ...new Set((recent_projects || []).map((p) => p.category))];
+    // Current Date formatted nicely
+    const currentDateFormatted = useMemo(() => {
+        const date = new Date();
+        return date.toLocaleDateString(language === 'en' ? 'en-US' : 'id-ID', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+        });
+    }, [language]);
+
+    // Filter recent projects locally
+    const filteredProjects = useMemo(() => {
+        return recent_projects.filter((p) => {
+            const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
+            const matchesSearch =
+                !projectSearch ||
+                (p.name && p.name.toLowerCase().includes(projectSearch.toLowerCase())) ||
+                (p.title && p.title.toLowerCase().includes(projectSearch.toLowerCase())) ||
+                (p.category && p.category.toLowerCase().includes(projectSearch.toLowerCase())) ||
+                (p.subtitle && p.subtitle.toLowerCase().includes(projectSearch.toLowerCase())) ||
+                (p.description && stripHtml(p.description).toLowerCase().includes(projectSearch.toLowerCase()));
+
+            return matchesStatus && matchesSearch;
+        });
+    }, [recent_projects, statusFilter, projectSearch]);
+
+    const handleDuplicate = async (slug, name) => {
+        const title = d.duplicateTitle || 'Duplikasi Project?';
+        const message = (d.duplicateMsg || 'Apakah Anda ingin membuat salinan dari project "{name}"? Salinan baru akan dibuat dengan status Draft.').replace('{name}', name);
+        const confirmText = d.duplicateConfirm || 'Duplikasi Project';
+        const cancelText = d.duplicateCancel || 'Batal';
+
+        const confirmed = await showConfirm({
+            title,
+            message,
+            confirmText,
+            cancelText,
+            variant: 'primary',
+        });
+        if (confirmed) {
+            router.post(`/projects/${slug}/duplicate`);
+        }
+    };
 
     return (
-        <AdminLayout
-            title={t.admin?.dashboard?.welcome ? 'Dashboard' : 'Admin Dashboard'}
-            currentPath="/dashboard"
-            onOpenNewProject={() => alert(language === 'id' ? 'Formulir Input Proyek Baru siap dihubungkan!' : 'New Project Input form ready to connect!')}
-        >
+        <AdminLayout title={d.pageTitle || 'Dashboard'} currentPath="/dashboard">
             <div className="space-y-6 sm:space-y-8">
-                {/* 1. Page Greeting & Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                            {t.admin?.dashboard?.welcome || 'Selamat Datang Kembali'}, {user.name.split(' ')[0]} 👋
-                        </h1>
-                        <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1 max-w-2xl">
-                            {t.admin?.dashboard?.subtitle || 'Pusat komando dan manajemen terpusat untuk standarisasi proyek riset CoE STAS-RG.'}
-                        </p>
-                    </div>
+                
+                {/* 1. Header Banner & Greeting */}
+                <div className="rounded-3xl bg-white dark:bg-[#121824] border border-zinc-200/80 dark:border-zinc-800/80 p-6 sm:p-8 shadow-xs relative overflow-hidden">
+                    {/* Subtle Background Radial Gradients */}
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-emerald-500/10 via-[#0D5A34]/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute -bottom-10 left-1/3 w-64 h-64 bg-teal-500/5 rounded-full blur-2xl pointer-events-none" />
 
-                    <div className="flex items-center gap-2.5 shrink-0">
-                        <button
-                            type="button"
-                            onClick={() => alert(language === 'id' ? 'Formulir Input Proyek Baru siap dihubungkan!' : 'New Project Input form ready!')}
-                            className="inline-flex items-center gap-2 py-2.5 px-4 rounded-full bg-[#0D5A34] hover:bg-[#094226] text-white text-xs sm:text-sm font-semibold border border-[#0D5A34] transition-all cursor-pointer shadow-none"
-                        >
-                            <Plus className="w-4 h-4" />
-                            <span>{t.admin?.dashboard?.quickActionButton || 'Input Proyek Baru'}</span>
-                        </button>
-                    </div>
-                </div>
-
-                {/* 2. Key Stats Overview Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
-                    {/* Stat 1: Total Proyek */}
-                    <div className="p-5 rounded-2xl bg-white dark:bg-[#18181B] border border-zinc-200/80 dark:border-zinc-800/80 transition-colors">
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-                                {t.admin?.dashboard?.statProjects || 'Total Proyek Aktif'}
-                            </span>
-                            <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/80 flex items-center justify-center text-emerald-700 dark:text-emerald-400">
-                                <FolderKanban className="w-4 h-4" />
+                    <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div className="space-y-1.5 max-w-2xl">
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                                <span className="text-xs text-zinc-400 font-medium">
+                                    {currentDateFormatted}
+                                </span>
                             </div>
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                                {stats?.total_projects || 4}
-                            </span>
-                            <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
-                                +1 bulan ini
-                            </span>
-                        </div>
-                    </div>
 
-                    {/* Stat 2: Dokumen Ter-generate */}
-                    <div className="p-5 rounded-2xl bg-white dark:bg-[#18181B] border border-zinc-200/80 dark:border-zinc-800/80 transition-colors">
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-                                {t.admin?.dashboard?.statDocuments || 'Dokumen Ter-generate'}
-                            </span>
-                            <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800/80 flex items-center justify-center text-blue-700 dark:text-blue-400">
-                                <FileText className="w-4 h-4" />
-                            </div>
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                                {stats?.total_documents || 12}
-                            </span>
-                            <span className="text-[11px] font-semibold text-blue-700 dark:text-blue-400">
-                                100% Valid
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Stat 3: Template Standar */}
-                    <div className="p-5 rounded-2xl bg-white dark:bg-[#18181B] border border-zinc-200/80 dark:border-zinc-800/80 transition-colors">
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-                                {t.admin?.dashboard?.statTemplates || 'Template Skema'}
-                            </span>
-                            <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200/80 dark:border-amber-800/80 flex items-center justify-center text-amber-700 dark:text-amber-400">
-                                <Layers className="w-4 h-4" />
-                            </div>
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                                {stats?.total_templates || 28}
-                            </span>
-                            <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
-                                CoE Format
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Stat 4: Keamanan Passkey */}
-                    <div className="p-5 rounded-2xl bg-white dark:bg-[#18181B] border border-zinc-200/80 dark:border-zinc-800/80 transition-colors">
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-                                {t.admin?.dashboard?.statPasskey || 'Keamanan Akses'}
-                            </span>
-                            <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/80 flex items-center justify-center text-emerald-700 dark:text-emerald-400">
-                                <ShieldCheck className="w-4 h-4" />
-                            </div>
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                                {user.is_biometric_enabled ? 'WebAuthn Aktif' : 'Password Only'}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* 3. Quick Project Input Banner */}
-                <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-r from-emerald-900 to-[#0D5A34] text-white border border-emerald-800/80 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                    <div className="max-w-xl z-10">
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-emerald-200 text-xs font-semibold mb-3">
-                            <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
-                            <span>Workflow Standarisasi Riset</span>
-                        </div>
-                        <h2 className="text-lg sm:text-xl font-bold tracking-tight">
-                            {t.admin?.dashboard?.quickActionTitle || 'Input Proyek Riset Baru'}
-                        </h2>
-                        <p className="text-xs sm:text-sm text-emerald-100/90 mt-1.5 leading-relaxed">
-                            {t.admin?.dashboard?.quickActionDesc || 'Mulai entri data proyek, anggota tim, deliverable, dan otomatisasi pembuatan dokumen terstandarisasi.'}
-                        </p>
-                    </div>
-
-                    <div className="shrink-0 z-10">
-                        <button
-                            type="button"
-                            onClick={() => alert(language === 'id' ? 'Formulir Input Proyek Baru siap dihubungkan!' : 'New Project Input form ready!')}
-                            className="inline-flex items-center gap-2 py-3 px-5 rounded-full bg-white hover:bg-emerald-50 text-[#0D5A34] text-xs sm:text-sm font-bold transition-colors cursor-pointer"
-                        >
-                            <span>{t.admin?.dashboard?.quickActionButton || 'Mulai Input Proyek'}</span>
-                            <ArrowUpRight className="w-4 h-4" />
-                        </button>
-                    </div>
-
-                    {/* Background Decorative Pattern */}
-                    <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-white/5 rounded-full blur-2xl pointer-events-none" />
-                </div>
-
-                {/* 4. Recent Projects Table Area */}
-                <div className="rounded-3xl bg-white dark:bg-[#18181B] border border-zinc-200/80 dark:border-zinc-800/80 overflow-hidden transition-colors">
-                    {/* Table Header & Search Controls */}
-                    <div className="p-5 sm:p-6 border-b border-zinc-200/80 dark:border-zinc-800/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                        <div>
-                            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-                                {t.admin?.dashboard?.recentProjectsTitle || 'Daftar Proyek Riset Terbaru'}
-                            </h3>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                                {t.admin?.dashboard?.recentProjectsSubtitle || 'Status kelengkapan skema dan dokumen proyek yang sedang berjalan.'}
+                            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                                {(d.welcome || 'Selamat Datang, {name} 👋').replace('{name}', user.name)}
+                            </h1>
+                            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                                {d.subtitle || 'Kelola seluruh lembar informasi riset, flyer publikasi berstandar resmi A4, dan terbitkan inovasi teknologi ke showcase publik landing page.'}
                             </p>
                         </div>
 
-                        {/* Search and Category Filter */}
-                        <div className="flex items-center gap-2.5 w-full md:w-auto">
-                            <div className="relative flex-1 md:w-64">
-                                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-                                <input
-                                    type="text"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    placeholder={language === 'id' ? 'Filter proyek...' : 'Filter projects...'}
-                                    className="w-full pl-9 pr-3 py-1.5 rounded-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-[#0D5A34]"
-                                />
+                        {/* Top Action Buttons */}
+                        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                            <a
+                                href="/#projects-showcase"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 text-xs sm:text-sm font-semibold border border-zinc-200 dark:border-zinc-700 transition-all cursor-pointer"
+                            >
+                                <Globe className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                <span>{d.viewShowcase || 'Lihat Showcase'}</span>
+                            </a>
+
+                            <Link
+                                href="/projects/create"
+                                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0D5A34] hover:bg-[#094226] text-white text-xs sm:text-sm font-semibold shadow-md shadow-emerald-900/15 hover:shadow-lg transition-all cursor-pointer"
+                            >
+                                <Plus className="w-4 h-4" />
+                                <span>{d.newProject || 'Buat Project Baru'}</span>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 2. Key Metrics & Analytics Grid (6 Cards) */}
+                <div className="grid grid-cols-2 lg:grid-cols-6 gap-3.5 sm:gap-4">
+                    {/* Stat 1: Total Projects */}
+                    <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#121824] border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs hover:border-emerald-500/40 transition-all">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                                {d.statTotalTitle || 'Total Riset'}
+                            </span>
+                            <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-[#0D5A34] dark:text-emerald-400 flex items-center justify-center">
+                                <FolderKanban className="w-3.5 h-3.5" />
+                            </div>
+                        </div>
+                        <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                            {stats?.total_projects ?? 0}
+                        </div>
+                        <div className="text-[10px] text-zinc-400 mt-1 flex items-center gap-1 font-medium">
+                            <TrendingUp className="w-3 h-3 text-emerald-600" />
+                            <span>{(d.statTotalSub || '+{count} bulan ini').replace('{count}', stats?.monthly_created_count ?? 0)}</span>
+                        </div>
+                    </div>
+
+                    {/* Stat 2: Published to Landing */}
+                    <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#121824] border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs hover:border-emerald-500/40 transition-all">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                                {d.statLandingTitle || 'Di Landing'}
+                            </span>
+                            <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                                <Globe className="w-3.5 h-3.5" />
+                            </div>
+                        </div>
+                        <div className="text-2xl sm:text-3xl font-extrabold text-[#0D5A34] dark:text-emerald-400 tracking-tight">
+                            {stats?.published_projects ?? 0}
+                        </div>
+                        <div className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 font-semibold flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            <span>{d.statLandingSub || 'Publik & Live'}</span>
+                        </div>
+                    </div>
+
+                    {/* Stat 3: Draft Projects */}
+                    <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#121824] border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs hover:border-amber-500/40 transition-all">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                                {d.statDraftTitle || 'Draft Internal'}
+                            </span>
+                            <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                                <FileEdit className="w-3.5 h-3.5" />
+                            </div>
+                        </div>
+                        <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                            {stats?.draft_projects ?? 0}
+                        </div>
+                        <div className="text-[10px] text-amber-600 dark:text-amber-400 mt-1 font-medium">
+                            {d.statDraftSub || 'Dalam pengerjaan'}
+                        </div>
+                    </div>
+
+                    {/* Stat 4: Categories Count */}
+                    <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#121824] border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs hover:border-blue-500/40 transition-all">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                                {d.statCategoriesTitle || 'Klaster Riset'}
+                            </span>
+                            <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                                <Tag className="w-3.5 h-3.5" />
+                            </div>
+                        </div>
+                        <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                            {stats?.categories_count ?? 0}
+                        </div>
+                        <div className="text-[10px] text-blue-600 dark:text-blue-400 mt-1 font-medium">
+                            {d.statCategoriesSub || 'Domain inovasi'}
+                        </div>
+                    </div>
+
+                    {/* Stat 5: QR Code Linked */}
+                    <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#121824] border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs hover:border-indigo-500/40 transition-all">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                                {d.statQrTitle || 'QR Terhubung'}
+                            </span>
+                            <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                                <QrCode className="w-3.5 h-3.5" />
+                            </div>
+                        </div>
+                        <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                            {stats?.qr_linked_count ?? 0}
+                        </div>
+                        <div className="text-[10px] text-indigo-600 dark:text-indigo-400 mt-1 font-medium">
+                            {d.statQrSub || 'Video & Tautan Aktif'}
+                        </div>
+                    </div>
+
+                    {/* Stat 6: Partner Collaborations */}
+                    <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#121824] border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs hover:border-purple-500/40 transition-all">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                                {d.statPartnerTitle || 'Mitra Kustom'}
+                            </span>
+                            <div className="w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                                <Building2 className="w-3.5 h-3.5" />
+                            </div>
+                        </div>
+                        <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                            {stats?.partner_projects_count ?? 0}
+                        </div>
+                        <div className="text-[10px] text-purple-600 dark:text-purple-400 mt-1 font-medium">
+                            {d.statPartnerSub || 'Logo Kemitraan'}
+                        </div>
+                    </div>
+                </div>
+
+                {/* 3. Main Dashboard Layout (Split 8 cols / 4 cols) */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-7 items-start">
+                    
+                    {/* LEFT COLUMN: Recent Projects Management & Table (lg:col-span-8) */}
+                    <div className="lg:col-span-8 space-y-6">
+                        
+                        {/* Project Table Card */}
+                        <div className="bg-white dark:bg-[#121824] rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 overflow-hidden shadow-xs">
+                            
+                            {/* Card Header & Filters */}
+                            <div className="p-5 sm:p-6 border-b border-zinc-200/80 dark:border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div>
+                                    <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">
+                                        {d.recentProjectsTitle || 'Project Riset & Flyer Terbaru'}
+                                    </h3>
+                                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                        {d.recentProjectsSubtitle || 'Daftar dokumen flyer inovasi visual yang siap diedit dan diekspor ke format PDF.'}
+                                    </p>
+                                </div>
+
+                                <Link
+                                    href="/projects"
+                                    className="inline-flex items-center gap-1 text-xs font-bold text-[#0D5A34] dark:text-emerald-400 hover:underline shrink-0"
+                                >
+                                    <span>{(d.viewAll || 'Lihat Semua ({count})').replace('{count}', stats?.total_projects ?? 0)}</span>
+                                    <ChevronRight className="w-4 h-4" />
+                                </Link>
                             </div>
 
-                            <select
-                                value={filterCategory}
-                                onChange={(e) => setFilterCategory(e.target.value)}
-                                className="px-3 py-1.5 rounded-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none focus:border-[#0D5A34] cursor-pointer"
-                            >
-                                <option value="all">{language === 'id' ? 'Semua Kategori' : 'All Categories'}</option>
-                                {categories.filter(c => c !== 'all').map((cat) => (
-                                    <option key={cat} value={cat}>{cat}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* Table View */}
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs text-slate-700 dark:text-zinc-300">
-                            <thead className="bg-zinc-50/70 dark:bg-zinc-900/70 border-b border-zinc-200/80 dark:border-zinc-800/80 text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                                <tr>
-                                    <th className="px-5 py-3">{t.admin?.dashboard?.colCode || 'Kode'}</th>
-                                    <th className="px-5 py-3">{t.admin?.dashboard?.colTitle || 'Nama Proyek Riset'}</th>
-                                    <th className="px-5 py-3 hidden sm:table-cell">Kategori / Lead</th>
-                                    <th className="px-5 py-3">{t.admin?.dashboard?.colStatus || 'Status'}</th>
-                                    <th className="px-5 py-3 hidden md:table-cell">{t.admin?.dashboard?.colDate || 'Pembaruan'}</th>
-                                    <th className="px-5 py-3 text-right">{t.admin?.dashboard?.colAction || 'Aksi'}</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-zinc-200/70 dark:divide-zinc-800/70">
-                                {filteredProjects.length > 0 ? (
-                                    filteredProjects.map((project) => (
-                                        <tr
-                                            key={project.id}
-                                            className="hover:bg-zinc-50/80 dark:hover:bg-zinc-850/40 transition-colors"
+                            {/* Toolbar: Status Tabs & Quick Search */}
+                            <div className="p-4 bg-zinc-50/70 dark:bg-zinc-900/40 border-b border-zinc-200/70 dark:border-zinc-800/70 flex flex-col sm:flex-row items-center justify-between gap-3">
+                                
+                                {/* Status Filter Tabs */}
+                                <div className="flex items-center gap-1 bg-white dark:bg-zinc-800 p-1 rounded-xl border border-zinc-200/80 dark:border-zinc-700/80 w-full sm:w-auto overflow-x-auto">
+                                    {[
+                                        { key: 'all', label: d.tabAll || 'Semua' },
+                                        { key: 'published', label: d.tabPublished || 'Published (Landing)' },
+                                        { key: 'draft', label: d.tabDraft || 'Draft' },
+                                    ].map((tab) => (
+                                        <button
+                                            key={tab.key}
+                                            type="button"
+                                            onClick={() => setStatusFilter(tab.key)}
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                                                statusFilter === tab.key
+                                                    ? 'bg-[#0D5A34] text-white shadow-xs'
+                                                    : 'text-zinc-600 dark:text-zinc-300 hover:text-slate-900'
+                                            }`}
                                         >
-                                            <td className="px-5 py-3.5 font-mono text-[11px] font-semibold text-[#0D5A34] dark:text-emerald-400 whitespace-nowrap">
-                                                {project.code}
-                                            </td>
-                                            <td className="px-5 py-3.5 font-medium text-slate-900 dark:text-white max-w-xs truncate">
-                                                {project.title}
-                                            </td>
-                                            <td className="px-5 py-3.5 hidden sm:table-cell">
-                                                <span className="text-[11px] text-zinc-600 dark:text-zinc-400 block truncate">
-                                                    {project.category}
-                                                </span>
-                                                <span className="text-[10px] text-zinc-400 dark:text-zinc-500 block truncate">
-                                                    {project.lead}
-                                                </span>
-                                            </td>
-                                            <td className="px-5 py-3.5 whitespace-nowrap">
-                                                <span
-                                                    className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                                                        project.status_type === 'success'
-                                                            ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
-                                                            : project.status_type === 'warning'
-                                                            ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300'
-                                                            : 'bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300'
-                                                    }`}
-                                                >
-                                                    {project.status_type === 'success' && <CheckCircle2 className="w-3 h-3 text-emerald-600" />}
-                                                    {project.status_type === 'warning' && <Clock className="w-3 h-3 text-amber-600" />}
-                                                    <span>{project.status} ({project.documents_count} Dok)</span>
-                                                </span>
-                                            </td>
-                                            <td className="px-5 py-3.5 text-zinc-500 dark:text-zinc-400 text-[11px] hidden md:table-cell whitespace-nowrap">
-                                                {project.updated_at}
-                                            </td>
-                                            <td className="px-5 py-3.5 text-right whitespace-nowrap">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => alert(`Membuka rincian proyek: ${project.title}`)}
-                                                    className="inline-flex items-center gap-1 text-xs font-semibold text-[#0D5A34] dark:text-emerald-400 hover:underline cursor-pointer"
-                                                >
-                                                    <span>Buka Dokumen</span>
-                                                    <ChevronRight className="w-3.5 h-3.5" />
-                                                </button>
-                                            </td>
+                                            {tab.label}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Local Search Input */}
+                                <div className="w-full sm:w-64 relative">
+                                    <input
+                                        type="text"
+                                        value={projectSearch}
+                                        onChange={(e) => setProjectSearch(e.target.value)}
+                                        placeholder={d.searchPlaceholder || 'Cari riset, headline...'}
+                                        className="w-full pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-[#0D5A34]"
+                                    />
+                                    <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-2.5 pointer-events-none" />
+                                </div>
+                            </div>
+
+                            {/* Table Content */}
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-xs text-slate-700 dark:text-zinc-300">
+                                    <thead className="bg-zinc-50/50 dark:bg-zinc-900/50 border-b border-zinc-200/70 dark:border-zinc-800/70 text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                                        <tr>
+                                            <th className="px-5 py-3">{d.thThumbnail || 'Thumbnail'}</th>
+                                            <th className="px-5 py-3">{d.thResearchName || 'Nama Riset & Headline'}</th>
+                                            <th className="px-5 py-3 hidden sm:table-cell">{d.thCategoryPartner || 'Kategori & Mitra'}</th>
+                                            <th className="px-5 py-3">{d.thStatus || 'Status'}</th>
+                                            <th className="px-5 py-3 hidden md:table-cell">{d.thUpdate || 'Update'}</th>
+                                            <th className="px-5 py-3 text-right">{d.thAction || 'Aksi'}</th>
                                         </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan={6} className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400 text-xs">
-                                            {t.admin?.dashboard?.emptyProjects || 'Tidak ada proyek yang sesuai.'}
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                                    </thead>
+                                    <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/70">
+                                        {filteredProjects.length > 0 ? (
+                                            filteredProjects.map((project) => (
+                                                <tr
+                                                    key={project.slug || project.id}
+                                                    className="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors group"
+                                                >
+                                                    {/* Thumbnail */}
+                                                    <td className="px-5 py-3.5 whitespace-nowrap">
+                                                        <div className="w-14 h-11 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center relative">
+                                                            {project.main_image ? (
+                                                                <img
+                                                                    src={project.main_image}
+                                                                    alt={project.name}
+                                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                                                />
+                                                            ) : (
+                                                                <FolderKanban className="w-5 h-5 text-zinc-400 opacity-60" />
+                                                            )}
+                                                        </div>
+                                                    </td>
 
-                {/* 5. System Health & Guidelines Card */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Database & System Infrastructure Status */}
-                    <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#18181B] border border-zinc-200/80 dark:border-zinc-800/80 transition-colors">
-                        <div className="flex items-center gap-2 mb-2">
-                            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                            <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                                {t.admin?.dashboard?.systemStatusTitle || 'Status Sistem & Keamanan'}
-                            </h4>
-                        </div>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                            {t.admin?.dashboard?.systemStatusDesc || 'Infrastruktur internal STAS-RG berjalan optimal dengan perlindungan WebAuthn.'}
-                        </p>
-                        <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800/70 flex items-center justify-between text-[11px]">
-                            <span className="text-zinc-500">Database Engine</span>
-                            <span className="font-semibold text-slate-900 dark:text-white">MySQL (stasrg_generator)</span>
-                        </div>
-                        <div className="mt-2 flex items-center justify-between text-[11px]">
-                            <span className="text-zinc-500">OTP Mail Service</span>
-                            <span className="font-semibold text-slate-900 dark:text-white">Mailpit (127.0.0.1:1025)</span>
-                        </div>
-                    </div>
+                                                    {/* Title & Name */}
+                                                    <td className="px-5 py-3.5 font-medium text-slate-900 dark:text-white max-w-xs">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setPreviewModalProject(project)}
+                                                            className="font-bold hover:text-[#0D5A34] dark:hover:text-emerald-400 truncate block uppercase text-left cursor-pointer transition-colors"
+                                                        >
+                                                            {project.title || project.name}
+                                                        </button>
+                                                        <span className="text-[11px] text-zinc-400 truncate block mt-0.5">
+                                                            {project.name}
+                                                        </span>
+                                                    </td>
 
-                    {/* Quick Guide Card */}
-                    <div className="p-5 sm:p-6 rounded-3xl bg-zinc-50/70 dark:bg-zinc-900/50 border border-zinc-200/80 dark:border-zinc-800/80 transition-colors">
-                        <div className="flex items-center gap-2 mb-2">
-                            <FileCode className="w-4 h-4 text-[#0D5A34] dark:text-emerald-400" />
-                            <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                                Panduan Input Proyek
-                            </h4>
+                                                    {/* Category & Partner */}
+                                                    <td className="px-5 py-3.5 hidden sm:table-cell">
+                                                        <span className="text-[11px] font-semibold text-[#0D5A34] dark:text-emerald-400 block truncate">
+                                                            {project.category}
+                                                        </span>
+                                                        <span className="text-[10px] text-zinc-400 dark:text-zinc-500 block truncate">
+                                                            {project.subtitle || '-'}
+                                                        </span>
+                                                    </td>
+
+                                                    {/* Status Badge */}
+                                                    <td className="px-5 py-3.5 whitespace-nowrap">
+                                                        <span
+                                                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                                                                project.status === 'published'
+                                                                    ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+                                                                    : 'bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300'
+                                                            }`}
+                                                        >
+                                                            {project.status === 'published' && (
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                            )}
+                                                            {project.status === 'published' ? (d.statusPublished || 'Published') : (d.statusDraft || 'Draft')}
+                                                        </span>
+                                                    </td>
+
+                                                    {/* Date */}
+                                                    <td className="px-5 py-3.5 text-zinc-400 text-[11px] hidden md:table-cell whitespace-nowrap">
+                                                        {project.updated_at}
+                                                    </td>
+
+                                                    {/* Actions Toolbar */}
+                                                    <td className="px-5 py-3.5 text-right whitespace-nowrap">
+                                                        <div className="flex items-center justify-end gap-1">
+                                                            {/* Quick View Modal */}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setPreviewModalProject(project)}
+                                                                title={d.actionQuickView || 'Quick View Flyer'}
+                                                                className="p-1.5 rounded-lg text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                                                            >
+                                                                <Eye className="w-4 h-4" />
+                                                            </button>
+
+                                                            {/* Edit */}
+                                                            <Link
+                                                                href={`/projects/${project.slug}/edit`}
+                                                                title={d.actionEdit || 'Edit Project'}
+                                                                className="p-1.5 rounded-lg text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                                                            >
+                                                                <Edit3 className="w-4 h-4" />
+                                                            </Link>
+
+                                                            {/* Download PDF */}
+                                                            <a
+                                                                href={`/projects/${project.slug}/pdf`}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                title={d.actionDownload || 'Download PDF Flyer'}
+                                                                className="p-1.5 rounded-lg text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                                                            >
+                                                                <Download className="w-4 h-4" />
+                                                            </a>
+
+                                                            {/* Duplicate */}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleDuplicate(project.slug, project.name)}
+                                                                title={d.actionDuplicate || 'Duplicate'}
+                                                                className="p-1.5 rounded-lg text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                                                            >
+                                                                <Copy className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="6" className="px-5 py-8 text-center text-zinc-400">
+                                                    {d.emptyProjectsFilter || 'Tidak ada project yang sesuai dengan filter.'}
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                            Admin dapat memasukkan data identitas proyek, skema anggota, dan target luaran. Sistem akan otomatis menyusun dokumen format CoE STAS-RG.
-                        </p>
-                        <div className="mt-4 pt-3 border-t border-zinc-200/60 dark:border-zinc-800/60 flex items-center justify-between">
-                            <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
-                                28 Standar Template Tersedia
-                            </span>
-                            <a
-                                href="/#how-it-works"
-                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+
+                        {/* Quick CTA Banner */}
+                        <div className="p-6 rounded-3xl bg-gradient-to-r from-[#0D5A34] via-[#0f673c] to-teal-800 text-white border border-emerald-700/80 relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 shadow-lg shadow-emerald-950/10">
+                            <div className="max-w-lg z-10">
+                                <h3 className="text-base sm:text-lg font-extrabold mt-2 tracking-tight">
+                                    {d.ctaTitle || 'Ingin Menerbitkan Flyer Riset Baru?'}
+                                </h3>
+                                <p className="text-xs text-emerald-100/90 mt-1 leading-relaxed">
+                                    {d.ctaDesc || 'Lengkapi foto prototype, spesifikasi teknologi, poin manfaat, dan tautan video untuk langsung meng-generate lembar publikasi siap cetak.'}
+                                </p>
+                            </div>
+
+                            <Link
+                                href="/projects/create"
+                                className="inline-flex items-center gap-2 py-2.5 px-5 rounded-xl bg-white hover:bg-emerald-50 text-[#0D5A34] text-xs sm:text-sm font-bold transition-all shadow-md shrink-0 cursor-pointer z-10"
                             >
-                                <span>Pelajari Skema</span>
-                                <ExternalLink className="w-3 h-3" />
-                            </a>
+                                <span>{d.ctaButton || 'Buat Sekarang'}</span>
+                                <ArrowUpRight className="w-4 h-4" />
+                            </Link>
+
+                            {/* Background Pattern */}
+                            <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
                         </div>
+
+                    </div>
+
+                    {/* RIGHT COLUMN: Category Distribution & System Metrics (lg:col-span-4) */}
+                    <div className="lg:col-span-4 space-y-6">
+                        
+                        {/* 1. Category Distribution Breakdown */}
+                        <div className="bg-white dark:bg-[#121824] rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 p-5 sm:p-6 shadow-xs space-y-4">
+                            <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                                <div className="flex items-center gap-2">
+                                    <span className="p-1 rounded-md bg-emerald-50 dark:bg-emerald-950 text-[#0D5A34] dark:text-emerald-400">
+                                        <Tag className="w-4 h-4" />
+                                    </span>
+                                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                                        {d.categoryTitle || 'Distribusi Klaster Riset'}
+                                    </h3>
+                                </div>
+                                <span className="text-[11px] font-bold text-zinc-400">
+                                    {(d.categoryCount || '{count} Kategori').replace('{count}', category_distribution.length)}
+                                </span>
+                            </div>
+
+                            {category_distribution.length > 0 ? (
+                                <div className="space-y-3.5">
+                                    {category_distribution.map((cat, idx) => (
+                                        <div key={idx} className="space-y-1.5">
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="font-semibold text-slate-800 dark:text-zinc-200 truncate max-w-[200px]">
+                                                    {cat.name}
+                                                </span>
+                                                <span className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
+                                                    {cat.count} ({cat.percentage}%)
+                                                </span>
+                                            </div>
+                                            <div className="w-full h-2 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+                                                <div
+                                                    className="h-full rounded-full bg-gradient-to-r from-[#0D5A34] to-emerald-500 transition-all duration-500"
+                                                    style={{ width: `${cat.percentage}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-xs text-zinc-400 text-center py-4">
+                                    {d.categoryEmpty || 'Belum ada data kategori riset.'}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Quick Launcher Shortcuts */}
+                        <div className="bg-white dark:bg-[#121824] rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 p-5 sm:p-6 shadow-xs space-y-3">
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                                {d.shortcutsTitle || 'Pintasan Navigasi'}
+                            </h3>
+
+                            <div className="grid grid-cols-2 gap-2">
+                                <Link
+                                    href="/projects"
+                                    className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-zinc-200/70 dark:border-zinc-800 hover:border-emerald-500/30 transition-all text-left"
+                                >
+                                    <FolderKanban className="w-4 h-4 text-[#0D5A34] dark:text-emerald-400 mb-1" />
+                                    <span className="block text-xs font-bold text-slate-900 dark:text-white">{d.shortcutAllProjects || 'Semua Project'}</span>
+                                    <span className="block text-[10px] text-zinc-400">{d.shortcutAllProjectsDesc || 'Kelola dokumen'}</span>
+                                </Link>
+
+                                <Link
+                                    href="/settings"
+                                    className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-zinc-200/70 dark:border-zinc-800 hover:border-emerald-500/30 transition-all text-left"
+                                >
+                                    <Fingerprint className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mb-1" />
+                                    <span className="block text-xs font-bold text-slate-900 dark:text-white">{d.shortcutPasskey || 'Passkey Auth'}</span>
+                                    <span className="block text-[10px] text-zinc-400">{d.shortcutPasskeyDesc || 'Biometrik & akun'}</span>
+                                </Link>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {/* Quick View Live Flyer Modal */}
+            {previewModalProject && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
+                    <div className="bg-white dark:bg-[#121824] rounded-3xl border border-zinc-200 dark:border-zinc-800 max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden my-auto">
+                        
+                        {/* Modal Header */}
+                        <div className="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-4 bg-zinc-50 dark:bg-zinc-900/60">
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white uppercase tracking-tight">
+                                        {previewModalProject.title || previewModalProject.name}
+                                    </h3>
+                                    <span
+                                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                                            previewModalProject.status === 'published'
+                                                ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30'
+                                                : 'bg-zinc-500/10 text-zinc-600 border-zinc-500/30'
+                                        }`}
+                                    >
+                                        {previewModalProject.status === 'published' ? (d.statusPublished || 'Published') : (d.statusDraft || 'Draft')}
+                                    </span>
+                                </div>
+                                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                    {previewModalProject.subtitle || previewModalProject.category}
+                                </p>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <Link
+                                    href={`/projects/${previewModalProject.slug}/edit`}
+                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 text-xs font-semibold transition-all"
+                                >
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                    <span>{d.modalEdit || 'Edit'}</span>
+                                </Link>
+
+                                <a
+                                    href={`/projects/${previewModalProject.slug}/pdf`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0D5A34] hover:bg-[#094226] text-white text-xs font-bold shadow-sm transition-all"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    <span>{d.modalDownload || 'Download PDF'}</span>
+                                </a>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setPreviewModalProject(null)}
+                                    className="p-2 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Modal Body: Flyer Canvas */}
+                        <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(90vh-140px)] flex items-center justify-center bg-zinc-100 dark:bg-zinc-950">
+                            <div className="max-w-2xl w-full">
+                                <ProjectPreview project={previewModalProject} isLive={false} />
+                            </div>
+                        </div>
+
                     </div>
                 </div>
-            </div>
+            )}
+
         </AdminLayout>
     );
 }

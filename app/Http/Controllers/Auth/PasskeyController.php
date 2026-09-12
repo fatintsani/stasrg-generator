@@ -84,6 +84,25 @@ class PasskeyController extends Controller
 
         $user = $passkey->user;
 
+        if ($user->isPending()) {
+            throw ValidationException::withMessages([
+                'passkey' => 'Akun Anda masih menunggu persetujuan admin.',
+            ]);
+        }
+
+        if ($user->isRejected()) {
+            $reason = $user->rejection_reason ? ' Alasan: '.$user->rejection_reason : '';
+            throw ValidationException::withMessages([
+                'passkey' => 'Akun Anda telah ditolak oleh admin.'.$reason,
+            ]);
+        }
+
+        if ($user->isInactive()) {
+            throw ValidationException::withMessages([
+                'passkey' => 'Akun Anda telah dinonaktifkan oleh admin.',
+            ]);
+        }
+
         // Increment counter
         $passkey->increment('counter');
 
@@ -174,6 +193,29 @@ class PasskeyController extends Controller
             'success' => true,
             'message' => 'Passkey biometrik perangkat berhasil didaftarkan.',
             'passkey' => $passkey,
+        ]);
+    }
+
+    /**
+     * Delete a registered passkey credential.
+     */
+    public function destroyPasskey(Request $request, PasskeyCredential $passkey): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user || $passkey->user_id !== $user->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $passkey->delete();
+
+        // If no passkeys left, mark is_biometric_enabled false
+        if ($user->passkeys()->count() === 0) {
+            $user->update(['is_biometric_enabled' => false]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Passkey berhasil dihapus.',
         ]);
     }
 }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, Fingerprint, LogIn, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Fingerprint, LogIn, ArrowRight, ShieldCheck, AlertCircle, Clock, Info } from 'lucide-react';
 import { AppProvider, useApp } from '../../Context/AppContext';
 import AuthLayout from '../../Components/AuthLayout';
 import BiometricModal from '../../Components/BiometricModal';
@@ -56,26 +56,58 @@ function LoginFormContent({ status }) {
         if (res && res.redirect_url) {
             window.location.href = res.redirect_url;
         } else {
-            window.location.href = '/';
+            window.location.href = '/dashboard';
         }
     };
 
+    // Check if error is related to pending approval or rejection
+    const isPendingError = errors.email && errors.email.includes('menunggu persetujuan');
+    const isRejectedError = errors.email && errors.email.includes('ditolak');
+    const isInactiveError = errors.email && errors.email.includes('dinonaktifkan');
+
     return (
         <AuthLayout
-            title={t.auth?.login?.title}
-            subtitle={t.auth?.login?.subtitle}
+            title={t.auth?.login?.title || 'Masuk ke Platform'}
+            subtitle={t.auth?.login?.subtitle || 'Akses terpusat untuk visual generator dan manajemen proyek STAS RG.'}
             badge={null}
         >
             <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                className="w-full p-7 sm:p-9 rounded-3xl bg-white dark:bg-[#18181B] border border-zinc-200/80 dark:border-zinc-800/80 transition-colors"
+                className="w-full p-7 sm:p-9 rounded-3xl bg-white dark:bg-[#18181B] border border-zinc-200/80 dark:border-zinc-800/80 transition-colors shadow-sm"
             >
-                {/* Flash Status Notification */}
+                {/* Flash Status Notification (e.g. after registration) */}
                 {status && (
-                    <div className="mb-5 p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
-                        {status}
+                    <div className="mb-5 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800 text-xs font-semibold text-amber-900 dark:text-amber-300 flex items-start gap-2.5">
+                        <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                        <span className="leading-relaxed">{status}</span>
+                    </div>
+                )}
+
+                {/* Prominent Pending Approval Warning Banner */}
+                {isPendingError && (
+                    <div className="mb-5 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-xs font-semibold text-amber-900 dark:text-amber-200 flex items-start gap-2.5 animate-in fade-in duration-200">
+                        <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-bold text-amber-900 dark:text-amber-200">Persetujuan Diperlukan</p>
+                            <p className="text-[11px] text-amber-800 dark:text-amber-300 mt-0.5 leading-relaxed">
+                                {errors.email} Hubungi Administrator untuk mempercepat proses aktivasi akun Anda.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Rejected or Inactive Status Banner */}
+                {(isRejectedError || isInactiveError) && (
+                    <div className="mb-5 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800 text-xs font-semibold text-rose-900 dark:text-rose-200 flex items-start gap-2.5 animate-in fade-in duration-200">
+                        <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-bold text-rose-900 dark:text-rose-200">Akses Akun Dibatasi</p>
+                            <p className="text-[11px] text-rose-800 dark:text-rose-300 mt-0.5 leading-relaxed">
+                                {errors.email}
+                            </p>
+                        </div>
                     </div>
                 )}
 
@@ -108,7 +140,7 @@ function LoginFormContent({ status }) {
                         <div className="w-full border-t border-zinc-200/80 dark:border-zinc-800" />
                     </div>
                     <span className="relative px-3 bg-white dark:bg-[#18181B] text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
-                        {t.auth?.login?.orDivider}
+                        {t.auth?.login?.orDivider || 'atau gunakan kredensial'}
                     </span>
                 </div>
 
@@ -117,7 +149,7 @@ function LoginFormContent({ status }) {
                     {/* Email / Username Field */}
                     <div>
                         <label className="block text-xs font-semibold text-slate-800 dark:text-zinc-200 mb-1.5">
-                            {t.auth?.login?.emailLabel}
+                            Email atau Username
                         </label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400 dark:text-zinc-500">
@@ -128,15 +160,15 @@ function LoginFormContent({ status }) {
                                 required
                                 value={data.email}
                                 onChange={(e) => setData('email', e.target.value)}
-                                placeholder={t.auth?.login?.emailPlaceholder}
+                                placeholder="Masukkan email atau username Anda"
                                 className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/80 border ${
                                     errors.email ? 'border-rose-400 dark:border-rose-600' : 'border-zinc-200 dark:border-zinc-800'
                                 } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0D5A34] dark:focus:border-emerald-500 transition-colors`}
                             />
                         </div>
-                        {errors.email && (
+                        {errors.email && !isPendingError && !isRejectedError && !isInactiveError && (
                             <p className="text-xs text-rose-600 dark:text-rose-400 mt-1.5 font-medium flex items-center gap-1">
-                                <AlertCircle className="w-3.5 h-3.5" />
+                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                                 <span>{errors.email}</span>
                             </p>
                         )}
@@ -146,13 +178,13 @@ function LoginFormContent({ status }) {
                     <div>
                         <div className="flex items-center justify-between mb-1.5">
                             <label className="text-xs font-semibold text-slate-800 dark:text-zinc-200">
-                                {t.auth?.login?.passwordLabel}
+                                Kata Sandi
                             </label>
                             <Link
                                 href="/forgot-password"
                                 className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 hover:underline"
                             >
-                                {t.auth?.login?.forgotPassword}
+                                Lupa kata sandi?
                             </Link>
                         </div>
                         <div className="relative">
@@ -164,7 +196,7 @@ function LoginFormContent({ status }) {
                                 required
                                 value={data.password}
                                 onChange={(e) => setData('password', e.target.value)}
-                                placeholder={t.auth?.login?.passwordPlaceholder}
+                                placeholder="Masukkan kata sandi Anda"
                                 className={`w-full pl-10 pr-10 py-2.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/80 border ${
                                     errors.password ? 'border-rose-400 dark:border-rose-600' : 'border-zinc-200 dark:border-zinc-800'
                                 } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0D5A34] dark:focus:border-emerald-500 transition-colors`}
@@ -180,7 +212,7 @@ function LoginFormContent({ status }) {
                         </div>
                         {errors.password && (
                             <p className="text-xs text-rose-600 dark:text-rose-400 mt-1.5 font-medium flex items-center gap-1">
-                                <AlertCircle className="w-3.5 h-3.5" />
+                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                                 <span>{errors.password}</span>
                             </p>
                         )}
@@ -196,7 +228,7 @@ function LoginFormContent({ status }) {
                                 className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-[#0D5A34] focus:ring-0 accent-[#0D5A34] dark:accent-emerald-500 cursor-pointer"
                             />
                             <span className="text-xs text-zinc-600 dark:text-zinc-400">
-                                {t.auth?.login?.rememberMe}
+                                Ingat saya pada perangkat ini
                             </span>
                         </label>
                     </div>
@@ -208,19 +240,19 @@ function LoginFormContent({ status }) {
                         className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-[#0D5A34] hover:bg-[#094226] disabled:opacity-70 text-white text-xs sm:text-sm font-semibold border border-[#0D5A34] transition-all duration-200 cursor-pointer mt-2"
                     >
                         <LogIn className="w-4 h-4" />
-                        <span>{processing ? t.auth?.login?.submitting : t.auth?.login?.submitButton}</span>
+                        <span>{processing ? 'Memverifikasi...' : 'Masuk ke Platform'}</span>
                     </button>
                 </form>
 
                 {/* Sign Up / Create User Footer Link */}
                 <div className="mt-6 pt-5 border-t border-zinc-200/80 dark:border-zinc-800 text-center">
                     <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                        {t.auth?.login?.noAccount}{' '}
+                        Belum memiliki akun terdaftar?{' '}
                         <Link
                             href="/register"
                             className="font-bold text-[#0D5A34] dark:text-emerald-400 hover:underline inline-flex items-center gap-0.5"
                         >
-                            <span>{t.auth?.login?.registerLink}</span>
+                            <span>Daftar Akun Baru</span>
                             <ArrowRight className="w-3.5 h-3.5" />
                         </Link>
                     </p>

@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { AppProvider } from './Context/AppContext';
+import { AlertProvider } from './Context/AlertContext';
 
 const appName = import.meta.env.VITE_APP_NAME || 'STAS RG Generator';
 
@@ -15,7 +16,9 @@ createInertiaApp({
         const root = createRoot(el);
         root.render(
             <AppProvider>
-                <App {...props} />
+                <AlertProvider>
+                    <App {...props} />
+                </AlertProvider>
             </AppProvider>
         );
     },

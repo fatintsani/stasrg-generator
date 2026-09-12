@@ -3,8 +3,34 @@ import { motion } from 'framer-motion';
 import { ArrowRight, FileText, CheckCircle2, ShieldCheck, Database, Layers } from 'lucide-react';
 import { useApp } from '../Context/AppContext';
 
-export default function HeroSection() {
-    const { t } = useApp();
+export default function HeroSection({ stats = {} }) {
+    const { t, language } = useApp();
+
+    const isId = language === 'id';
+
+    // Dynamic metrics calculated from database
+    const totalProjects = stats.total_projects !== undefined ? stats.total_projects : null;
+    const totalUsers = stats.total_users !== undefined ? stats.total_users : null;
+    const categoriesCount = stats.categories_count || 1;
+
+    const metric1Value = totalProjects !== null 
+        ? `${totalProjects} ${isId ? 'Riset' : 'Projects'}` 
+        : t.hero.terminal.metric1Value;
+
+    const metric1Desc = totalProjects !== null
+        ? `${categoriesCount} ${isId ? 'Kategori Domain • CoE STAS-RG' : 'Domain Categories • CoE STAS-RG'}`
+        : t.hero.terminal.metric1Desc;
+
+    const metric2Value = t.hero.terminal.metric2Value || (isId ? '100% Ketat' : '100% Strict');
+    const metric2Desc = t.hero.terminal.metric2Desc || (isId ? 'Pemeriksaan format & audit otomatis' : 'Automated syntax & audit check');
+
+    const metric3Value = totalUsers !== null
+        ? `${totalUsers} ${isId ? 'Peneliti' : 'Researchers'}`
+        : t.hero.terminal.metric3Value;
+
+    const metric3Desc = totalUsers !== null
+        ? `${totalUsers} ${isId ? 'Peneliti & engineer terverifikasi' : 'Verified researchers & engineers'}`
+        : t.hero.terminal.metric3Desc;
 
     return (
         <section id="overview" className="scroll-mt-20 relative pt-20 pb-20 sm:pt-28 sm:pb-28 px-4 sm:px-6 lg:px-8 border-b border-zinc-200/60 dark:border-zinc-800/60 bg-gradient-to-b from-white via-[#FAFAFA] to-[#F4F6F8] dark:from-[#090D16] dark:via-[#090D16] dark:to-[#0D121F] transition-colors">
@@ -20,7 +46,7 @@ export default function HeroSection() {
                     className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/80 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold tracking-wide mb-8"
                 >
                     <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-emerald-400 shrink-0"></span>
-                    <span>{t.hero.badge} • CoE STAS-RG</span>
+                    <span>{t.hero.badge}</span>
                 </motion.div>
 
                 {/* Hero Headline */}
@@ -72,7 +98,7 @@ export default function HeroSection() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.4 }}
-                    className="w-full text-left rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md overflow-hidden"
+                    className="w-full text-left rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md overflow-hidden shadow-sm"
                 >
                     {/* Top Window Bar */}
                     <div className="px-5 py-3.5 bg-zinc-50/80 dark:bg-zinc-900/90 border-b border-zinc-200/60 dark:border-zinc-800/60 flex items-center justify-between">
@@ -83,7 +109,7 @@ export default function HeroSection() {
                                 <span className="w-2.5 h-2.5 rounded-full bg-zinc-300 dark:bg-zinc-700 inline-block"></span>
                             </div>
                             <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
-                                STAS-RG Workspace Overview
+                                STAS-RG Workspace Overview • Live Metrics
                             </span>
                         </div>
 
@@ -95,7 +121,7 @@ export default function HeroSection() {
 
                     {/* Body Metric Cards */}
                     <div className="p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        {/* Metric 1 */}
+                        {/* Metric 1: Registri Template / Riset Aktif */}
                         <motion.div 
                             whileHover={{ y: -3 }}
                             transition={{ duration: 0.2 }}
@@ -108,14 +134,14 @@ export default function HeroSection() {
                                 {t.hero.terminal.metric1Title}
                             </span>
                             <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mb-1">
-                                {t.hero.terminal.metric1Value}
+                                {metric1Value}
                             </div>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                                {t.hero.terminal.metric1Desc}
+                                {metric1Desc}
                             </p>
                         </motion.div>
 
-                        {/* Metric 2 */}
+                        {/* Metric 2: Verifikasi Integritas */}
                         <motion.div 
                             whileHover={{ y: -3 }}
                             transition={{ duration: 0.2 }}
@@ -128,14 +154,14 @@ export default function HeroSection() {
                                 {t.hero.terminal.metric2Title}
                             </span>
                             <div className="text-2xl sm:text-3xl font-extrabold text-emerald-700 dark:text-emerald-400 mb-1">
-                                {t.hero.terminal.metric2Value}
+                                {metric2Value}
                             </div>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                                {t.hero.terminal.metric2Desc}
+                                {metric2Desc}
                             </p>
                         </motion.div>
 
-                        {/* Metric 3 */}
+                        {/* Metric 3: Tingkat Akses / Peneliti */}
                         <motion.div 
                             whileHover={{ y: -3 }}
                             transition={{ duration: 0.2 }}
@@ -148,10 +174,10 @@ export default function HeroSection() {
                                 {t.hero.terminal.metric3Title}
                             </span>
                             <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mb-1">
-                                {t.hero.terminal.metric3Value}
+                                {metric3Value}
                             </div>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                                {t.hero.terminal.metric3Desc}
+                                {metric3Desc}
                             </p>
                         </motion.div>
                     </div>

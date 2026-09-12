@@ -6,13 +6,78 @@ use App\Http\Controllers\Auth\PasskeyController;
 use App\Http\Controllers\Auth\PasswordResetOtpController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\UserController;
+use App\Models\Project;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 
 // Landing & Legal Pages
 Route::get('/', function () {
-    return Inertia::render('Welcome');
+    $publishedProjects = [];
+
+    if (Schema::hasTable('projects')) {
+        $publishedProjects = Project::where('status', 'published')
+            ->latest()
+            ->get()
+            ->map(function ($project) {
+                return [
+                    'id' => $project->id,
+                    'name' => $project->name,
+                    'slug' => $project->slug,
+                    'category' => $project->category ?? 'General',
+                    'title' => $project->title,
+                    'subtitle' => $project->subtitle,
+                    'description' => $project->description,
+                    'main_image' => $project->main_image ? asset('storage/'.$project->main_image) : null,
+                    'benefits' => $project->benefits,
+                    'specifications' => $project->specifications,
+                    'problem_solution' => $project->problem_solution,
+                    'project_url' => $project->project_url,
+                    'qr_code_path' => $project->qr_code_path ? asset('storage/'.$project->qr_code_path) : null,
+                    'partner_logo' => $project->partner_logo ? asset('storage/'.$project->partner_logo) : null,
+                    'footer_website' => $project->footer_website,
+                    'footer_instagram' => $project->footer_instagram,
+                    'footer_youtube' => $project->footer_youtube,
+                    'status' => $project->status,
+                    'created_at' => $project->created_at->format('d M Y'),
+                    'updated_at' => $project->updated_at->format('d M Y'),
+                ];
+            });
+    }
+
+    $stats = [
+        'total_projects' => 0,
+        'published_projects' => 0,
+        'categories_count' => 0,
+        'total_users' => 0,
+    ];
+
+    if (Schema::hasTable('projects')) {
+        $stats['total_projects'] = Project::count();
+        $stats['published_projects'] = Project::where('status', 'published')->count();
+        $stats['categories_count'] = Project::distinct('category')->whereNotNull('category')->where('category', '!=', '')->count('category') ?: 1;
+    }
+
+    if (Schema::hasTable('users')) {
+        $stats['total_users'] = User::count();
+    }
+
+    return Inertia::render('Welcome', [
+        'publishedProjects' => $publishedProjects,
+        'stats' => $stats,
+    ]);
 })->name('home');
+
+// Public Project Detail Page for Published Projects
+Route::get('/showcase/{project:slug}', [ProjectController::class, 'publicShow'])->name('projects.showcase.show');
+Route::get('/riset/{project:slug}', [ProjectController::class, 'publicShow'])->name('projects.riset.show');
+
+// Public PDF Download for Published Projects
+Route::get('/public/projects/{project:slug}/pdf', [ProjectController::class, 'publicPdf'])->name('projects.public-pdf');
 
 Route::get('/privacy', function () {
     return Inertia::render('Privacy');
@@ -50,12 +115,36 @@ Route::middleware('guest')->group(function () {
     Route::post('/auth/passkey/verify', [PasskeyController::class, 'verify'])->name('auth.passkey.verify');
 });
 
-// Authenticated Routes
-Route::middleware('auth')->group(function () {
+// Authenticated & Approved Routes
+Route::middleware(['auth', 'approved'])->group(function () {
     // Admin Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Project Management
+    Route::resource('projects', ProjectController::class);
+    Route::post('/projects/{project}/duplicate', [ProjectController::class, 'duplicate'])->name('projects.duplicate');
+    Route::get('/projects/{project}/pdf', [ProjectController::class, 'downloadPdf'])->name('projects.pdf');
+
+    // User & Approval Management
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::post('/users/{user}/approve', [UserController::class, 'approve'])->name('users.approve');
+    Route::post('/users/{user}/reject', [UserController::class, 'reject'])->name('users.reject');
+    Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
+    // Settings & Configuration
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
+    Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile.update');
+    Route::post('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password.update');
+    Route::post('/settings/maintenance/toggle', [SettingsController::class, 'toggleMaintenance'])->name('settings.maintenance.toggle');
+    Route::post('/settings/maintenance/clear-cache', [SettingsController::class, 'clearCache'])->name('settings.maintenance.clear-cache');
+    Route::post('/settings/maintenance/optimize', [SettingsController::class, 'optimizeSystem'])->name('settings.maintenance.optimize');
+    Route::delete('/settings/avatar', [SettingsController::class, 'removeAvatar'])->name('settings.avatar.destroy');
+
+    // Account & Passkey
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
     Route::get('/auth/passkey/register-options', [PasskeyController::class, 'registerOptions'])->name('auth.passkey.register-options');
     Route::post('/auth/passkey/register', [PasskeyController::class, 'registerPasskey'])->name('auth.passkey.register');
+    Route::delete('/auth/passkey/{passkey}', [PasskeyController::class, 'destroyPasskey'])->name('auth.passkey.destroy');
 });

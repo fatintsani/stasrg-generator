@@ -38,3 +38,56 @@ html.dark body {
     background-color: #090D16;
     color: #F8FAFC;
 }
+
+/* ==========================================================================
+   Scrollbar Styling: Sembunyikan scrollbar di seluruh konten internal,
+   tetap pertahankan scrollbar utama di sisi kanan layar (html/body).
+   ========================================================================== */
+
+/* Sembunyikan scrollbar di semua elemen / container dalam */
+* {
+    -ms-overflow-style: none; /* IE & Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+*::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+/* Pertahankan scrollbar utama browser di sisi kanan layar */
+html, body {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.4) transparent;
+    -ms-overflow-style: auto;
+}
+
+html.dark, html.dark body {
+    scrollbar-color: rgba(75, 85, 99, 0.4) transparent;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    display: block !important;
+    width: 7px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.4);
+    border-radius: 9999px;
+}
+
+html.dark::-webkit-scrollbar-thumb,
+html.dark body::-webkit-scrollbar-thumb {
+    background-color: rgba(75, 85, 99, 0.4);
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(13, 90, 52, 0.6);
+}

@@ -176,7 +176,7 @@ export default function Footer() {
                         </div>
 
                         {/* Location Details Card */}
-                        <div className="p-4 rounded-2xl bg-zinc-50/70 dark:bg-zinc-850/60 border border-zinc-200/80 dark:border-zinc-700/80 space-y-3">
+                        <div className="p-4 rounded-2xl bg-zinc-50/70 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800/80 space-y-3">
                             <div className="flex items-start gap-3">
                                 <MapPin className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
                                 <div className="space-y-0.5">

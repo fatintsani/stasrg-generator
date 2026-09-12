@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\PasswordChangedMail;
 use App\Mail\PasswordResetOtpMail;
 use App\Models\PasswordResetOtp;
 use App\Models\User;
@@ -44,7 +45,26 @@ class PasswordResetOtpController extends Controller
         $user = User::where('email', $email)->first();
         if (! $user) {
             throw ValidationException::withMessages([
-                'email' => 'Email akademik ini tidak terdaftar dalam sistem.',
+                'email' => 'Email ini tidak terdaftar dalam sistem.',
+            ]);
+        }
+
+        if ($user->isPending()) {
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda masih menunggu persetujuan admin.',
+            ]);
+        }
+
+        if ($user->isRejected()) {
+            $reason = $user->rejection_reason ? ' Alasan: '.$user->rejection_reason : '';
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda telah ditolak oleh admin.'.$reason,
+            ]);
+        }
+
+        if ($user->isInactive()) {
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda telah dinonaktifkan oleh admin.',
             ]);
         }
 
@@ -160,6 +180,12 @@ class PasswordResetOtpController extends Controller
                 'password' => Hash::make($request->password),
                 'remember_token' => Str::random(60),
             ])->save();
+
+            try {
+                Mail::to($user->email)->send(new PasswordChangedMail($user, $request->ip()));
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
 
         // Delete used OTP

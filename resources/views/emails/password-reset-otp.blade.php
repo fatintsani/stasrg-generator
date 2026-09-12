@@ -1,134 +1,42 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kode OTP Pemulihan Kata Sandi — STAS RG Generator</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #FAFAFA;
-            color: #0F172A;
-            margin: 0;
-            padding: 40px 20px;
-        }
-        .container {
-            max-width: 520px;
-            margin: 0 auto;
-            background-color: #FFFFFF;
-            border: 1px solid #E2E8F0;
-            border-radius: 20px;
-            padding: 36px 32px;
-        }
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 24px;
-        }
-        .brand-title {
-            font-size: 16px;
-            font-weight: 800;
-            color: #0F172A;
-            letter-spacing: -0.5px;
-        }
-        .brand-sub {
-            font-weight: 400;
-            color: #64748B;
-        }
-        .badge {
-            display: inline-block;
-            background-color: #ECFDF5;
-            border: 1px solid #A7F3D0;
-            color: #0D5A34;
-            font-size: 11px;
-            font-weight: 700;
-            padding: 4px 10px;
-            border-radius: 9999px;
-            letter-spacing: 0.5px;
-            margin-bottom: 16px;
-        }
-        h1 {
-            font-size: 22px;
-            font-weight: 800;
-            color: #0F172A;
-            margin: 0 0 12px 0;
-            letter-spacing: -0.5px;
-        }
-        p {
-            font-size: 14px;
-            line-height: 1.6;
-            color: #475569;
-            margin: 0 0 20px 0;
-        }
-        .otp-box {
-            background: linear-gradient(180deg, #F0FDF4 0%, #DCFCE7 100%);
-            border: 1.5px solid #86EFAC;
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-            margin: 24px 0;
-        }
-        .otp-label {
-            font-size: 11px;
-            font-weight: 700;
-            color: #0D5A34;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
-        .otp-code {
-            font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
-            font-size: 32px;
-            font-weight: 800;
-            color: #0D5A34;
-            letter-spacing: 6px;
-        }
-        .note {
-            font-size: 12px;
-            color: #64748B;
-            border-top: 1px solid #E2E8F0;
-            padding-top: 18px;
-            margin-top: 24px;
-        }
-        .footer {
-            text-align: center;
-            font-size: 11px;
-            color: #94A3B8;
-            margin-top: 24px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="brand">
-            <span class="brand-title">STAS RG <span class="brand-sub">Generator</span></span>
+@extends('emails.layouts.master')
+
+@section('content')
+    <div class="badge-pill badge-warning">
+        <span class="badge-dot"></span>
+        <span>Pemulihan Kata Sandi // OTP</span>
+    </div>
+
+    <h1>Kode Verifikasi Anda</h1>
+    
+    <div class="greeting">
+        Halo Peneliti,
+    </div>
+
+    <p>
+        Kami menerima permintaan pengaturan ulang kata sandi untuk akun STAS RG Generator Anda. Gunakan kode <strong>One-Time Password (OTP)</strong> berikut untuk memverifikasi identitas Anda:
+    </p>
+
+    <!-- Prominent OTP Box -->
+    <div class="status-box status-box-otp">
+        <div style="font-size: 11px; font-weight: 700; color: #0D5A34; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px;">
+            KODE OTP VERIFIKASI (BERLAKU 15 MENIT)
         </div>
-
-        <div class="badge">PEMULIHAN KATA SANDI // OTP</div>
-
-        <h1>Kode Verifikasi Anda</h1>
-        <p>
-            Halo peneliti, kami menerima permintaan pengaturan ulang kata sandi untuk akun STAS RG Generator Anda. Gunakan kode One-Time Password (OTP) berikut untuk memverifikasi identitas Anda:
-        </p>
-
-        <div class="otp-box">
-            <div class="otp-label">KODE OTP (BERLAKU 15 MENIT)</div>
-            <div class="otp-code">{{ $otpCode }}</div>
-        </div>
-
-        <p style="font-size: 13px; color: #64748B;">
-            Jangan berikan kode ini kepada siapa pun. Jika Anda tidak merasa melakukan permintaan pemulihan ini, abaikan email ini dan akun Anda akan tetap aman.
-        </p>
-
-        <div class="note">
-            Permintaan dikirim ke: <strong>{{ $email }}</strong><br>
-            Center of Excellence Sustainable Technology and Applied Sciences Research Group (CoE STAS-RG) – Telkom University
+        <div style="font-family: 'JetBrains Mono', Consolas, Monaco, monospace; font-size: 36px; font-weight: 800; color: #0D5A34; letter-spacing: 8px;">
+            {{ $otpCode }}
         </div>
     </div>
 
-    <div class="footer">
-        © {{ date('Y') }} CoE STAS-RG Telkom University. Seluruh hak cipta dilindungi.
+    <!-- Security Warning Card -->
+    <div class="info-card" style="border-left: 3px solid #F59E0B; margin-top: 20px;">
+        <div style="font-size: 12px; font-weight: 700; color: #92400E; margin-bottom: 4px;">
+            Pemberitahuan Keamanan
+        </div>
+        <div style="font-size: 12px; color: #78350F; line-height: 1.5;">
+            Jangan berikan kode OTP ini kepada siapa pun, termasuk staf lab. Jika Anda tidak merasa melakukan permintaan pemulihan ini, abaikan email ini dan akun Anda akan tetap aman.
+        </div>
     </div>
-</body>
-</html>
+
+    <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #F1F5F9; font-size: 12px; color: #64748B;">
+        Permintaan dikirimkan untuk akun: <strong>{{ $email }}</strong>
+    </div>
+@endsection

@@ -3,13 +3,14 @@ import { Head } from '@inertiajs/react';
 import { AppProvider, useApp } from '../Context/AppContext';
 import Navbar from '../Components/Navbar';
 import HeroSection from '../Components/HeroSection';
+import ProjectShowcaseSection from '../Components/ProjectShowcaseSection';
 import AboutSection from '../Components/AboutSection';
 import PrinciplesSection from '../Components/PrinciplesSection';
 import HowItWorksSection from '../Components/HowItWorksSection';
 import InternalNoteBanner from '../Components/InternalNoteBanner';
 import Footer from '../Components/Footer';
 
-function LandingContent() {
+function LandingContent({ publishedProjects = [], stats = {} }) {
     const { t } = useApp();
 
     const pageTitle = t?.nav?.brand 
@@ -31,7 +32,10 @@ function LandingContent() {
                 {/* Main Content Area */}
                 <main className="flex-grow">
                     {/* Hero Section with Live Stats Widget */}
-                    <HeroSection />
+                    <HeroSection stats={stats} />
+
+                    {/* Published Projects Showcase Section */}
+                    <ProjectShowcaseSection projects={publishedProjects} />
 
                     {/* About Section */}
                     <AboutSection />
@@ -53,10 +57,10 @@ function LandingContent() {
     );
 }
 
-export default function Welcome() {
+export default function Welcome({ publishedProjects = [], stats = {} }) {
     return (
         <AppProvider>
-            <LandingContent />
+            <LandingContent publishedProjects={publishedProjects} stats={stats} />
         </AppProvider>
     );
 }

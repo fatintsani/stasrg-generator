@@ -1,0 +1,103 @@
+<?php
+
+namespace App\Models;
+
+use Database\Factories\ProjectFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
+
+class Project extends Model
+{
+    /** @use HasFactory<ProjectFactory> */
+    use HasFactory;
+
+    /**
+     * @var list<string>
+     */
+    protected $fillable = [
+        'user_id',
+        'name',
+        'slug',
+        'category',
+        'title',
+        'description',
+        'subtitle',
+        'main_image',
+        'benefits',
+        'specifications',
+        'problem_solution',
+        'project_url',
+        'qr_code_path',
+        'footer_website',
+        'footer_instagram',
+        'footer_youtube',
+        'footer_logo',
+        'partner_logo',
+        'status',
+    ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'benefits' => 'array',
+            'specifications' => 'array',
+            'problem_solution' => 'array',
+        ];
+    }
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Project $project) {
+            if (empty($project->slug)) {
+                $project->slug = static::generateUniqueSlug($project->name ?: 'project');
+            }
+        });
+
+        static::updating(function (Project $project) {
+            if ($project->isDirty('name') && ! $project->isDirty('slug')) {
+                $project->slug = static::generateUniqueSlug($project->name ?: 'project', $project->id);
+            }
+        });
+    }
+
+    /**
+     * Generate a unique slug for the project.
+     */
+    public static function generateUniqueSlug(string $name, ?int $ignoreId = null): string
+    {
+        $baseSlug = Str::slug($name) ?: 'project';
+        $slug = $baseSlug;
+        $counter = 1;
+
+        while (static::where('slug', $slug)->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))->exists()) {
+            $counter++;
+            $slug = "{$baseSlug}-{$counter}";
+        }
+
+        return $slug;
+    }
+
+    /**
+     * The user who created this project.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+}

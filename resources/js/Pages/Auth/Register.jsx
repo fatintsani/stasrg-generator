@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { User, Mail, Lock, Eye, EyeOff, UserCheck, ArrowRight, ChevronDown, AlertCircle } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, UserCheck, ArrowRight, AlertCircle, Clock, AtSign, Info } from 'lucide-react';
 import { AppProvider, useApp } from '../../Context/AppContext';
 import AuthLayout from '../../Components/AuthLayout';
 
@@ -34,6 +34,7 @@ function RegisterFormContent() {
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
+        username: '',
         email: '',
         password: '',
         password_confirmation: '',
@@ -53,16 +54,24 @@ function RegisterFormContent() {
 
     return (
         <AuthLayout
-            title={t.auth?.register?.title}
-            subtitle={t.auth?.register?.subtitle}
+            title="Daftar Akun Baru"
+            subtitle="Buat akun untuk mengajukan akses ke platform STAS RG Generator."
             badge={null}
         >
             <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                className="w-full p-7 sm:p-9 rounded-3xl bg-white dark:bg-[#18181B] border border-zinc-200/80 dark:border-zinc-800/80 transition-colors"
+                className="w-full p-7 sm:p-9 rounded-3xl bg-white dark:bg-[#18181B] border border-zinc-200/80 dark:border-zinc-800/80 transition-colors shadow-sm"
             >
+                {/* Notice Alert about Admin Approval Flow */}
+                <div className="mb-6 p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 flex items-start gap-2.5">
+                    <Info className="w-4 h-4 text-[#0D5A34] dark:text-emerald-400 shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-emerald-900 dark:text-emerald-200 leading-relaxed">
+                        <strong>Informasi:</strong> Pendaftaran terbuka untuk semua email (Gmail, Yahoo, dll). Setelah mendaftar, akun akan berstatus <em>Pending</em> hingga disetujui oleh Administrator.
+                    </p>
+                </div>
+
                 {/* Google Sign Up Quick Button */}
                 <div className="mb-6">
                     <button
@@ -71,7 +80,7 @@ function RegisterFormContent() {
                         className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800/90 text-slate-800 dark:text-zinc-200 text-xs font-semibold border border-zinc-200/90 dark:border-zinc-700/80 transition-all cursor-pointer"
                     >
                         <GoogleLogo className="w-4 h-4 shrink-0" />
-                        <span>{t.auth?.register?.googleButton}</span>
+                        <span>Daftar Akun via Google</span>
                     </button>
                 </div>
 
@@ -81,7 +90,7 @@ function RegisterFormContent() {
                         <div className="w-full border-t border-zinc-200/80 dark:border-zinc-800" />
                     </div>
                     <span className="relative px-3 bg-white dark:bg-[#18181B] text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
-                        {t.auth?.register?.orDivider}
+                        atau daftar manual
                     </span>
                 </div>
 
@@ -90,7 +99,7 @@ function RegisterFormContent() {
                     {/* Full Name */}
                     <div>
                         <label className="block text-xs font-semibold text-slate-800 dark:text-zinc-200 mb-1.5">
-                            {t.auth?.register?.fullNameLabel}
+                            Nama Lengkap <span className="text-rose-500">*</span>
                         </label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400 dark:text-zinc-500">
@@ -101,7 +110,7 @@ function RegisterFormContent() {
                                 required
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
-                                placeholder={t.auth?.register?.fullNamePlaceholder}
+                                placeholder="cth. Budi Santoso"
                                 className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/80 border ${
                                     errors.name ? 'border-rose-400 dark:border-rose-600' : 'border-zinc-200 dark:border-zinc-800'
                                 } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0D5A34] dark:focus:border-emerald-500 transition-colors`}
@@ -109,8 +118,35 @@ function RegisterFormContent() {
                         </div>
                         {errors.name && (
                             <p className="text-xs text-rose-600 dark:text-rose-400 mt-1.5 font-medium flex items-center gap-1">
-                                <AlertCircle className="w-3.5 h-3.5" />
+                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                                 <span>{errors.name}</span>
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Username */}
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-800 dark:text-zinc-200 mb-1.5">
+                            Username Akun <span className="text-zinc-400 font-normal">(opsional)</span>
+                        </label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400 dark:text-zinc-500">
+                                <AtSign className="w-4 h-4" />
+                            </div>
+                            <input
+                                type="text"
+                                value={data.username}
+                                onChange={(e) => setData('username', e.target.value)}
+                                placeholder="cth. budi_santoso"
+                                className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/80 border ${
+                                    errors.username ? 'border-rose-400 dark:border-rose-600' : 'border-zinc-200 dark:border-zinc-800'
+                                } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0D5A34] dark:focus:border-emerald-500 transition-colors`}
+                            />
+                        </div>
+                        {errors.username && (
+                            <p className="text-xs text-rose-600 dark:text-rose-400 mt-1.5 font-medium flex items-center gap-1">
+                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                <span>{errors.username}</span>
                             </p>
                         )}
                     </div>
@@ -118,7 +154,7 @@ function RegisterFormContent() {
                     {/* Email */}
                     <div>
                         <label className="block text-xs font-semibold text-slate-800 dark:text-zinc-200 mb-1.5">
-                            {t.auth?.register?.emailLabel}
+                            Alamat Email <span className="text-rose-500">*</span>
                         </label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400 dark:text-zinc-500">
@@ -129,7 +165,7 @@ function RegisterFormContent() {
                                 required
                                 value={data.email}
                                 onChange={(e) => setData('email', e.target.value)}
-                                placeholder={t.auth?.register?.emailPlaceholder}
+                                placeholder="nama@gmail.com atau email Anda"
                                 className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/80 border ${
                                     errors.email ? 'border-rose-400 dark:border-rose-600' : 'border-zinc-200 dark:border-zinc-800'
                                 } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0D5A34] dark:focus:border-emerald-500 transition-colors`}
@@ -137,7 +173,7 @@ function RegisterFormContent() {
                         </div>
                         {errors.email && (
                             <p className="text-xs text-rose-600 dark:text-rose-400 mt-1.5 font-medium flex items-center gap-1">
-                                <AlertCircle className="w-3.5 h-3.5" />
+                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                                 <span>{errors.email}</span>
                             </p>
                         )}
@@ -146,7 +182,7 @@ function RegisterFormContent() {
                     {/* Password Field */}
                     <div>
                         <label className="block text-xs font-semibold text-slate-800 dark:text-zinc-200 mb-1.5">
-                            {t.auth?.register?.passwordLabel}
+                            Kata Sandi <span className="text-rose-500">*</span>
                         </label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400 dark:text-zinc-500">
@@ -157,7 +193,7 @@ function RegisterFormContent() {
                                 required
                                 value={data.password}
                                 onChange={(e) => setData('password', e.target.value)}
-                                placeholder={t.auth?.register?.passwordPlaceholder}
+                                placeholder="Minimal 8 karakter"
                                 className={`w-full pl-10 pr-10 py-2.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/80 border ${
                                     errors.password ? 'border-rose-400 dark:border-rose-600' : 'border-zinc-200 dark:border-zinc-800'
                                 } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0D5A34] dark:focus:border-emerald-500 transition-colors`}
@@ -173,7 +209,7 @@ function RegisterFormContent() {
                         </div>
                         {errors.password && (
                             <p className="text-xs text-rose-600 dark:text-rose-400 mt-1.5 font-medium flex items-center gap-1">
-                                <AlertCircle className="w-3.5 h-3.5" />
+                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                                 <span>{errors.password}</span>
                             </p>
                         )}
@@ -182,7 +218,7 @@ function RegisterFormContent() {
                     {/* Confirm Password Field */}
                     <div>
                         <label className="block text-xs font-semibold text-slate-800 dark:text-zinc-200 mb-1.5">
-                            {t.auth?.register?.passwordConfirmLabel}
+                            Konfirmasi Kata Sandi <span className="text-rose-500">*</span>
                         </label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400 dark:text-zinc-500">
@@ -193,7 +229,7 @@ function RegisterFormContent() {
                                 required
                                 value={data.password_confirmation}
                                 onChange={(e) => setData('password_confirmation', e.target.value)}
-                                placeholder={t.auth?.register?.passwordConfirmPlaceholder}
+                                placeholder="Ulangi kata sandi Anda"
                                 className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/80 border ${
                                     errors.password_confirmation ? 'border-rose-400 dark:border-rose-600' : 'border-zinc-200 dark:border-zinc-800'
                                 } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0D5A34] dark:focus:border-emerald-500 transition-colors`}
@@ -201,7 +237,7 @@ function RegisterFormContent() {
                         </div>
                         {errors.password_confirmation && (
                             <p className="text-xs text-rose-600 dark:text-rose-400 mt-1.5 font-medium flex items-center gap-1">
-                                <AlertCircle className="w-3.5 h-3.5" />
+                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                                 <span>{errors.password_confirmation}</span>
                             </p>
                         )}
@@ -218,19 +254,19 @@ function RegisterFormContent() {
                                 className="w-4 h-4 mt-0.5 rounded border-zinc-300 dark:border-zinc-700 text-[#0D5A34] focus:ring-0 accent-[#0D5A34] dark:accent-emerald-500 cursor-pointer shrink-0"
                             />
                             <span className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                                {t.auth?.register?.agreeTerms}{' '}
+                                Saya menyetujui{' '}
                                 <Link href="/privacy" className="text-[#0D5A34] dark:text-emerald-400 font-semibold hover:underline">
-                                    {t.auth?.register?.privacyLink}
+                                    Kebijakan Privasi
                                 </Link>{' '}
-                                {t.auth?.register?.andWord}{' '}
+                                dan{' '}
                                 <Link href="/terms" className="text-[#0D5A34] dark:text-emerald-400 font-semibold hover:underline">
-                                    {t.auth?.register?.termsLink}
+                                    Ketentuan Layanan
                                 </Link>
                             </span>
                         </label>
                         {errors.agree && (
                             <p className="text-xs text-rose-600 dark:text-rose-400 mt-1.5 font-medium flex items-center gap-1">
-                                <AlertCircle className="w-3.5 h-3.5" />
+                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                                 <span>{errors.agree}</span>
                             </p>
                         )}
@@ -243,19 +279,19 @@ function RegisterFormContent() {
                         className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-[#0D5A34] hover:bg-[#094226] disabled:opacity-70 text-white text-xs sm:text-sm font-semibold border border-[#0D5A34] transition-all duration-200 cursor-pointer mt-2"
                     >
                         <UserCheck className="w-4 h-4" />
-                        <span>{processing ? t.auth?.register?.submitting : t.auth?.register?.submitButton}</span>
+                        <span>{processing ? 'Mendaftarkan Akun...' : 'Daftar Akun'}</span>
                     </button>
                 </form>
 
                 {/* Back to Login Footer Link */}
                 <div className="mt-6 pt-5 border-t border-zinc-200/80 dark:border-zinc-800 text-center">
                     <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                        {t.auth?.register?.hasAccount}{' '}
+                        Sudah memiliki akun terdaftar?{' '}
                         <Link
                             href="/login"
                             className="font-bold text-[#0D5A34] dark:text-emerald-400 hover:underline inline-flex items-center gap-0.5"
                         >
-                            <span>{t.auth?.register?.loginLink}</span>
+                            <span>Masuk Sekarang</span>
                             <ArrowRight className="w-3.5 h-3.5" />
                         </Link>
                     </p>
