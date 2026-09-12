@@ -104,20 +104,18 @@
             src: url('data:font/truetype;charset=utf-8;base64,{{ $fontExtraBoldB64 }}') format('truetype'); }
         @endif
 
-        /* @page margin HANYA berlaku saat file benar-benar di-export
-           lewat PDF engine (dompdf/wkhtmltopdf/Chromium page.pdf()).
-           Kalau template ini dirender sebagai HTML biasa atau
-           di-screenshot untuk preview, @page diabaikan sepenuhnya —
-           itulah sebabnya konten sebelumnya nempel ke tepi kanvas.
-           Karena itu jarak yang sebenarnya kita andalkan sekarang
-           datang dari padding pada .page di bawah, bukan dari @page. */
+        /* @page margin sengaja 0 — jarak halaman sepenuhnya diatur
+           lewat margin pada .page di bawah (lihat penjelasan di sana),
+           supaya hasilnya konsisten baik di preview browser/screenshot
+           maupun saat benar-benar di-export ke PDF. */
         @page { size: A4 portrait; margin: 0; }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; overflow-wrap: break-word; word-break: break-word; }
 
         html, body {
             width: 100%;
             height: 100%;
+            overflow-x: hidden;
         }
 
         body {
@@ -128,18 +126,24 @@
             background: #ffffff;
         }
 
-        /* Pembungkus utama — sumber margin yang konsisten di semua
-           mode render (preview browser, screenshot, maupun PDF asli).
-           Nilai disamakan dengan margin @page lama: 18mm atas,
-           15mm kiri/kanan, 14mm bawah. */
+        /* Pembungkus utama.
+           PENTING: jarak kiri/kanan pakai MARGIN, bukan padding.
+           Alasan: kombinasi width:100% + padding bergantung pada
+           dukungan box-sizing:border-box, dan banyak PDF engine
+           (dompdf, dsb.) tidak konsisten menerapkannya — akibatnya
+           padding malah ditambahkan DI LUAR lebar 100%, membuat
+           total lebar .page melebihi kertas A4 sehingga sisi kanan
+           (termasuk QR code) terpotong saat dicetak ke PDF.
+           Margin selalu dihitung di luar box, jadi width:calc(100% - 30mm)
+           + margin kiri/kanan 15mm dijamin totalnya pas 100% lebar
+           halaman, di mesin render manapun. */
         .page {
-            width: 210mm;
-            min-height: 297mm;
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 18mm 15mm 14mm 15mm;
+            width: calc(100% - 30mm);
+            margin: 18mm 15mm 14mm 15mm;
             background: #ffffff;
         }
+
+        .page img { max-width: 100%; }
 
         /* HEADER */
         .header-table { width: 100%; margin-bottom: 8px; border-collapse: collapse; }
@@ -222,7 +226,7 @@
         .section-table td { vertical-align: top; }
 
         .icon-cell { width: 40px; padding-top: 2px; }
-        .icon-img { width: 30px; height: 30px; }
+        .icon-img { width: 30px !important; height: 30px !important; }
 
         .content-cell { padding-left: 6px; }
         .section-title {
@@ -260,15 +264,23 @@
         .footer-heading { font-family: 'Poppins', sans-serif; font-size: 8pt; color: #374151; font-weight: 600; margin-bottom: 6px; }
 
         .social-item {
+            display: inline-table;
+            vertical-align: middle;
+            margin-right: 16px;
+        }
+        .social-icon-cell, .social-text-cell {
+            display: table-cell;
+            vertical-align: middle;
+        }
+        .social-icon-cell { padding-right: 5px; }
+        .social-text-cell {
             font-family: 'Poppins', sans-serif;
             font-size: 8.5pt;
             color: #1f2937;
             font-weight: 600;
-            padding-right: 14px;
-            display: inline-block;
-            vertical-align: middle;
+            white-space: nowrap;
         }
-        .social-icon-img { width: 14px; height: 14px; vertical-align: middle; margin-right: 4px; margin-bottom: 2px; display: inline-block; }
+        .social-icon-img { width: 14px; height: 14px; display: block; }
 
         .footer-right { width: 40%; text-align: right; }
         .qr-wrapper { display: inline-block; text-align: right; }
@@ -295,7 +307,7 @@
             color: #6b7280;
             text-align: center;
         }
-        .showcase-link-url { color: #0d5a34; font-weight: 700; text-decoration: underline; }
+        .showcase-link-url { color: #0d5a34; font-weight: 700; text-decoration: underline; word-break: break-all; }
     </style>
 </head>
 <body>
@@ -424,9 +436,18 @@
                 <td class="footer-left">
                     <div class="footer-heading">Kunjungi platform resmi kami untuk informasi lengkap tentang CoE STAS-RG:</div>
                     <div>
-                        <span class="social-item"><img src="{{ $instagramSvg }}" class="social-icon-img" alt="Instagram"> {{ $project->footer_instagram ?: '@stas.rg' }}</span>
-                        <span class="social-item"><img src="{{ $webSvg }}" class="social-icon-img" alt="Website"> {{ $project->footer_website ?: 'tel-u.ac.id/stasrg' }}</span>
-                        <span class="social-item"><img src="{{ $youtubeSvg }}" class="social-icon-img" alt="YouTube"> {{ $project->footer_youtube ?: '@stas_rg' }}</span>
+                        <span class="social-item">
+                            <span class="social-icon-cell"><img src="{{ $instagramSvg }}" class="social-icon-img" alt="Instagram"></span>
+                            <span class="social-text-cell">{{ $project->footer_instagram ?: '@stas.rg' }}</span>
+                        </span>
+                        <span class="social-item">
+                            <span class="social-icon-cell"><img src="{{ $webSvg }}" class="social-icon-img" alt="Website"></span>
+                            <span class="social-text-cell">{{ $project->footer_website ?: 'tel-u.ac.id/stasrg' }}</span>
+                        </span>
+                        <span class="social-item">
+                            <span class="social-icon-cell"><img src="{{ $youtubeSvg }}" class="social-icon-img" alt="YouTube"></span>
+                            <span class="social-text-cell">{{ $project->footer_youtube ?: '@stas_rg' }}</span>
+                        </span>
                     </div>
                 </td>
                 <td class="footer-right">
