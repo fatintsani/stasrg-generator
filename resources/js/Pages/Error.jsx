@@ -86,7 +86,7 @@ export default function ErrorPage({ status = 404, message }) {
             title: 'Layanan Sedang dalam Pemeliharaan',
             description: 'Sistem STASIKATOR saat ini sedang menjalani proses pemeliharaan rutin atau peningkatan infrastruktur server. Kami akan segera kembali aktif.',
             primaryAction: { label: 'Coba Muat Ulang', icon: RefreshCw, onClick: () => window.location.reload() },
-            secondaryAction: { label: 'Kunjungi Website STAS-RG', icon: ExternalLink, href: 'https://tel-u.ac.id/stasrg' },
+            secondaryAction: { label: 'Kunjungi Website STAS-RG', icon: ExternalLink, href: 'https://www.stas-rg.com' },
             infoPill: 'Laboratorium CoE STAS-RG • Fakultas Ilmu Terapan Telkom University.',
         },
     };

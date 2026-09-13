@@ -21,7 +21,7 @@
             Coba Muat Ulang
         </button>
         
-        <a href="https://tel-u.ac.id/stasrg" target="_blank" class="btn btn-secondary">
+        <a href="https://www.stas-rg.com" target="_blank" class="btn btn-secondary">
             Kunjungi Website STAS-RG
         </a>
     </div>

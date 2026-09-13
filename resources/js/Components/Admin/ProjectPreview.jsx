@@ -3,35 +3,9 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Image, Check, Settings, Lightbulb, AlertTriangle, Layers, Columns, LayoutTemplate, FileText } from 'lucide-react';
 import { evaluateProjectLayoutLimits } from '../../Utils/textLimits';
 import { getLayoutPreset, getDocumentFormat, getColorTheme, getPrintMode } from '../../Utils/layoutPresets';
+import { SocialIcon, normalizeSocialLinks } from '../../Utils/socialPlatforms';
 
-function InstagramIcon({ style = {} }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ ...style, display: 'inline-block', verticalAlign: 'middle' }}>
-            <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
-            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-            <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
-        </svg>
-    );
-}
 
-function GlobeIcon({ style = {} }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ ...style, display: 'inline-block', verticalAlign: 'middle' }}>
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="2" x2="22" y1="12" y2="12"/>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"/>
-        </svg>
-    );
-}
-
-function YoutubeIcon({ style = {} }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ ...style, display: 'inline-block', verticalAlign: 'middle' }}>
-            <path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/>
-            <polygon points="10 15 15 12 10 9 10 15"/>
-        </svg>
-    );
-}
 
 function tryParseJson(str) {
     if (!str) return null;
@@ -84,9 +58,8 @@ export function A4Document({ project, isLive = false, id }) {
     const partnerLogoUrl = project.partner_logo_preview || (project.partner_logo ? (project.partner_logo.startsWith('http') || project.partner_logo.startsWith('blob:') || project.partner_logo.startsWith('data:') ? project.partner_logo : `/storage/${project.partner_logo}`) : '/assets/img/telu.png');
 
     const projectUrl = project.project_url || '';
-    const instagram = project.footer_instagram || '@stas.rg';
-    const website = project.footer_website || 'tel-u.ac.id/stasrg';
-    const youtube = project.footer_youtube || '@stas_rg';
+    const socialLinks = normalizeSocialLinks(project);
+    const website = project.footer_website || 'www.stas-rg.com';
 
     const benefitsContent = benefitsData.content || '';
     const specsContent = specsData.content || '';
@@ -476,25 +449,13 @@ export function A4Document({ project, isLive = false, id }) {
                                         }}>
                                             Kunjungi platform resmi kami untuk informasi lengkap tentang CoE STAS-RG:
                                         </div>
-                                        <div style={{ color: titleColor }}>
-                                            {instagram && (
-                                                <span style={{ fontSize: '8pt', fontWeight: 600, paddingRight: '12px', display: 'inline-block', verticalAlign: 'middle' }}>
-                                                    <InstagramIcon style={{ width: '13px', height: '13px', marginRight: '4px', marginBottom: '2px', color: primaryColor }} />
-                                                    <span>{instagram}</span>
+                                        <div style={{ color: titleColor, display: 'flex', flexWrap: 'wrap', gap: '6px 12px', alignItems: 'center' }}>
+                                            {socialLinks.map((item, idx) => (
+                                                <span key={idx} style={{ fontSize: '8pt', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                    <SocialIcon platform={item.platform} style={{ width: '13px', height: '13px', color: primaryColor }} />
+                                                    <span>{item.value}</span>
                                                 </span>
-                                            )}
-                                            {website && (
-                                                <span style={{ fontSize: '8pt', fontWeight: 600, paddingRight: '12px', display: 'inline-block', verticalAlign: 'middle' }}>
-                                                    <GlobeIcon style={{ width: '13px', height: '13px', marginRight: '4px', marginBottom: '2px', color: primaryColor }} />
-                                                    <span>{website}</span>
-                                                </span>
-                                            )}
-                                            {youtube && (
-                                                <span style={{ fontSize: '8pt', fontWeight: 600, paddingRight: '12px', display: 'inline-block', verticalAlign: 'middle' }}>
-                                                    <YoutubeIcon style={{ width: '13px', height: '13px', marginRight: '4px', marginBottom: '2px', color: primaryColor }} />
-                                                    <span>{youtube}</span>
-                                                </span>
-                                            )}
+                                            ))}
                                         </div>
                                     </td>
                                     <td style={{ verticalAlign: 'middle', width: '40%', textAlign: 'right' }}>
@@ -667,12 +628,17 @@ export function A4Document({ project, isLive = false, id }) {
                                 <div className="text-[10px] text-zinc-500">
                                     Arahkan kamera smartphone ke QR code di samping
                                 </div>
-                                <div className="text-[10px] font-mono font-bold text-zinc-700 dark:text-zinc-300">
-                                    {website}
+                                <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                                    {socialLinks.slice(0, 3).map((item, idx) => (
+                                        <span key={idx} className="inline-flex items-center gap-1 text-[9.5px] font-semibold text-zinc-700 dark:text-zinc-300">
+                                            <SocialIcon platform={item.platform} style={{ width: '11px', height: '11px', color: primaryColor }} />
+                                            <span>{item.value}</span>
+                                        </span>
+                                    ))}
                                 </div>
                             </div>
                             <div className="p-1.5 bg-white rounded-lg border border-zinc-300 shrink-0">
-                                <QRCodeSVG value={projectUrl ? (projectUrl.startsWith('http') ? projectUrl : `https://${projectUrl}`) : 'https://tel-u.ac.id/stasrg'} size={72} level="H" fgColor={primaryColor} />
+                                <QRCodeSVG value={projectUrl ? (projectUrl.startsWith('http') ? projectUrl : `https://${projectUrl}`) : 'https://www.stas-rg.com'} size={72} level="H" fgColor={primaryColor} />
                             </div>
                         </div>
 
@@ -778,7 +744,7 @@ export function A4Document({ project, isLive = false, id }) {
                                         <div className="text-[9px] font-mono text-zinc-600 dark:text-zinc-400">{website}</div>
                                     </div>
                                     <div className="p-1 bg-white border rounded shrink-0">
-                                        <QRCodeSVG value={projectUrl || 'https://tel-u.ac.id/stasrg'} size={52} level="H" fgColor={primaryColor} />
+                                        <QRCodeSVG value={projectUrl || 'https://www.stas-rg.com'} size={52} level="H" fgColor={primaryColor} />
                                     </div>
                                 </div>
                             </div>
@@ -786,8 +752,16 @@ export function A4Document({ project, isLive = false, id }) {
                     </div>
 
                     {/* Factsheet Footer */}
-                    <div className="pt-3 border-t flex items-center justify-between text-[8pt]" style={{ borderColor: cardBorder, color: mutedColor }}>
-                        <div>STAS-RG Research Center • {instagram} • {youtube}</div>
+                    <div className="pt-3 border-t flex flex-wrap items-center justify-between gap-2 text-[8pt]" style={{ borderColor: cardBorder, color: mutedColor }}>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <span className="font-semibold" style={{ color: primaryColor }}>STAS-RG</span>
+                            {socialLinks.map((item, idx) => (
+                                <span key={idx} className="inline-flex items-center gap-1">
+                                    <SocialIcon platform={item.platform} style={{ width: '11px', height: '11px', color: primaryColor }} />
+                                    <span>{item.value}</span>
+                                </span>
+                            ))}
+                        </div>
                         <div>Telkom University • All Rights Reserved</div>
                     </div>
                 </div>
@@ -869,7 +843,7 @@ export function A4Document({ project, isLive = false, id }) {
                                 <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: cardBorder }}>
                                     <div className="text-[9px] font-mono" style={{ color: mutedColor }}>Scan for Demo</div>
                                     <div className="p-1 bg-white rounded border">
-                                        <QRCodeSVG value={projectUrl || 'https://tel-u.ac.id/stasrg'} size={36} level="M" fgColor={primaryColor} />
+                                        <QRCodeSVG value={projectUrl || 'https://www.stas-rg.com'} size={36} level="M" fgColor={primaryColor} />
                                     </div>
                                 </div>
                             </div>
@@ -877,14 +851,258 @@ export function A4Document({ project, isLive = false, id }) {
                     </div>
 
                     {/* Widescreen Footer */}
-                    <div className="pt-3 border-t flex items-center justify-between text-[9pt]" style={{ borderColor: cardBorder, color: mutedColor }}>
-                        <div className="flex items-center gap-4 font-medium">
-                            <span>Web: {website}</span>
-                            <span>IG: {instagram}</span>
-                            <span>YT: {youtube}</span>
+                    <div className="pt-3 border-t flex flex-wrap items-center justify-between gap-3 text-[9pt]" style={{ borderColor: cardBorder, color: mutedColor }}>
+                        <div className="flex flex-wrap items-center gap-4 font-medium">
+                            {socialLinks.map((item, idx) => (
+                                <span key={idx} className="inline-flex items-center gap-1.5">
+                                    <SocialIcon platform={item.platform} style={{ width: '13px', height: '13px', color: primaryColor }} />
+                                    <span>{item.value}</span>
+                                </span>
+                            ))}
                         </div>
                         <div className="font-bold" style={{ color: primaryColor }}>
                             Telkom University • CoE STAS-RG
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* FORMAT 5: INSTAGRAM & LINKEDIN FEED 1:1 SQUARE (1080 × 1080 px) */}
+            {docFormatId === 'social_feed' && (
+                <div className="flex flex-col justify-between h-full space-y-4 select-none">
+                    {/* Top Branding Bar */}
+                    <div className="flex items-center justify-between pb-3 border-b" style={{ borderColor: cardBorder }}>
+                        <div className="flex items-center gap-2">
+                            {project.category && (
+                                <span className="text-[12px] font-extrabold uppercase px-3 py-1 rounded-md tracking-wider" style={{ backgroundColor: badgeBg, color: badgeTextColor }}>
+                                    {project.category}
+                                </span>
+                            )}
+                            {subtitle && (
+                                <span className="text-[11px] font-semibold px-2.5 py-1 rounded-md border" style={{ backgroundColor: cardBg, borderColor: cardBorder, color: primaryColor }}>
+                                    {subtitle}
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <img src={partnerLogoUrl} alt="Partner" className="h-9 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                            <img src="/assets/img/stas.png" alt="STAS" className="h-9 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                        </div>
+                    </div>
+
+                    {/* Main Title & Subtitle */}
+                    <div className="space-y-1">
+                        <h1 className="text-2xl sm:text-3xl font-black uppercase leading-tight tracking-tight line-clamp-2" style={{ color: titleColor }}>
+                            {title}
+                        </h1>
+                    </div>
+
+                    {/* Center Hero Image */}
+                    <div className="w-full h-[370px] rounded-2xl overflow-hidden border flex items-center justify-center relative" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+                        {mainImageUrl ? (
+                            <img src={mainImageUrl} alt={title} className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="flex flex-col items-center text-zinc-400">
+                                <Image className="w-14 h-14 mb-2 opacity-50" />
+                                <span className="font-bold text-sm">Foto Prototipe Riset (1:1 Feed)</span>
+                            </div>
+                        )}
+                        <div className="absolute bottom-3 left-3 px-3 py-1 rounded-lg backdrop-blur-md bg-black/60 text-white text-[11px] font-bold uppercase tracking-wider">
+                            Inovasi CoE STAS-RG
+                        </div>
+                    </div>
+
+                    {/* Middle Info Highlights (Split 2 Boxes) */}
+                    <div className="grid grid-cols-2 gap-3.5">
+                        {/* Problem & Solution Box */}
+                        <div className="p-3.5 rounded-xl border flex flex-col justify-between" style={{ backgroundColor: isDark ? `${primaryColor}15` : themeConfig.bgAccent, borderColor: `${primaryColor}44` }}>
+                            <div>
+                                <h4 className="text-[11px] font-bold uppercase tracking-wider mb-1 flex items-center gap-1.5" style={{ color: primaryColor }}>
+                                    <Lightbulb className="w-3.5 h-3.5" />
+                                    <span>Problem & Solusi</span>
+                                </h4>
+                                {psProblem && (
+                                    <p className="text-[11px] line-clamp-2 leading-relaxed mb-1" style={{ color: textColor }}>
+                                        <strong>Tantangan:</strong> {psProblem.replace(/<[^>]*>?/gm, '')}
+                                    </p>
+                                )}
+                                {psSolution && (
+                                    <p className="text-[11px] line-clamp-2 leading-relaxed" style={{ color: textColor }}>
+                                        <strong>Solusi:</strong> {psSolution.replace(/<[^>]*>?/gm, '')}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Benefits / Specs Box */}
+                        <div className="p-3.5 rounded-xl border flex flex-col justify-between" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+                            <div>
+                                <h4 className="text-[11px] font-bold uppercase tracking-wider mb-1 flex items-center gap-1.5" style={{ color: primaryColor }}>
+                                    <Check className="w-3.5 h-3.5" />
+                                    <span>Manfaat & Keunggulan</span>
+                                </h4>
+                                <div className="text-[11px] flyer-rich-content line-clamp-3 leading-relaxed" style={{ color: mutedColor }} dangerouslySetInnerHTML={{ __html: benefitsContent || description || 'Penerapan teknologi tepat guna ramah lingkungan.' }} />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Bottom Feed Footer with Interactive QR Code */}
+                    <div className="pt-3 border-t flex items-center justify-between gap-4" style={{ borderColor: cardBorder }}>
+                        <div className="space-y-1">
+                            <div className="text-xs font-black uppercase tracking-wider" style={{ color: primaryColor }}>
+                                Telkom University • CoE STAS-RG
+                            </div>
+                            <div className="flex flex-wrap items-center gap-3 text-[11px]" style={{ color: mutedColor }}>
+                                {socialLinks.map((item, idx) => (
+                                    <span key={idx} className="inline-flex items-center gap-1">
+                                        <SocialIcon platform={item.platform} style={{ width: '13px', height: '13px', color: primaryColor }} />
+                                        <span>{item.value}</span>
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 p-2 rounded-xl bg-white dark:bg-zinc-900 border" style={{ borderColor: cardBorder }}>
+                            <div className="text-right">
+                                <div className="text-[10px] font-bold uppercase" style={{ color: primaryColor }}>Scan Live Demo</div>
+                                <div className="text-[9px] text-zinc-500">Video Prototipe</div>
+                            </div>
+                            <div className="p-1 bg-white rounded border border-zinc-200 shrink-0">
+                                <QRCodeSVG value={projectUrl || 'https://www.stas-rg.com'} size={48} level="H" fgColor={primaryColor} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* FORMAT 6: INSTAGRAM STORY & WA STATUS 9:16 VERTICAL (1080 × 1920 px) */}
+            {docFormatId === 'social_story' && (
+                <div className="flex flex-col justify-between h-full space-y-5 select-none">
+                    <div>
+                        {/* Top Story Header */}
+                        <div className="flex items-center justify-between pb-4 border-b" style={{ borderColor: cardBorder }}>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[12px] font-extrabold uppercase px-3 py-1.5 rounded-lg tracking-wider" style={{ backgroundColor: badgeBg, color: badgeTextColor }}>
+                                    {project.category || 'INNOVATION STORY'}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <img src={partnerLogoUrl} alt="Partner" className="h-9 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                                <img src="/assets/img/stas.png" alt="STAS" className="h-9 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                            </div>
+                        </div>
+
+                        {/* Story Subtitle & Title */}
+                        <div className="mt-6 space-y-2">
+                            {subtitle && (
+                                <div className="inline-block text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border" style={{ backgroundColor: `${primaryColor}15`, color: primaryColor, borderColor: `${primaryColor}33` }}>
+                                    {subtitle}
+                                </div>
+                            )}
+                            <h1 className="text-3xl sm:text-4xl font-black uppercase leading-tight tracking-tight" style={{ color: titleColor }}>
+                                {title}
+                            </h1>
+                        </div>
+
+                        {/* Tall Hero Prototype Image */}
+                        <div className="mt-6 w-full h-[520px] rounded-3xl overflow-hidden border flex items-center justify-center relative" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+                            {mainImageUrl ? (
+                                <img src={mainImageUrl} alt={title} className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="flex flex-col items-center text-zinc-400">
+                                    <Image className="w-16 h-16 mb-2 opacity-50" />
+                                    <span className="font-bold text-base">Foto Prototipe (9:16 Story)</span>
+                                </div>
+                            )}
+                            <div className="absolute top-4 left-4 px-3.5 py-1.5 rounded-full backdrop-blur-md bg-black/60 text-white text-xs font-extrabold uppercase tracking-wider">
+                                CoE STAS-RG Research
+                            </div>
+                        </div>
+
+                        {/* Executive Summary */}
+                        {description && (
+                            <div 
+                                className="mt-5 p-4 rounded-2xl text-xs text-justify leading-relaxed flyer-rich-content border"
+                                style={{ backgroundColor: cardBg, borderColor: cardBorder, color: mutedColor }}
+                                dangerouslySetInnerHTML={{ __html: description }}
+                            />
+                        )}
+
+                        {/* 3 Innovation Pillars */}
+                        <div className="mt-5 space-y-3">
+                            {/* Problem - Solution Box */}
+                            {(psProblem || psSolution) && (
+                                <div className="p-4 rounded-2xl border" style={{ backgroundColor: isDark ? `${primaryColor}15` : themeConfig.bgAccent, borderColor: `${primaryColor}44` }}>
+                                    <h4 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: primaryColor }}>
+                                        <Lightbulb className="w-4 h-4" />
+                                        <span>Problem & Inovasi Solusi</span>
+                                    </h4>
+                                    {psProblem && (
+                                        <p className="text-xs mb-1 leading-relaxed" style={{ color: textColor }}>
+                                            <strong>Tantangan:</strong> {psProblem.replace(/<[^>]*>?/gm, '')}
+                                        </p>
+                                    )}
+                                    {psSolution && (
+                                        <p className="text-xs leading-relaxed" style={{ color: textColor }}>
+                                            <strong>Solusi:</strong> {psSolution.replace(/<[^>]*>?/gm, '')}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Benefits */}
+                            {benefitsContent && (
+                                <div className="p-4 rounded-2xl border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+                                    <h5 className="text-xs font-bold uppercase tracking-wider mb-1.5 flex items-center gap-1.5" style={{ color: primaryColor }}>
+                                        <Check className="w-4 h-4" />
+                                        <span>Keunggulan & Manfaat</span>
+                                    </h5>
+                                    <div className="text-xs flyer-rich-content" style={{ color: mutedColor }} dangerouslySetInnerHTML={{ __html: benefitsContent }} />
+                                </div>
+                            )}
+
+                            {/* Technical Specs */}
+                            {specsContent && (
+                                <div className="p-4 rounded-2xl border" style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
+                                    <h5 className="text-xs font-bold uppercase tracking-wider mb-1.5 flex items-center gap-1.5" style={{ color: primaryColor }}>
+                                        <Settings className="w-4 h-4" />
+                                        <span>Spesifikasi Sistem</span>
+                                    </h5>
+                                    <div className="text-xs flyer-rich-content" style={{ color: mutedColor }} dangerouslySetInnerHTML={{ __html: specsContent }} />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Story Bottom Interactive QR Bar */}
+                    <div className="pt-5 border-t space-y-4" style={{ borderColor: cardBorder }}>
+                        <div className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-zinc-900 border shadow-xs" style={{ borderColor: cardBorder }}>
+                            <div className="space-y-1">
+                                <div className="text-xs font-black uppercase" style={{ color: primaryColor }}>
+                                    Pindai Video Demo & Riset
+                                </div>
+                                <div className="text-[11px] text-zinc-500">
+                                    Arahkan kamera HP Anda ke QR code berikut:
+                                </div>
+                                <div className="text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300">
+                                    {website}
+                                </div>
+                            </div>
+                            <div className="p-2 bg-white rounded-xl border border-zinc-300 shrink-0">
+                                <QRCodeSVG value={projectUrl || 'https://www.stas-rg.com'} size={76} level="H" fgColor={primaryColor} />
+                            </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-500 dark:text-zinc-400 font-medium px-2">
+                            <div className="flex flex-wrap items-center gap-3">
+                                {socialLinks.map((item, idx) => (
+                                    <span key={idx} className="inline-flex items-center gap-1">
+                                        <SocialIcon platform={item.platform} style={{ width: '12px', height: '12px', color: primaryColor }} />
+                                        <span>{item.value}</span>
+                                    </span>
+                                ))}
+                            </div>
+                            <span className="font-bold" style={{ color: primaryColor }}>Telkom University</span>
                         </div>
                     </div>
                 </div>

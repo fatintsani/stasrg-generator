@@ -62,8 +62,8 @@ class ProjectControllerTest extends TestCase
                 'problem' => 'Kualitas telur ayam menurun.',
                 'solution' => 'Sistem monitoring IoT real-time.',
             ],
-            'project_url' => 'https://tel-u.ac.id/stasrg',
-            'footer_website' => 'tel-u.ac.id/stasrg',
+            'project_url' => 'https://www.stas-rg.com',
+            'footer_website' => 'www.stas-rg.com',
             'footer_instagram' => '@stas.rg',
             'footer_youtube' => '@stas_rg',
             'status' => 'published',
@@ -144,7 +144,7 @@ class ProjectControllerTest extends TestCase
             'user_id' => $user->id,
             'name' => 'Original Project',
             'title' => 'FLYER TITLE',
-            'project_url' => 'https://tel-u.ac.id/stasrg',
+            'project_url' => 'https://www.stas-rg.com',
         ]);
 
         $response = $this->actingAs($user)->post("/projects/{$project->slug}/duplicate");

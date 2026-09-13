@@ -22,6 +22,7 @@ import {
     BookmarkCheck,
     Wand2,
     Check,
+    Smartphone,
 } from 'lucide-react';
 
 export default function LayoutPresetSelector({
@@ -50,6 +51,9 @@ export default function LayoutPresetSelector({
 
     const getFormatIcon = (id) => {
         switch (id) {
+            case 'social_feed':
+            case 'social_story':
+                return <Smartphone className="w-4 h-4" />;
             case 'roll_banner':
                 return <Layers className="w-4 h-4" />;
             case 'factsheet_2col':
@@ -217,6 +221,37 @@ export default function LayoutPresetSelector({
                                                             <div className="col-span-1 bg-emerald-500/20 rounded-xs" />
                                                             <div className="col-span-2 bg-zinc-200/80 dark:bg-zinc-600 rounded-xs" />
                                                         </div>
+                                                    </div>
+                                                )}
+                                                {fmt.id === 'social_feed' && (
+                                                    <div className="w-10 h-10 bg-white dark:bg-zinc-700 rounded-xs border border-zinc-300 dark:border-zinc-600 p-0.5 flex flex-col justify-between shadow-2xs">
+                                                        <div className="flex justify-between items-center">
+                                                            <div className="w-4 h-0.5 bg-[#0D5A34] rounded-xs" />
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/50" />
+                                                        </div>
+                                                        <div className="w-full h-4.5 bg-emerald-500/20 rounded-xs flex items-center justify-center">
+                                                            <Image className="w-2 h-2 text-[#0D5A34] opacity-70" />
+                                                        </div>
+                                                        <div className="flex justify-between items-center gap-0.5">
+                                                            <div className="w-4 h-0.5 bg-zinc-300 dark:bg-zinc-500 rounded-xs" />
+                                                            <div className="w-1.5 h-1.5 bg-[#0D5A34]/60 rounded-xs" />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {fmt.id === 'social_story' && (
+                                                    <div className="w-6 h-12 bg-white dark:bg-zinc-700 rounded-xs border border-zinc-300 dark:border-zinc-600 p-0.5 flex flex-col justify-between shadow-2xs">
+                                                        <div className="flex justify-between items-center">
+                                                            <div className="w-2.5 h-0.5 bg-[#0D5A34] rounded-xs" />
+                                                            <div className="w-1 h-1 rounded-full bg-emerald-500/50" />
+                                                        </div>
+                                                        <div className="w-full h-4.5 bg-emerald-500/20 rounded-xs flex items-center justify-center">
+                                                            <Image className="w-2 h-2 text-[#0D5A34] opacity-70" />
+                                                        </div>
+                                                        <div className="space-y-0.5">
+                                                            <div className="w-full h-0.5 bg-zinc-300 dark:bg-zinc-500 rounded-xs" />
+                                                            <div className="w-full h-0.5 bg-zinc-300 dark:bg-zinc-500 rounded-xs" />
+                                                        </div>
+                                                        <div className="w-2 h-2 bg-[#0D5A34]/60 mx-auto rounded-xs" />
                                                     </div>
                                                 )}
                                             </div>

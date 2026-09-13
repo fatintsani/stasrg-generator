@@ -33,6 +33,7 @@ class Project extends Model
         'footer_website',
         'footer_instagram',
         'footer_youtube',
+        'social_links',
         'footer_logo',
         'partner_logo',
         'status',
@@ -52,6 +53,7 @@ class Project extends Model
             'benefits' => 'array',
             'specifications' => 'array',
             'problem_solution' => 'array',
+            'social_links' => 'array',
         ];
     }
 

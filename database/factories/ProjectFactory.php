@@ -43,7 +43,7 @@ class ProjectFactory extends Factory
                 'solution' => fake()->paragraph(2),
             ],
             'project_url' => fake()->url(),
-            'footer_website' => 'tel-u.ac.id/stasrg',
+            'footer_website' => 'www.stas-rg.com',
             'footer_instagram' => '@stas.rg',
             'footer_youtube' => '@stas_rg',
             'layout_preset' => 'balanced',

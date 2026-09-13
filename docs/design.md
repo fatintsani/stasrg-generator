@@ -106,7 +106,7 @@ Email notifikasi merupakan bagian integral dari Design System STASIKATOR. Seluru
 - **Card**: Border 1px `#E2E8F0`, background `#F8FAFC`, radius `10px`, padding `16px 20px`.
 - **Status Badges di Email**: Menggunakan small dot bullet dan warna pastel fungsional sesuai standar Badge System.
 - **Footer**: Wajib menyertakan tautan resmi:
-  - **Website**: `https://tel-u.ac.id/stasrg`
+  - **Website**: `https://www.stas-rg.com`
   - **Instagram**: `https://instagram.com/stas.rg`
   - **Lab Email**: `stas.research@telkomuniversity.ac.id`
   - **Alamat**: Laboratorium CoE STAS-RG, Fakultas Ilmu Terapan, Gedung Selaru, Telkom University, Bandung 40257.

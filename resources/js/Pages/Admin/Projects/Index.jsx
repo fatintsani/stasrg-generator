@@ -6,6 +6,7 @@ import { useAlert } from '../../../Context/AlertContext';
 import { stripHtml } from '../../../Utils/text';
 import { A4Document } from '../../../Components/Admin/ProjectPreview';
 import { captureFlyerToDataUrl, createZipFromFlyerImages } from '../../../Utils/flyerExport';
+import ExportSosmedModal from '../../../Components/Admin/ExportSosmedModal';
 import {
     FolderKanban,
     Plus,
@@ -30,7 +31,8 @@ import {
     Layers,
     Check,
     X,
-    Sparkles
+    Sparkles,
+    Share2
 } from 'lucide-react';
 
 export default function Index({ projects, filters = {} }) {
@@ -46,6 +48,9 @@ export default function Index({ projects, filters = {} }) {
 
     // Multi-Selection State
     const [selectedIds, setSelectedIds] = useState([]);
+
+    // Export Sosmed Modal State
+    const [activeSosmedProject, setActiveSosmedProject] = useState(null);
 
     // Batch Export State
     const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
@@ -519,6 +524,14 @@ export default function Index({ projects, filters = {} }) {
                                                 {/* Actions */}
                                                 <td className="py-3.5 px-4 text-right">
                                                     <div className="flex items-center justify-end gap-1">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setActiveSosmedProject(project)}
+                                                            title="Ekspor Media Sosial & Multi-Format (1:1, 9:16, PNG, JPG)"
+                                                            className="p-1.5 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors cursor-pointer"
+                                                        >
+                                                            <Share2 className="w-4 h-4" />
+                                                        </button>
                                                         <Link
                                                             href={`/projects/${project.slug}`}
                                                             title={p.actionPreview || 'Lihat Flyer'}
@@ -658,6 +671,14 @@ export default function Index({ projects, filters = {} }) {
 
                                             {/* Action Buttons Toolbar */}
                                             <div className="flex items-center gap-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setActiveSosmedProject(project)}
+                                                    title="Ekspor Media Sosial & Multi-Format (1:1, 9:16, PNG, JPG)"
+                                                    className="p-1.5 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors cursor-pointer"
+                                                >
+                                                    <Share2 className="w-4 h-4" />
+                                                </button>
                                                 <Link
                                                     href={`/projects/${project.slug}`}
                                                     title={p.actionPreview || 'Lihat Detail'}
@@ -786,6 +807,13 @@ export default function Index({ projects, filters = {} }) {
                     </div>
                 </div>
             )}
+
+            {/* Export Multi-Format & Media Sosial Modal */}
+            <ExportSosmedModal
+                project={activeSosmedProject}
+                isOpen={!!activeSosmedProject}
+                onClose={() => setActiveSosmedProject(null)}
+            />
 
             {/* Offscreen A4 Canvas for Batch Rendering & High-Res PNG Capture */}
             <div

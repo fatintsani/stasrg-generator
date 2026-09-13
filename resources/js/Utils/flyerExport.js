@@ -114,9 +114,81 @@ export async function downloadFlyerAsJpg(target, filename = 'flyer.jpg', options
         link.click();
         document.body.removeChild(link);
 
+        sendExportAuditLog('jpg', filename.replace(/\.(jpg|jpeg)$/, ''));
+
         return true;
     } catch (error) {
         console.error('Error generating JPG flyer:', error);
+        throw error;
+    }
+}
+
+/**
+ * Universal Multi-Format Image Exporter (PNG or JPG) with custom pixel ratios.
+ * 
+ * @param {HTMLElement|string} target - The DOM element or ID of the canvas.
+ * @param {string} filename - Output filename.
+ * @param {'png'|'jpg'} format - Image format ('png' or 'jpg').
+ * @param {object} options - Overrides for html-to-image.
+ * @returns {Promise<boolean>}
+ */
+export async function downloadElementAsImage(target, filename = 'export', format = 'png', options = {}) {
+    if (format === 'jpg' || format === 'jpeg') {
+        return await downloadFlyerAsJpg(target, `${filename}.jpg`, options);
+    }
+    return await downloadFlyerAsPng(target, `${filename}.png`, options);
+}
+
+/**
+ * Copy the rendered visual canvas directly to the user's OS Clipboard as PNG.
+ * Enables instant pasting (Ctrl+V) into WhatsApp Web, Figma, Canva, Discord, etc.
+ * 
+ * @param {HTMLElement|string} target - The DOM element or ID of the canvas.
+ * @param {object} options - Overrides for html-to-image.
+ * @returns {Promise<boolean>}
+ */
+export async function copyElementToClipboard(target, options = {}) {
+    const element = typeof target === 'string' ? document.getElementById(target) : target;
+
+    if (!element) {
+        throw new Error('Elemen canvas tidak ditemukan untuk disalin.');
+    }
+
+    try {
+        const dataUrl = await toPng(element, {
+            quality: 1.0,
+            pixelRatio: 2.0,
+            backgroundColor: '#ffffff',
+            cacheBust: true,
+            style: {
+                transform: 'none',
+                margin: '0',
+            },
+            filter: (node) => {
+                if (node.classList && node.classList.contains('no-export')) {
+                    return false;
+                }
+                return true;
+            },
+            ...options,
+        });
+
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+
+        if (navigator.clipboard && window.ClipboardItem) {
+            await navigator.clipboard.write([
+                new ClipboardItem({
+                    'image/png': blob,
+                }),
+            ]);
+            sendExportAuditLog('clipboard_copy');
+            return true;
+        } else {
+            throw new Error('Clipboard API tidak didukung pada peramban ini.');
+        }
+    } catch (error) {
+        console.error('Error copying element to clipboard:', error);
         throw error;
     }
 }

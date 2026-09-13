@@ -20,10 +20,12 @@ import {
     Eye
 } from 'lucide-react';
 import { downloadFlyerAsPng, printFlyer } from '../../../Utils/flyerExport';
+import ExportSosmedModal from '../../../Components/Admin/ExportSosmedModal';
 
 export default function Show({ project }) {
     const { showConfirm } = useAlert();
     const [pngLoading, setPngLoading] = useState(false);
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
     if (!project) return null;
 
@@ -104,7 +106,7 @@ export default function Show({ project }) {
                                         {project.status === 'published' ? 'Published' : 'Draft'}
                                     </span>
                                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
-                                        Format: {project.doc_format === 'roll_banner' ? 'X-Banner / Roll-up' : project.doc_format === 'factsheet_2col' ? 'Factsheet 2-Kolom' : project.doc_format === 'pitch_poster' ? 'Pitch Poster (16:9)' : 'A4 Flyer'}
+                                        Format: {project.doc_format === 'social_feed' ? 'Instagram / LinkedIn Feed (1:1)' : project.doc_format === 'social_story' ? 'Instagram Story / WA Status (9:16)' : project.doc_format === 'roll_banner' ? 'X-Banner / Roll-up' : project.doc_format === 'factsheet_2col' ? 'Factsheet 2-Kolom' : project.doc_format === 'pitch_poster' ? 'Pitch Poster (16:9)' : 'A4 Flyer'}
                                     </span>
                                     {(!project.doc_format || project.doc_format === 'a4_flyer') && (
                                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#0D5A34] dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shrink-0">
@@ -171,6 +173,16 @@ export default function Show({ project }) {
                         <div className="flex items-center gap-2">
                             <button
                                 type="button"
+                                onClick={() => setIsExportModalOpen(true)}
+                                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-[#0D5A34] dark:text-emerald-300 text-xs font-bold border border-emerald-300/80 dark:border-emerald-800 whitespace-nowrap transition-all cursor-pointer shadow-xs"
+                                title="Buka Multi-Format & Sosmed Exporter (1:1 Feed, 9:16 Story, PNG, JPG, Salin Gambar)"
+                            >
+                                <Share2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                <span>Export Multi-Format</span>
+                            </button>
+
+                            <button
+                                type="button"
                                 onClick={handlePrint}
                                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold whitespace-nowrap transition-all cursor-pointer"
                                 title="Cetak langsung atau Simpan sebagai PDF via browser Print dialog (Ctrl+P)"
@@ -206,6 +218,13 @@ export default function Show({ project }) {
                 <div className="max-w-4xl mx-auto w-full">
                     <ProjectPreview project={project} />
                 </div>
+
+                {/* Export Multi-Format & Media Sosial Modal */}
+                <ExportSosmedModal
+                    project={project}
+                    isOpen={isExportModalOpen}
+                    onClose={() => setIsExportModalOpen(false)}
+                />
 
             </div>
         </AdminLayout>

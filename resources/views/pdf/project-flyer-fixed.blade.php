@@ -542,7 +542,7 @@
                         </span>
                         <span class="social-item">
                             <span class="social-icon-cell"><img src="{{ $webSvg }}" class="social-icon-img" alt="Website"></span>
-                            <span class="social-text-cell">{{ $project->footer_website ?: 'tel-u.ac.id/stasrg' }}</span>
+                            <span class="social-text-cell">{{ $project->footer_website ?: 'www.stas-rg.com' }}</span>
                         </span>
                         <span class="social-item">
                             <span class="social-icon-cell"><img src="{{ $youtubeSvg }}" class="social-icon-img" alt="YouTube"></span>
