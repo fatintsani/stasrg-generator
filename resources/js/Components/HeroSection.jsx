@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, FileText, CheckCircle2, ShieldCheck, Database, Layers } from 'lucide-react';
 import { useApp } from '../Context/AppContext';
 
@@ -7,6 +7,20 @@ export default function HeroSection({ stats = {} }) {
     const { t, language } = useApp();
 
     const isId = language === 'id';
+
+    const words = isId
+        ? ['Projects', 'Generator', 'Inovasi', 'Riset', 'Dokumen', 'Showcase']
+        : ['Projects', 'Generator', 'Innovations', 'Research', 'Documents', 'Showcase'];
+
+    const [currentWordIndex, setCurrentWordIndex] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentWordIndex((prev) => (prev + 1) % words.length);
+        }, 2400);
+
+        return () => clearInterval(interval);
+    }, [words.length]);
 
     // Dynamic metrics calculated from database
     const totalProjects = stats.total_projects !== undefined ? stats.total_projects : null;
@@ -49,14 +63,28 @@ export default function HeroSection({ stats = {} }) {
                     <span>{t.hero.badge}</span>
                 </motion.div>
 
-                {/* Hero Headline */}
+                {/* Hero Headline with Animated Morphing Word */}
                 <motion.h1
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.1 }}
-                    className="text-4xl sm:text-6xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.12] mb-6"
+                    className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.15] mb-6 flex flex-wrap items-center justify-center gap-x-3.5"
                 >
-                    {t.hero.title}
+                    <span>STAS RG</span>
+                    <span className="inline-flex items-center justify-start min-w-[170px] sm:min-w-[270px] text-left">
+                        <AnimatePresence mode="wait">
+                            <motion.span
+                                key={`${language}-${currentWordIndex}`}
+                                initial={{ opacity: 0, y: 22, filter: 'blur(6px)' }}
+                                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                                exit={{ opacity: 0, y: -22, filter: 'blur(6px)' }}
+                                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                                className="text-[#0D5A34] dark:text-emerald-400"
+                            >
+                                {words[currentWordIndex]}
+                            </motion.span>
+                        </AnimatePresence>
+                    </span>
                 </motion.h1>
 
                 {/* Subtitle */}

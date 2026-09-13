@@ -110,7 +110,7 @@ export default function Footer() {
                             <div className="flex items-center gap-2">
                                 <span className="text-lg tracking-tight text-slate-900 dark:text-white">
                                     <span className="font-extrabold">STAS RG</span>{' '}
-                                    <span className="font-normal text-zinc-500 dark:text-zinc-400">Generator</span>
+                                    <span className="font-normal text-zinc-500 dark:text-zinc-400">Projects</span>
                                 </span>
                             </div>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium mt-1">

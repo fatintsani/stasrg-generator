@@ -285,7 +285,7 @@ export const translations = {
         },
         admin: {
             brand: 'STAS RG',
-            brandSub: 'Generator Panel',
+            brandSub: 'Projects Panel',
             sidebar: {
                 mainGroup: 'Utama',
                 systemGroup: 'Sistem & Konfigurasi',
@@ -390,8 +390,8 @@ export const translations = {
             },
             projects: {
                 pageTitle: 'Semua Project',
-                headerTitle: 'Project Visual Generator',
-                headerSubtitle: 'Kelola, generate flyer visual, dan cetak atau simpan lembar informasi riset STAS RG.',
+                headerTitle: 'Manajemen & Visual Project',
+                headerSubtitle: 'Kelola, susun template visual, dan cetak atau simpan lembar informasi riset STAS RG.',
                 createButton: 'Buat Project Baru',
 
                 // Toolbar
@@ -816,6 +816,40 @@ export const translations = {
             step3Desc: 'Print directly or save as high-fidelity PDF, or download high-resolution PNG images.',
             step3Meta: 'Output: Print / PDF / PNG',
         },
+        principles: {
+            tag: 'OPERATIONAL PRINCIPLES',
+            title: 'Designed for a Simpler Workflow',
+            subtitle: 'Dedicated utilities crafted to remove friction and bottlenecks in research document preparation.',
+            phase1Badge: 'PHASE // 01',
+            phase1Title: '01 — Organized',
+            phase1Desc: 'Keep project information structured in one place with predictable relational hierarchies and metadata indexing.',
+            phase1Tag: 'INDEXING + REPO SYNC',
+            phase2Badge: 'PHASE // 02',
+            phase2Title: '02 — Consistent',
+            phase2Desc: 'Maintain document structure and visual identity consistency across the entire research group without manual styling audits.',
+            phase2Tag: 'STANDARDS + COMPLIANCE',
+            phase3Badge: 'PHASE // 03',
+            phase3Title: '03 — Efficient',
+            phase3Desc: 'Eliminate repetitive manual formatting overhead, returning valuable time to productive technical research.',
+            phase3Tag: 'AUTOMATION + VELOCITY',
+        },
+        howItWorks: {
+            tag: 'SEQUENTIAL PROTOCOL',
+            title: 'How the System Works',
+            subtitle: 'A guided 3-step lifecycle from initial draft to final publication-ready documents.',
+            step1Badge: '01',
+            step1Title: 'Create Project',
+            step1Desc: 'Initialize a new project container complete with team attributions, project scope boundaries, and primary metadata tags.',
+            step1Meta: 'Schema: init_project.json',
+            step2Badge: '02',
+            step2Title: 'Fill Project Details',
+            step2Desc: 'Input project parameters, milestones, research metrics, and standardized data fields through structured forms.',
+            step2Meta: 'Validation: Real-time',
+            step3Badge: '03',
+            step3Title: 'Generate & Manage',
+            step3Desc: 'Export formatted documents and maintain synchronized version control across the entire research lifecycle.',
+            step3Meta: 'Output: PDF / MD / DOCX',
+        },
         showcase: {
             titlePart1: 'Research & Innovation Showcase',
             titlePart2: 'CoE STAS-RG',
@@ -1009,7 +1043,7 @@ export const translations = {
         },
         admin: {
             brand: 'STAS RG',
-            brandSub: 'Generator Panel',
+            brandSub: 'Projects Panel',
             sidebar: {
                 mainGroup: 'Main',
                 systemGroup: 'System & Config',
@@ -1114,8 +1148,8 @@ export const translations = {
             },
             projects: {
                 pageTitle: 'All Projects',
-                headerTitle: 'Project Visual Generator',
-                headerSubtitle: 'Manage, generate visual flyers, and print or export STAS RG research information sheets.',
+                headerTitle: 'Project Management & Visuals',
+                headerSubtitle: 'Manage, configure visual templates, and print or export STAS RG research information sheets.',
                 createButton: 'Create Project',
 
                 // Toolbar

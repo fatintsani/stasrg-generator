@@ -68,7 +68,7 @@ function LoginFormContent({ status }) {
     return (
         <AuthLayout
             title={t.auth?.login?.title || 'Masuk ke Platform'}
-            subtitle={t.auth?.login?.subtitle || 'Akses terpusat untuk visual generator dan manajemen proyek STAS RG.'}
+            subtitle={t.auth?.login?.subtitle || 'Akses terpusat untuk publikasi dan manajemen proyek STAS RG.'}
             badge={null}
         >
             <motion.div

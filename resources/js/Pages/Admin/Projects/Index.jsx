@@ -248,7 +248,7 @@ export default function Index({ projects, filters = {} }) {
                                 <FolderKanban className="w-5 h-5" />
                             </span>
                             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-                                {p.headerTitle || 'Project Visual Generator'}
+                                {p.headerTitle || 'Manajemen & Visual Project'}
                             </h1>
                         </div>
                         <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">

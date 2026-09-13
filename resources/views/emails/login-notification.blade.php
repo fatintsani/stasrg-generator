@@ -12,7 +12,7 @@
     </div>
 
     <p class="paragraph">
-        Akun STASIKATOR Anda baru saja digunakan untuk masuk ke portal generator riset. Berikut adalah detail sesi akses:
+        Akun STASIKATOR Anda baru saja digunakan untuk masuk ke portal proyek riset STAS RG. Berikut adalah detail sesi akses:
     </p>
 
     <!-- Info Card -->

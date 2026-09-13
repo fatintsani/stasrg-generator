@@ -224,7 +224,7 @@ export default function AdminSidebar({
                                 </div>
                                 <div className="flex flex-col truncate">
                                     <span className="text-sm sm:text-[15px] font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-                                        STAS RG <span className="text-emerald-700 dark:text-emerald-400 font-bold">Generator</span>
+                                        STAS RG <span className="text-emerald-700 dark:text-emerald-400 font-bold">Projects</span>
                                     </span>
                                 </div>
                             </Link>

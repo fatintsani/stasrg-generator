@@ -349,7 +349,7 @@
                                     </td>
                                     <td align="right" style="vertical-align: middle;">
                                         <div style="font-size: 13px; font-weight: 800; color: #0F172A; letter-spacing: -0.3px;">
-                                            STAS RG <span style="font-weight: 600; color: #0D5A34;">Generator</span>
+                                            STAS RG <span style="font-weight: 600; color: #0D5A34;">Projects</span>
                                         </div>
                                         <div style="font-size: 10px; color: #94A3B8; font-weight: 500;">
                                             CoE STAS-RG Platform

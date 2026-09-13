@@ -12,7 +12,7 @@
     </div>
 
     <p class="paragraph">
-        Terima kasih atas ketertarikan Anda untuk bergabung dengan platform generator riset <strong>STASIKATOR</strong>.
+        Terima kasih atas ketertarikan Anda untuk bergabung dengan platform manajemen proyek riset <strong>STASIKATOR</strong>.
     </p>
 
     <p class="paragraph">

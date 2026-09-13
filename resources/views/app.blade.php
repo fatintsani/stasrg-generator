@@ -12,7 +12,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/img/stas.png') }}">
 
     <!-- SEO Meta Tags -->
-    <meta name="description" content="STAS RG Projects — Platform publikasi riset, showcase inovasi, dan generator dokumen ilmiah resmi STAS Research Group Telkom University.">
+    <meta name="description" content="STAS RG Projects — Platform publikasi riset, showcase inovasi, dan pengelolaan dokumen ilmiah resmi STAS Research Group Telkom University.">
     <meta name="keywords" content="STAS Research Group, Telkom University, Smart Agriculture, IoT, Research Showcase, RG Projects, Dokumen Ilmiah, Riset Indonesia">
     <meta name="author" content="STAS Research Group Telkom University">
     <meta name="robots" content="index, follow">
@@ -25,14 +25,14 @@
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="STAS RG Projects">
     <meta property="og:title" content="STAS RG Projects — Platform Showcase Riset & Manajemen Dokumen">
-    <meta property="og:description" content="Platform publikasi riset, showcase inovasi, dan generator dokumen ilmiah resmi STAS Research Group Telkom University.">
+    <meta property="og:description" content="Platform publikasi riset, showcase inovasi, dan pengelolaan dokumen ilmiah resmi STAS Research Group Telkom University.">
     <meta property="og:image" content="{{ asset('assets/img/stas.png') }}">
     <meta property="og:url" content="{{ url()->current() }}">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="STAS RG Projects — Platform Showcase Riset & Manajemen Dokumen">
-    <meta name="twitter:description" content="Platform publikasi riset, showcase inovasi, dan generator dokumen ilmiah resmi STAS Research Group Telkom University.">
+    <meta name="twitter:description" content="Platform publikasi riset, showcase inovasi, dan pengelolaan dokumen ilmiah resmi STAS Research Group Telkom University.">
     <meta name="twitter:image" content="{{ asset('assets/img/stas.png') }}">
 
     <!-- Google Fonts: Plus Jakarta Sans & Poppins -->

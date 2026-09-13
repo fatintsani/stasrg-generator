@@ -46,8 +46,31 @@ export function AppProvider({ children }) {
         setLanguage((prev) => (prev === 'id' ? 'en' : 'id'));
     };
 
-    // Dictionary getter
-    const t = translations[language] || translations.id;
+    // Dictionary getter with recursive fallback to avoid any missing key blank screens
+    const getMergedTranslations = (lang) => {
+        const primary = translations[lang] || translations.id;
+        const fallback = translations.id;
+
+        const merge = (target, base) => {
+            const result = { ...target };
+            for (const key in base) {
+                if (!(key in result) || result[key] === undefined) {
+                    result[key] = base[key];
+                } else if (
+                    typeof base[key] === 'object' &&
+                    base[key] !== null &&
+                    !Array.isArray(base[key])
+                ) {
+                    result[key] = merge(result[key], base[key]);
+                }
+            }
+            return result;
+        };
+
+        return lang === 'id' ? primary : merge(primary, fallback);
+    };
+
+    const t = getMergedTranslations(language);
 
     return (
         <AppContext.Provider
