@@ -234,14 +234,7 @@ class EmailNotificationTest extends TestCase
             return $mail->hasTo($user->email) && $mail->eventType === 'duplicated';
         });
 
-        // 4. Download PDF
-        $this->actingAs($user)->get(route('projects.pdf', $project));
-
-        Mail::assertSent(ProjectNotificationMail::class, function ($mail) use ($user) {
-            return $mail->hasTo($user->email) && $mail->eventType === 'pdf_downloaded';
-        });
-
-        // 5. Delete Project
+        // 4. Delete Project
         $this->actingAs($user)->delete(route('projects.destroy', $project));
 
         Mail::assertSent(ProjectNotificationMail::class, function ($mail) use ($user) {

@@ -27,16 +27,18 @@ import {
     Trash2,
     X,
     Fingerprint,
-    Lightbulb,
-    Wrench,
     Share2,
-    Tag
+    Tag,
+    Printer,
+    Image as ImageIcon,
+    Loader2
 } from 'lucide-react';
 import { useApp } from '../../Context/AppContext';
 import { useAlert } from '../../Context/AlertContext';
 import AdminLayout from '../../Layouts/AdminLayout';
 import ProjectPreview from '../../Components/Admin/ProjectPreview';
 import { stripHtml } from '../../Utils/text';
+import { downloadFlyerAsPng, printFlyer } from '../../Utils/flyerExport';
 
 export default function Dashboard({ auth, stats, category_distribution = [], recent_projects = [] }) {
     const { t, language } = useApp();
@@ -46,10 +48,30 @@ export default function Dashboard({ auth, stats, category_distribution = [], rec
 
     const user = auth?.user || { name: 'Administrator', email: 'admin@stasrg.internal', role: 'admin' };
 
-    // State for local table search and status filtering
     const [projectSearch, setProjectSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [previewModalProject, setPreviewModalProject] = useState(null);
+    const [modalPngLoading, setModalPngLoading] = useState(false);
+
+    const handleModalDownloadPng = async () => {
+        if (!previewModalProject || modalPngLoading) return;
+        setModalPngLoading(true);
+        try {
+            const canvasId = `flyer-canvas-${previewModalProject.slug || previewModalProject.id}`;
+            const filename = `${previewModalProject.name.replace(/\s+/g, '_').toLowerCase()}_flyer_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.png`;
+            await downloadFlyerAsPng(canvasId, filename);
+        } catch (error) {
+            console.error('Modal PNG export error:', error);
+        } finally {
+            setModalPngLoading(false);
+        }
+    };
+
+    const handleModalPrint = () => {
+        if (!previewModalProject) return;
+        const canvasId = `flyer-canvas-${previewModalProject.slug || previewModalProject.id}`;
+        printFlyer(canvasId, `Flyer - ${previewModalProject.title || previewModalProject.name}`);
+    };
 
     // Current Date formatted nicely
     const currentDateFormatted = useMemo(() => {
@@ -115,7 +137,7 @@ export default function Dashboard({ auth, stats, category_distribution = [], rec
                             </div>
 
                             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                                {(d.welcome || 'Selamat Datang, {name} 👋').replace('{name}', user.name)}
+                                {(d.welcome || 'Selamat Datang, {name}').replace('{name}', user.name)}
                             </h1>
                             <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
                                 {d.subtitle || 'Kelola seluruh lembar informasi riset, flyer publikasi berstandar resmi A4, dan terbitkan inovasi teknologi ke showcase publik landing page.'}
@@ -427,16 +449,14 @@ export default function Dashboard({ auth, stats, category_distribution = [], rec
                                                                 <Edit3 className="w-4 h-4" />
                                                             </Link>
 
-                                                            {/* Download PDF */}
-                                                            <a
-                                                                href={`/projects/${project.slug}/pdf`}
-                                                                target="_blank"
-                                                                rel="noreferrer"
-                                                                title={d.actionDownload || 'Download PDF Flyer'}
+                                                            {/* View / Preview */}
+                                                            <Link
+                                                                href={`/projects/${project.slug}`}
+                                                                title={d.actionQuickView || 'Lihat Flyer'}
                                                                 className="p-1.5 rounded-lg text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                                                             >
-                                                                <Download className="w-4 h-4" />
-                                                            </a>
+                                                                <FileText className="w-4 h-4" />
+                                                            </Link>
 
                                                             {/* Duplicate */}
                                                             <button
@@ -598,21 +618,41 @@ export default function Dashboard({ auth, stats, category_distribution = [], rec
                             <div className="flex items-center gap-2">
                                 <Link
                                     href={`/projects/${previewModalProject.slug}/edit`}
-                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 text-xs font-semibold transition-all"
+                                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 text-xs font-semibold transition-all"
                                 >
                                     <Edit3 className="w-3.5 h-3.5" />
                                     <span>{d.modalEdit || 'Edit'}</span>
                                 </Link>
 
-                                <a
-                                    href={`/projects/${previewModalProject.slug}/pdf`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0D5A34] hover:bg-[#094226] text-white text-xs font-bold shadow-sm transition-all"
+                                <button
+                                    type="button"
+                                    onClick={handleModalPrint}
+                                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 text-xs font-semibold transition-all cursor-pointer"
+                                    title="Cetak atau Simpan sebagai PDF via browser (Ctrl+P)"
                                 >
-                                    <Download className="w-4 h-4" />
-                                    <span>{d.modalDownload || 'Download PDF'}</span>
-                                </a>
+                                    <Printer className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
+                                    <span>Print / Simpan PDF</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={handleModalDownloadPng}
+                                    disabled={modalPngLoading}
+                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0D5A34] hover:bg-[#094226] text-white text-xs font-semibold shadow-sm transition-all cursor-pointer disabled:cursor-wait"
+                                    title="Download Gambar PNG Resolusi Tinggi (300 DPI)"
+                                >
+                                    {modalPngLoading ? (
+                                        <>
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                            <span>PNG...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <ImageIcon className="w-3.5 h-3.5" />
+                                            <span>Download PNG</span>
+                                        </>
+                                    )}
+                                </button>
 
                                 <button
                                     type="button"

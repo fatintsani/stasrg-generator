@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '../../Layouts/AdminLayout';
 import { useApp } from '../../Context/AppContext';
 import { useAlert } from '../../Context/AlertContext';
+import { compressImage } from '../../Utils/imageCompressor';
 import {
     Settings as SettingsIcon,
     Plus,
@@ -42,7 +43,12 @@ import {
     Database,
     Activity,
     Power,
-    ShieldAlert
+    ShieldAlert,
+    Sparkles,
+    Bot,
+    XCircle,
+    FlaskConical,
+    Lightbulb
 } from 'lucide-react';
 
 function IndonesiaFlag({ className = "w-4 h-3" }) {
@@ -74,9 +80,10 @@ function EnglishFlag({ className = "w-4 h-3" }) {
     );
 }
 
-export default function Settings({ user, passkeys = [], projectStats = {}, systemInfo = {} }) {
+export default function Settings({ user, passkeys = [], projectStats = {}, systemInfo = {}, aiSettings = {} }) {
     const { theme, setTheme, language, setLanguage, t } = useApp();
     const s = t?.admin?.settings || {};
+    const aiTrans = t?.aiSettings || {};
     const { showSuccess, showError, showWarning, showConfirm } = useAlert();
     const [isEnrolling, setIsEnrolling] = useState(false);
     const [deletingPasskeyId, setDeletingPasskeyId] = useState(null);
@@ -87,6 +94,9 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
     const [avatarPreview, setAvatarPreview] = useState(null);
     const [isSavingProfile, setIsSavingProfile] = useState(false);
     const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
+    const [isCompressingAvatar, setIsCompressingAvatar] = useState(false);
+    const [avatarCompressionProgress, setAvatarCompressionProgress] = useState(null);
+    const [avatarCompressionStats, setAvatarCompressionStats] = useState(null);
     const fileInputRef = useRef(null);
 
     // Password form state
@@ -103,6 +113,16 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
     const [isClearingCache, setIsClearingCache] = useState(false);
     const [isOptimizing, setIsOptimizing] = useState(false);
 
+    // AI Configuration state
+    const [aiProvider, setAiProvider] = useState(aiSettings?.ai_provider || 'gemini');
+    const [aiModel, setAiModel] = useState(aiSettings?.ai_model || 'gemini-3.6-flash');
+    const [aiApiKey, setAiApiKey] = useState(aiSettings?.masked_api_key || '');
+    const [aiCustomEndpoint, setAiCustomEndpoint] = useState(aiSettings?.custom_endpoint || '');
+    const [showAiApiKey, setShowAiApiKey] = useState(false);
+    const [isSavingAi, setIsSavingAi] = useState(false);
+    const [isTestingAi, setIsTestingAi] = useState(false);
+    const [aiTestResult, setAiTestResult] = useState(null);
+
     // Synchronize profileName when user prop updates
     useEffect(() => {
         if (user?.name) {
@@ -110,8 +130,97 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
         }
     }, [user?.name]);
 
-    // Handle avatar file selection
-    const handleAvatarSelect = (e) => {
+    // Handle saving AI Settings
+    const handleSaveAiSettings = (e) => {
+        e.preventDefault();
+        setIsSavingAi(true);
+
+        const payload = {
+            ai_provider: aiProvider,
+            ai_model: aiModel,
+            custom_endpoint: aiCustomEndpoint,
+        };
+
+        // Only send api_key if it's not the masked placeholder
+        if (aiApiKey && !aiApiKey.includes('••••')) {
+            payload.api_key = aiApiKey;
+        }
+
+        router.post('/settings/ai', payload, {
+            preserveScroll: true,
+            onSuccess: () => {
+                showSuccess(
+                    aiTrans.saveSuccessTitle || 'Konfigurasi AI Disimpan',
+                    aiTrans.saveSuccessMsg || 'Pengaturan model dan API Key AI berhasil disimpan dan dienkripsi.'
+                );
+                setIsSavingAi(false);
+            },
+            onError: (err) => {
+                showError(
+                    aiTrans.saveFailTitle || 'Gagal Menyimpan AI',
+                    Object.values(err)[0] || 'Terjadi kesalahan saat menyimpan konfigurasi AI.'
+                );
+                setIsSavingAi(false);
+            },
+            onFinish: () => {
+                setIsSavingAi(false);
+            }
+        });
+    };
+
+    // Handle Live AI Connection Test
+    const handleTestAiConnection = async () => {
+        setIsTestingAi(true);
+        setAiTestResult(null);
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+        try {
+            const res = await fetch('/settings/ai/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({
+                    provider: aiProvider,
+                    model: aiModel,
+                    api_key: aiApiKey && !aiApiKey.includes('••••') ? aiApiKey : null,
+                    custom_endpoint: aiCustomEndpoint || null,
+                }),
+            });
+
+            const data = await res.json();
+            setAiTestResult(data);
+
+            if (data.success) {
+                showSuccess(
+                    aiTrans.testSuccessTitle || 'Koneksi AI Berhasil!',
+                    `${aiTrans.testSuccessMsg || 'Terhubung dengan'} ${data.model} (${data.latency_ms} ms)`
+                );
+            } else {
+                showError(
+                    aiTrans.testFailTitle || 'Koneksi AI Gagal',
+                    data.error || data.message || 'Tidak dapat terhubung ke server API AI.'
+                );
+            }
+        } catch (err) {
+            const fallbackResult = {
+                success: false,
+                error: err.message || 'Network error saat menghubungi server.',
+                hint: 'Periksa koneksi internet Anda atau periksa kembali API Key.',
+            };
+            setAiTestResult(fallbackResult);
+            showError(aiTrans.testFailTitle || 'Koneksi AI Gagal', fallbackResult.error);
+        } finally {
+            setIsTestingAi(false);
+        }
+    };
+
+    // Handle avatar file selection with automatic compression
+    const handleAvatarSelect = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -123,22 +232,48 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
             return;
         }
 
-        if (file.size > 5 * 1024 * 1024) {
-            showError(
-                s.alertSizeTooBigTitle || 'Ukuran Terlalu Besar',
-                s.alertSizeTooBigMsg || 'Ukuran foto profil maksimal adalah 5MB.'
-            );
+        if (file.type === 'image/svg+xml') {
+            setAvatarFile(file);
+            setAvatarPreview(URL.createObjectURL(file));
+            setAvatarCompressionStats(null);
             return;
         }
 
-        setAvatarFile(file);
-        setAvatarPreview(URL.createObjectURL(file));
+        try {
+            setIsCompressingAvatar(true);
+            setAvatarCompressionProgress({ stage: 'Mempersiapkan foto profil...', percent: 10 });
+
+            const result = await compressImage(file, {
+                maxSizeMB: 2,
+                maxWidth: 1200,
+                maxHeight: 1200,
+                initialQuality: 0.90,
+                onProgress: (p) => setAvatarCompressionProgress(p),
+            });
+
+            setAvatarFile(result.file);
+            setAvatarPreview(result.previewUrl);
+            setAvatarCompressionStats(result);
+
+            if (result.wasCompressed) {
+                showSuccess(
+                    'Foto Profil Dikompresi',
+                    `Ukuran foto diperkecil dari ${result.originalSizeStr} menjadi ${result.compressedSizeStr} (Hemat ${result.savedPercent}%).`
+                );
+            }
+        } catch (err) {
+            showError('Gagal Memproses Foto', err.message || 'Terjadi kesalahan saat mengompresi foto profil.');
+        } finally {
+            setIsCompressingAvatar(false);
+            setAvatarCompressionProgress(null);
+        }
     };
 
     // Cancel new selected avatar
     const handleCancelNewAvatar = () => {
         setAvatarFile(null);
         setAvatarPreview(null);
+        setAvatarCompressionStats(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
@@ -530,7 +665,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                 {s.projectSectionTitle || 'Pembuatan & Input Proyek Baru'}
                             </h2>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                                {s.projectSectionDesc || 'Buat visual lembar informasi riset resmi: input detail produk, spesifikasi, problem–solution, serta otomatis buat QR Code dan ekspor PDF resolusi tinggi.'}
+                                {s.projectSectionDesc || 'Buat visual lembar informasi riset resmi: input detail produk, spesifikasi, problem–solution, serta otomatis buat QR Code, cetak/simpan PDF, dan unduh gambar PNG resolusi tinggi.'}
                             </p>
                             
                             {/* Stats badges */}
@@ -678,6 +813,233 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                     </button>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Section: Integrasi AI & Konfigurasi API Key (AI Assistant Engine) */}
+                        <div className="bg-white dark:bg-[#121824] p-5 sm:p-6 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs space-y-5">
+                            
+                            {/* Card Header */}
+                            <div className="flex items-center justify-between gap-4 pb-4 border-b border-zinc-100 dark:border-zinc-800/80">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-xl bg-gradient-to-br from-[#0D5A34] to-emerald-600 text-white shadow-xs">
+                                        <Sparkles className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                            <span>{aiTrans.cardTitle || 'Integrasi Kecerdasan Buatan'}</span>
+                                        </h3>
+                                        <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400">
+                                            {aiTrans.cardDesc || 'Konfigurasikan API Key AI untuk mengaktifkan fitur Magic Assist: generate konten formulir otomatis, problem-solution, manfaat, dan spesifikasi riset.'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <span
+                                    className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border shrink-0 flex items-center gap-1.5 ${
+                                        aiSettings?.has_api_key
+                                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                                            : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                                    }`}
+                                >
+                                    <span className={`w-1.5 h-1.5 rounded-full ${aiSettings?.has_api_key ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+                                    {aiSettings?.has_api_key ? (aiTrans.statusConfigured || 'API Key Terpasang') : (aiTrans.statusNotConfigured || 'Belum Dikonfigurasi')}
+                                </span>
+                            </div>
+
+                            <form onSubmit={handleSaveAiSettings} className="space-y-4">
+                                
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {/* AI Provider */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
+                                            {aiTrans.labelProvider || 'Provider AI'}
+                                        </label>
+                                        <select
+                                            value={aiProvider}
+                                            onChange={(e) => {
+                                                const prov = e.target.value;
+                                                setAiProvider(prov);
+                                                if (prov === 'gemini') setAiModel('gemini-3.6-flash');
+                                                else if (prov === 'openai') setAiModel('gpt-4o-mini');
+                                            }}
+                                            className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-[#0D5A34]"
+                                        >
+                                            <option value="gemini">Google Gemini AI (Direkomendasikan)</option>
+                                            <option value="openai">OpenAI (ChatGPT / Custom Endpoint)</option>
+                                        </select>
+                                    </div>
+
+                                    {/* AI Model */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
+                                            {aiTrans.labelModel || 'Model AI'}
+                                        </label>
+                                        <select
+                                            value={aiModel}
+                                            onChange={(e) => setAiModel(e.target.value)}
+                                            className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-[#0D5A34]"
+                                        >
+                                            {aiProvider === 'gemini' ? (
+                                                <>
+                                                    <option value="gemini-3.6-flash">Gemini 3.6 Flash (Direkomendasikan, Cepat & Cerdas)</option>
+                                                    <option value="gemini-3.6-pro">Gemini 3.6 Pro (Penalaran Kompleks & Riset Mendalam)</option>
+                                                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                                                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                                                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <option value="gpt-4o-mini">GPT-4o Mini</option>
+                                                    <option value="gpt-4o">GPT-4o</option>
+                                                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                                </>
+                                            )}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* API Key Input */}
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+                                            <KeyRound className="w-3.5 h-3.5 text-emerald-600" />
+                                            <span>{aiTrans.labelApiKey || 'API Key AI'}</span>
+                                        </label>
+                                        {aiProvider === 'gemini' && (
+                                            <a
+                                                href="https://aistudio.google.com/app/apikey"
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-semibold"
+                                            >
+                                                <span>Dapatkan API Key Gemini Gratis</span>
+                                                <ExternalLink className="w-3 h-3" />
+                                            </a>
+                                        )}
+                                    </div>
+                                    <div className="relative">
+                                        <input
+                                            type={showAiApiKey ? "text" : "password"}
+                                            value={aiApiKey}
+                                            onChange={(e) => setAiApiKey(e.target.value)}
+                                            placeholder={aiSettings?.has_api_key ? "API Key tersimpan (masukkan baru untuk mengganti)" : "Masukkan Google Gemini API Key (AIzaSy...)"}
+                                            className="w-full px-3 py-2 pr-10 text-xs font-mono bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-[#0D5A34] transition-colors"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowAiApiKey(!showAiApiKey)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
+                                        >
+                                            {showAiApiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                        </button>
+                                    </div>
+                                    <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                                        {aiTrans.apiKeySecurityNotice || 'API Key disimpan dengan enkripsi AES-256 di database server dan tidak akan pernah dibocorkan ke publik.'}
+                                    </p>
+                                </div>
+
+                                {/* Custom Endpoint (Only if OpenAI) */}
+                                {aiProvider === 'openai' && (
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
+                                            Custom Base URL Endpoint (Opsional)
+                                        </label>
+                                        <input
+                                            type="url"
+                                            value={aiCustomEndpoint}
+                                            onChange={(e) => setAiCustomEndpoint(e.target.value)}
+                                            placeholder="https://api.openai.com/v1"
+                                            className="w-full px-3 py-2 text-xs font-mono bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-[#0D5A34]"
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Action Buttons: Test Connection & Save */}
+                                <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+                                    {/* Test Connection Button */}
+                                    <button
+                                        type="button"
+                                        onClick={handleTestAiConnection}
+                                        disabled={isTestingAi || isSavingAi || (!aiSettings?.has_api_key && !aiApiKey)}
+                                        className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 text-slate-800 dark:text-zinc-200 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                                    >
+                                        {isTestingAi ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+                                                <span>{aiTrans.testingConnection || 'Menguji Koneksi API...'}</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FlaskConical className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                                <span>{aiTrans.btnTestConnection || 'Tes Koneksi API'}</span>
+                                            </>
+                                        )}
+                                    </button>
+
+                                    {/* Save Button */}
+                                    <button
+                                        type="submit"
+                                        disabled={isSavingAi || isTestingAi}
+                                        className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0D5A34] hover:bg-[#094226] text-white text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                                    >
+                                        {isSavingAi ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                <span>{aiTrans.savingSettings || 'Menyimpan...'}</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Check className="w-4 h-4" />
+                                                <span>{aiTrans.btnSaveSettings || 'Simpan Konfigurasi AI'}</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+
+                            {/* Live Test Diagnostic Result Banner */}
+                            {aiTestResult && (
+                                <div className={`p-4 rounded-xl border text-xs transition-all animate-in fade-in duration-200 ${
+                                    aiTestResult.success
+                                        ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800/80 text-emerald-950 dark:text-emerald-200'
+                                        : 'bg-rose-50/80 dark:bg-rose-950/30 border-rose-300 dark:border-rose-800/80 text-rose-950 dark:text-rose-200'
+                                }`}>
+                                    <div className="flex items-start gap-3">
+                                        {aiTestResult.success ? (
+                                            <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                                        ) : (
+                                            <XCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                                        )}
+                                        <div className="space-y-1 flex-1">
+                                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                                <p className="font-bold text-xs">
+                                                    {aiTestResult.success ? 'Koneksi AI Terverifikasi & Aktif' : 'Koneksi AI Gagal'}
+                                                </p>
+                                                {aiTestResult.latency_ms && (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-white/80 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+                                                        <Activity className="w-3 h-3 text-emerald-500" />
+                                                        <span>{aiTestResult.latency_ms} ms</span>
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <p className="text-[11px] leading-relaxed opacity-90">
+                                                {aiTestResult.success
+                                                    ? `API Key valid. Model ${aiTestResult.model || aiModel} (${aiTestResult.provider || aiProvider}) siap digunakan untuk pembuatan project otomatis.`
+                                                    : (aiTestResult.error || aiTestResult.message || 'Tidak dapat terhubung ke server AI.')}
+                                            </p>
+
+                                            {aiTestResult.hint && (
+                                                <div className="flex items-start gap-1.5 text-[11px] text-amber-800 dark:text-amber-300 pt-1">
+                                                    <Lightbulb className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                                                    <span><strong className="font-semibold">Solusi:</strong> {aiTestResult.hint}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                         </div>
 
                         {/* Section: Pemeliharaan & Kontrol Status Sistem (Maintenance & Diagnostics) */}
@@ -1036,44 +1398,70 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                         </button>
                                     </div>
 
-                                    <div className="flex-1 min-w-0 space-y-1.5">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => fileInputRef.current?.click()}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
-                                            >
-                                                <Upload className="w-3.5 h-3.5" />
-                                                <span>{avatarPreview ? (s.btnChangeChoice || 'Ganti Pilihan') : (s.btnChoosePhoto || 'Pilih Foto')}</span>
-                                            </button>
+                                    <div className="flex-1 min-w-0 space-y-2">
+                                        {isCompressingAvatar ? (
+                                            <div className="p-3 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/70 dark:bg-emerald-950/30 space-y-1.5 animate-in fade-in">
+                                                <div className="flex items-center justify-between text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                                                    <div className="flex items-center gap-2">
+                                                        <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600 dark:text-emerald-400" />
+                                                        <span className="text-[11px]">{avatarCompressionProgress?.stage || 'Mengompresi foto otomatis...'}</span>
+                                                    </div>
+                                                    <span className="text-[11px] font-mono">{avatarCompressionProgress?.percent || 0}%</span>
+                                                </div>
+                                                <div className="w-full bg-emerald-200 dark:bg-emerald-900 rounded-full h-1.5 overflow-hidden">
+                                                    <div
+                                                        className="bg-[#0D5A34] dark:bg-emerald-400 h-1.5 rounded-full transition-all duration-300"
+                                                        style={{ width: `${avatarCompressionProgress?.percent || 15}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+                                                >
+                                                    <Upload className="w-3.5 h-3.5" />
+                                                    <span>{avatarPreview ? (s.btnChangeChoice || 'Ganti Pilihan') : (s.btnChoosePhoto || 'Pilih Foto')}</span>
+                                                </button>
 
-                                            {avatarPreview ? (
-                                                <button
-                                                    type="button"
-                                                    onClick={handleCancelNewAvatar}
-                                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                                                >
-                                                    <X className="w-3.5 h-3.5" />
-                                                    <span>{s.btnCancelChoice || 'Batal'}</span>
-                                                </button>
-                                            ) : (user?.avatar_url || user?.avatar) ? (
-                                                <button
-                                                    type="button"
-                                                    onClick={handleDeleteCurrentAvatar}
-                                                    disabled={isRemovingAvatar}
-                                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer disabled:opacity-50"
-                                                >
-                                                    {isRemovingAvatar ? (
-                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                    ) : (
-                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                    )}
-                                                    <span>{s.btnDeletePhoto || 'Hapus Foto'}</span>
-                                                </button>
-                                            ) : null}
-                                        </div>
+                                                {avatarPreview ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleCancelNewAvatar}
+                                                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                                                    >
+                                                        <X className="w-3.5 h-3.5" />
+                                                        <span>{s.btnCancelChoice || 'Batal'}</span>
+                                                    </button>
+                                                ) : (user?.avatar_url || user?.avatar) ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleDeleteCurrentAvatar}
+                                                        disabled={isRemovingAvatar}
+                                                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer disabled:opacity-50"
+                                                    >
+                                                        {isRemovingAvatar ? (
+                                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                        ) : (
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        )}
+                                                        <span>{s.btnDeletePhoto || 'Hapus Foto'}</span>
+                                                    </button>
+                                                ) : null}
+                                            </div>
+                                        )}
+
+                                        {avatarCompressionStats?.wasCompressed && (
+                                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300">
+                                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                                <span>Dikompresi: {avatarCompressionStats.originalSizeStr} &rarr; {avatarCompressionStats.compressedSizeStr} (Hemat {avatarCompressionStats.savedPercent}%)</span>
+                                            </div>
+                                        )}
+
                                         <p className="text-[10px] text-zinc-400 dark:text-zinc-500">
-                                            {s.photoHint || 'Format JPG, PNG, atau WebP. Maksimal 5MB.'}
+                                            {s.photoHint || 'Format JPG, PNG, atau WebP. Gambar berukuran besar otomatis dikompresi.'}
                                         </p>
                                     </div>
                                 </div>
@@ -1227,12 +1615,22 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                     <label className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 flex items-center justify-between">
                                         <span>{s.labelConfirmPassword || 'Konfirmasi Kata Sandi Baru'}</span>
                                         {confirmPassword && (
-                                            <span className={`text-[10px] font-medium ${
+                                            <span className={`inline-flex items-center gap-1 text-[10px] font-semibold ${
                                                 newPassword === confirmPassword
                                                     ? 'text-emerald-600 dark:text-emerald-400'
                                                     : 'text-rose-500'
                                             }`}>
-                                                {newPassword === confirmPassword ? '✓ Cocok' : '✕ Tidak Cocok'}
+                                                {newPassword === confirmPassword ? (
+                                                    <>
+                                                        <Check className="w-3 h-3" />
+                                                        <span>Cocok</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <X className="w-3 h-3" />
+                                                        <span>Tidak Cocok</span>
+                                                    </>
+                                                )}
                                             </span>
                                         )}
                                     </label>

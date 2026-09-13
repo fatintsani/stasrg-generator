@@ -46,6 +46,7 @@ class ProjectFactory extends Factory
             'footer_website' => 'tel-u.ac.id/stasrg',
             'footer_instagram' => '@stas.rg',
             'footer_youtube' => '@stas_rg',
+            'layout_preset' => 'balanced',
             'status' => fake()->randomElement(['draft', 'published']),
         ];
     }

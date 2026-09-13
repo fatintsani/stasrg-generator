@@ -36,6 +36,11 @@ class Project extends Model
         'footer_logo',
         'partner_logo',
         'status',
+        'layout_preset',
+        'doc_format',
+        'color_theme',
+        'print_mode',
+        'boilerplate_type',
     ];
 
     /**

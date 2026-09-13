@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Mail\LoginNotificationMail;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -45,6 +46,14 @@ class AuthenticatedSessionController extends Controller
             ->first();
 
         if (! $user || ! $user->password || ! Hash::check($password, $user->password)) {
+            ActivityLogger::logAuth(
+                action: 'auth.login_failed',
+                description: "Percobaan login gagal untuk identitas \"{$loginInput}\"",
+                user: $user,
+                properties: ['input' => $loginInput, 'reason' => 'invalid_credentials'],
+                request: $request
+            );
+
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
             ]);
@@ -80,6 +89,17 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        ActivityLogger::logAuth(
+            action: 'auth.login',
+            description: "Login berhasil sebagai \"{$user->name}\" via Email/Password",
+            user: $user,
+            properties: [
+                'auth_method' => 'password',
+                'role' => $user->role,
+            ],
+            request: $request
+        );
+
         try {
             Mail::to($user->email)->send(
                 new LoginNotificationMail($user, $request->ip(), $request->userAgent())
@@ -96,6 +116,17 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $user = Auth::user();
+
+        if ($user) {
+            ActivityLogger::logAuth(
+                action: 'auth.logout',
+                description: "Pengguna \"{$user->name}\" berhasil logout",
+                user: $user,
+                request: $request
+            );
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

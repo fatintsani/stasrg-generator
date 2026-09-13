@@ -17,12 +17,10 @@ import {
     QrCode,
     Share2,
     Check,
-    Globe,
-    Layers,
-    ChevronRight,
-    ArrowUpRight,
     Tag,
-    Clock
+    Clock,
+    ChevronRight,
+    Globe
 } from 'lucide-react';
 
 function InstagramIcon({ className = "w-4 h-4" }) {
@@ -348,7 +346,9 @@ function ProjectDetailContent({ project, relatedProjects = [] }) {
                                     </div>
                                 )}
 
-                                {/* 2. Institutional Information Card */}
+
+
+                                {/* 3. Institutional Information Card */}
                                 <div className="bg-white dark:bg-[#121824] rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 p-6 shadow-xs space-y-4">
                                     <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 pb-2 border-b border-zinc-100 dark:border-zinc-800">
                                         Informasi Publikasi Riset
@@ -476,6 +476,8 @@ function ProjectDetailContent({ project, relatedProjects = [] }) {
 
                     </div>
                 </main>
+
+
 
                 {/* Footer */}
                 <Footer />

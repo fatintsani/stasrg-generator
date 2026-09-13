@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../Context/AppContext';
 import { useAlert } from '../../Context/AlertContext';
+import GlobalSearchModal from './GlobalSearchModal';
 
 function IndonesiaFlag({ className = "w-5 h-3.5" }) {
     return (
@@ -55,7 +56,21 @@ export default function AdminHeader({
     const user = props.auth?.user || { name: 'Admin', email: 'admin@stasrg.com' };
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
     const dropdownRef = useRef(null);
+
+    // Global shortcut Cmd+K / Ctrl+K and /
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                setIsSearchOpen((prev) => !prev);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     // Close dropdown on click outside
     useEffect(() => {
@@ -99,22 +114,34 @@ export default function AdminHeader({
                         <Menu className="w-5 h-5 md:hidden" />
                     </button>
 
-                    {/* Global Search Input */}
+                    {/* Global Search Interactive Trigger */}
                     <div className="relative w-full hidden sm:block">
-                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400">
-                            <Search className="w-4 h-4" />
-                        </div>
-                        <input
-                            type="text"
-                            placeholder={t.admin?.header?.searchPlaceholder || 'Cari proyek atau template...'}
-                            className="w-full pl-10 pr-16 py-2 rounded-full bg-zinc-100/80 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800/80 text-xs text-slate-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0D5A34] dark:focus:border-emerald-500 transition-colors"
-                        />
-                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                            <kbd className="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
+                        <button
+                            type="button"
+                            onClick={() => setIsSearchOpen(true)}
+                            className="w-full flex items-center justify-between pl-3.5 pr-3 py-2 rounded-full bg-zinc-100/90 dark:bg-zinc-900/90 hover:bg-zinc-200/70 dark:hover:bg-zinc-800/80 border border-zinc-200/80 dark:border-zinc-800/80 text-xs text-left transition-all cursor-pointer group shadow-2xs"
+                        >
+                            <div className="flex items-center gap-2.5 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300">
+                                <Search className="w-4 h-4 text-zinc-400 group-hover:text-[#0D5A34] dark:group-hover:text-emerald-400 transition-colors" />
+                                <span className="truncate">
+                                    {t.admin?.header?.searchPlaceholder || 'Cari proyek, deliverable, atau template dokumen...'}
+                                </span>
+                            </div>
+                            <kbd className="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-2xs">
                                 ⌘K
                             </kbd>
-                        </div>
+                        </button>
                     </div>
+
+                    {/* Mobile Search Icon Button */}
+                    <button
+                        type="button"
+                        onClick={() => setIsSearchOpen(true)}
+                        className="p-2 rounded-xl text-zinc-500 hover:text-slate-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors sm:hidden cursor-pointer"
+                        title="Cari Proyek & Navigasi"
+                    >
+                        <Search className="w-5 h-5" />
+                    </button>
                 </div>
 
                 {/* Right: Controls & Profile */}
@@ -227,6 +254,12 @@ export default function AdminHeader({
                     </div>
                 </div>
             </div>
+
+            {/* Global Spotlight Search Command Palette */}
+            <GlobalSearchModal
+                isOpen={isSearchOpen}
+                onClose={() => setIsSearchOpen(false)}
+            />
         </header>
     );
 }

@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Mail\ProfileUpdatedMail;
 use App\Models\Project;
+use App\Models\SystemSetting;
+use App\Services\ActivityLogger;
+use App\Services\AiAssistantService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -36,6 +40,16 @@ class SettingsController extends Controller
             'draft' => Project::where('status', 'draft')->count(),
         ];
 
+        // AI Assistant configuration
+        $savedApiKey = SystemSetting::get('ai_api_key');
+        $aiSettings = [
+            'provider' => SystemSetting::get('ai_provider', 'gemini'),
+            'model' => SystemSetting::get('ai_model', 'gemini-2.5-flash'),
+            'has_api_key' => ! empty($savedApiKey),
+            'masked_api_key' => SystemSetting::maskSecret($savedApiKey),
+            'custom_endpoint' => SystemSetting::get('ai_custom_endpoint', ''),
+        ];
+
         // System information and maintenance diagnostics
         $systemInfo = [
             'is_maintenance_mode' => app()->isDownForMaintenance(),
@@ -63,8 +77,77 @@ class SettingsController extends Controller
             ],
             'passkeys' => $passkeys,
             'projectStats' => $projectStats,
+            'aiSettings' => $aiSettings,
             'systemInfo' => $systemInfo,
         ]);
+    }
+
+    /**
+     * Update AI provider configuration and API key.
+     */
+    public function updateAiSettings(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ai_provider' => ['required', 'string', 'in:gemini,openai'],
+            'ai_model' => ['required', 'string', 'max:100'],
+            'api_key' => ['nullable', 'string', 'max:255'],
+            'ai_api_key' => ['nullable', 'string', 'max:255'],
+            'custom_endpoint' => ['nullable', 'string', 'max:255'],
+            'ai_custom_endpoint' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        SystemSetting::set('ai_provider', $validated['ai_provider']);
+        SystemSetting::set('ai_model', $validated['ai_model']);
+
+        $apiKey = $validated['api_key'] ?? $validated['ai_api_key'] ?? null;
+        if (! empty($apiKey)) {
+            SystemSetting::set('ai_api_key', trim($apiKey), 'encrypted');
+        }
+
+        $endpoint = $validated['custom_endpoint'] ?? $validated['ai_custom_endpoint'] ?? null;
+        if ($endpoint !== null) {
+            SystemSetting::set('ai_custom_endpoint', $endpoint);
+        }
+
+        ActivityLogger::logSystem(
+            action: 'settings.ai_updated',
+            description: "Memperbarui konfigurasi AI Assistant ({$validated['ai_provider']} - {$validated['ai_model']})",
+            properties: [
+                'provider' => $validated['ai_provider'],
+                'model' => $validated['ai_model'],
+                'has_new_key' => ! empty($apiKey),
+            ],
+            user: $request->user(),
+            request: $request
+        );
+
+        return back()->with('success', 'Konfigurasi AI Assistant berhasil disimpan!')->with('message', 'Konfigurasi AI Assistant berhasil disimpan!');
+    }
+
+    /**
+     * Test AI API key connection and return diagnostic result.
+     */
+    public function testAiConnection(Request $request): JsonResponse
+    {
+        $apiKey = $request->input('api_key');
+        $provider = $request->input('provider', 'gemini');
+        $model = $request->input('model', 'gemini-3.6-flash');
+
+        $result = AiAssistantService::testConnection($apiKey, $provider, $model);
+
+        ActivityLogger::logSystem(
+            action: 'system.ai_connection_tested',
+            description: $result['success']
+                ? "Uji coba koneksi AI ({$provider} - {$model}) berhasil ({$result['latency_ms']} ms)"
+                : "Uji coba koneksi AI ({$provider} - {$model}) gagal",
+            properties: $result,
+            user: $request->user(),
+            request: $request
+        );
+
+        $status = $result['success'] ? 200 : 422;
+
+        return response()->json($result, $status);
     }
 
     /**
@@ -77,7 +160,7 @@ class SettingsController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'username' => ['nullable', 'string', 'max:255', 'alpha_dash', 'unique:users,username,'.$user->id],
-            'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:3072'],
+            'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
         ]);
 
         if ($request->hasFile('avatar')) {
@@ -99,6 +182,15 @@ class SettingsController extends Controller
         } catch (\Throwable $e) {
             Log::warning('Failed to send profile updated email: '.$e->getMessage());
         }
+
+        ActivityLogger::logUser(
+            action: 'settings.profile_updated',
+            description: "Memperbarui informasi profil akun \"{$user->name}\"",
+            subjectUser: $user,
+            properties: ['updated_fields' => array_keys($validated)],
+            actor: $user,
+            request: $request
+        );
 
         return back()->with('success', 'Profil dan foto berhasil diperbarui.')->with('message', 'Profil dan foto berhasil diperbarui.');
     }
@@ -122,6 +214,13 @@ class SettingsController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
+        ActivityLogger::logAuth(
+            action: 'settings.password_changed',
+            description: "Mengubah kata sandi akun \"{$user->email}\" melalui pengaturan profil",
+            user: $user,
+            request: $request
+        );
+
         return back()->with('success', 'Kata sandi Anda berhasil diperbarui.')->with('message', 'Kata sandi Anda berhasil diperbarui.');
     }
 
@@ -133,10 +232,19 @@ class SettingsController extends Controller
         if (app()->isDownForMaintenance()) {
             Artisan::call('up');
             $message = 'Mode pemeliharaan dinonaktifkan. Sistem kini kembali online untuk semua pengunjung.';
+            $action = 'system.maintenance_disabled';
         } else {
             Artisan::call('down');
             $message = 'Mode pemeliharaan sistem berhasil diaktifkan.';
+            $action = 'system.maintenance_enabled';
         }
+
+        ActivityLogger::logSystem(
+            action: $action,
+            description: $message,
+            user: $request->user(),
+            request: $request
+        );
 
         return back()->with('success', $message)->with('message', $message);
     }
@@ -154,6 +262,13 @@ class SettingsController extends Controller
             $message = 'Cache aplikasi berhasil dibersihkan.';
         }
 
+        ActivityLogger::logSystem(
+            action: 'system.cache_cleared',
+            description: 'Membersihkan cache aplikasi, view cache, dan route cache sistem',
+            user: $request->user(),
+            request: $request
+        );
+
         return back()->with('success', $message)->with('message', $message);
     }
 
@@ -163,8 +278,13 @@ class SettingsController extends Controller
     public function optimizeSystem(Request $request): RedirectResponse
     {
         try {
-            Artisan::call('optimize');
-            $message = 'Sistem berhasil dioptimasi. Konfigurasi dan rute telah di-cache.';
+            if (app()->environment('production')) {
+                Artisan::call('optimize');
+                $message = 'Sistem produksi berhasil dioptimasi. Konfigurasi dan rute telah di-cache.';
+            } else {
+                Artisan::call('optimize:clear');
+                $message = 'Optimasi lingkungan pengembangan selesai (cache dibersihkan).';
+            }
         } catch (\Throwable $e) {
             Log::error('Failed to optimize system: '.$e->getMessage());
             $message = 'Proses optimasi sistem selesai.';

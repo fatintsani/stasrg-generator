@@ -18,64 +18,71 @@
     $fontExtraBoldB64 = file_exists($extraBoldFontPath) ? base64_encode(file_get_contents($extraBoldFontPath)) : '';
     $fontItalicB64 = file_exists($italicFontPath) ? base64_encode(file_get_contents($italicFontPath)) : '';
 
+    $themeColor = match($project->color_theme ?? 'stas_official') {
+        'ocean_tech' => '#0F2B48',
+        'crimson_innovation' => '#8B1538',
+        'slate_monochrome' => '#1E293B',
+        default => '#0D5A34',
+    };
+
     /*
     * ============================================
     * IKON — didesain ulang mengikuti gaya poster asli:
     * - MANFAAT : ikon tangan polos, tanpa lingkaran latar
     * - SPESIFIKASI: kaca pembesar + gear, dengan outline lingkaran tipis
-    * - PROBLEM-SOLUTION: bohlam putih di dalam lingkaran hijau solid
+    * - PROBLEM-SOLUTION: bohlam putih di dalam lingkaran tema solid
     * ============================================
     */
     $handSvg = 'data:image/svg+xml;base64,' . base64_encode('
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
-        <circle cx="20" cy="20" r="19" fill="none" stroke="#0D5A34" stroke-width="1.6" />
-        <path d="M12 22 Q12 15 20 15 Q28 15 28 22" fill="none" stroke="#0D5A34" stroke-width="1.6" />
-        <path d="M9 24 C9 22 11 21 13 22 L20 25 L27 22 C29 21 31 22 31 24 C31 27 27 30 20 30 C13 30 9 27 9 24 Z" fill="#0D5A34" />
-        <circle cx="20" cy="12" r="3.2" fill="none" stroke="#0D5A34" stroke-width="1.6" />
+        <circle cx="20" cy="20" r="19" fill="none" stroke="' . $themeColor . '" stroke-width="1.6" />
+        <path d="M12 22 Q12 15 20 15 Q28 15 28 22" fill="none" stroke="' . $themeColor . '" stroke-width="1.6" />
+        <path d="M9 24 C9 22 11 21 13 22 L20 25 L27 22 C29 21 31 22 31 24 C31 27 27 30 20 30 C13 30 9 27 9 24 Z" fill="' . $themeColor . '" />
+        <circle cx="20" cy="12" r="3.2" fill="none" stroke="' . $themeColor . '" stroke-width="1.6" />
     </svg>');
 
     $gearSvg = 'data:image/svg+xml;base64,' . base64_encode('
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
-        <circle cx="17" cy="17" r="9" fill="none" stroke="#0D5A34" stroke-width="1.6" />
-        <circle cx="17" cy="17" r="3" fill="none" stroke="#0D5A34" stroke-width="1.6" />
-        <line x1="23.5" y1="23.5" x2="31" y2="31" stroke="#0D5A34" stroke-width="2" stroke-linecap="round" />
-        <path d="M17 6 L18.3 9 L17 10.3 L15.7 9 Z" fill="#0D5A34" />
-        <path d="M28 17 L25 18.3 L23.7 17 L25 15.7 Z" fill="#0D5A34" />
-        <path d="M17 28 L15.7 25 L17 23.7 L18.3 25 Z" fill="#0D5A34" />
-        <path d="M6 17 L9 15.7 L10.3 17 L9 18.3 Z" fill="#0D5A34" />
+        <circle cx="17" cy="17" r="9" fill="none" stroke="' . $themeColor . '" stroke-width="1.6" />
+        <circle cx="17" cy="17" r="3" fill="none" stroke="' . $themeColor . '" stroke-width="1.6" />
+        <line x1="23.5" y1="23.5" x2="31" y2="31" stroke="' . $themeColor . '" stroke-width="2" stroke-linecap="round" />
+        <path d="M17 6 L18.3 9 L17 10.3 L15.7 9 Z" fill="' . $themeColor . '" />
+        <path d="M28 17 L25 18.3 L23.7 17 L25 15.7 Z" fill="' . $themeColor . '" />
+        <path d="M17 28 L15.7 25 L17 23.7 L18.3 25 Z" fill="' . $themeColor . '" />
+        <path d="M6 17 L9 15.7 L10.3 17 L9 18.3 Z" fill="' . $themeColor . '" />
     </svg>');
 
     $bulbSvg = 'data:image/svg+xml;base64,' . base64_encode('
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
-        <circle cx="20" cy="20" r="19" fill="#0D5A34" />
+        <circle cx="20" cy="20" r="19" fill="' . $themeColor . '" />
         <path d="M20 8 C15 8 12 12 12 16 C12 19 13.5 21 15.5 22.5 L15.5 26 L24.5 26 L24.5 22.5 C26.5 21 28 19 28 16 C28 12 25 8 20 8 Z" fill="none" stroke="#ffffff" stroke-width="1.6" />
         <line x1="16" y1="29" x2="24" y2="29" stroke="#ffffff" stroke-width="1.6" />
         <line x1="17" y1="32" x2="23" y2="32" stroke="#ffffff" stroke-width="1.6" />
     </svg>');
 
-    $instagramSvg = 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0D5A34" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    $instagramSvg = 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="' . $themeColor . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
         <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
         <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
     </svg>');
-    $webSvg = 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0D5A34" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    $webSvg = 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="' . $themeColor . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10" />
         <line x1="2" x2="22" y1="12" y2="12" />
         <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
     </svg>');
-    $youtubeSvg = 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0D5A34" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    $youtubeSvg = 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="' . $themeColor . '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17" />
         <polygon points="10 15 15 12 10 9 10 15" />
     </svg>');
 
-    // Ikon lingkaran hijau untuk fallback wordmark "STAS RG" —
+    // Ikon lingkaran untuk fallback wordmark "STAS RG" —
     // dipakai hanya kalau file logo asli tidak ditemukan.
     $stasIconSvg = 'data:image/svg+xml;base64,' . base64_encode('
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
-        <circle cx="20" cy="20" r="18" fill="none" stroke="#0D5A34" stroke-width="3.2" />
-        <path d="M20 2 A18 18 0 0 1 38 20 L28 20 A8 8 0 0 0 20 12 Z" fill="#0D5A34" />
+        <circle cx="20" cy="20" r="18" fill="none" stroke="' . $themeColor . '" stroke-width="3.2" />
+        <path d="M20 2 A18 18 0 0 1 38 20 L28 20 A8 8 0 0 0 20 12 Z" fill="' . $themeColor . '" />
         <rect x="20" y="17" width="14" height="6" fill="#ffffff" />
-        <rect x="26" y="17" width="8" height="12" fill="#0D5A34" />
+        <rect x="26" y="17" width="8" height="12" fill="' . $themeColor . '" />
     </svg>');
 
     // Gambar dari controller (base64 data-uri, mis. "data:image/jpeg;base64,....")
@@ -252,7 +259,7 @@
             font-family: 'Poppins', sans-serif;
             font-size: 16pt;
             font-weight: 800;
-            color: #0d5a34;
+            color: {{ $themeColor }};
             letter-spacing: 0.3px;
             padding-right: 3px;
         }
@@ -270,7 +277,7 @@
 
         .partner-badge {
             display: inline-table;
-            background-color: #0d5a34;
+            background-color: {{ $themeColor }};
             border-radius: 2px;
         }
 
@@ -423,7 +430,7 @@
 
         .section-text a,
         .description a {
-            color: #0d5a34;
+            color: {{ $themeColor }};
             text-decoration: underline;
         }
 
@@ -558,7 +565,7 @@
         }
 
         .showcase-link-url {
-            color: #0d5a34;
+            color: {{ $themeColor }};
             font-weight: 700;
             text-decoration: underline;
             word-break: break-all;

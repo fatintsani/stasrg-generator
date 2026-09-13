@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Mail\ProjectNotificationMail;
 use App\Models\Project;
+use App\Services\ActivityLogger;
+use App\Services\AiAssistantService;
 use App\Services\HtmlSanitizer;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -56,6 +58,7 @@ class ProjectController extends Controller
     {
         return Inertia::render('Admin/Projects/Form', [
             'project' => null,
+            'categories' => $this->getAvailableCategories(),
         ]);
     }
 
@@ -70,7 +73,7 @@ class ProjectController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'subtitle' => ['nullable', 'string', 'max:255'],
-            'main_image' => ['nullable', 'image', 'max:5120'],
+            'main_image' => ['nullable', 'image', 'max:10240'],
             'benefits' => ['nullable', 'array'],
             'specifications' => ['nullable', 'array'],
             'problem_solution' => ['nullable', 'array'],
@@ -78,8 +81,13 @@ class ProjectController extends Controller
             'footer_website' => ['nullable', 'string', 'max:255'],
             'footer_instagram' => ['nullable', 'string', 'max:255'],
             'footer_youtube' => ['nullable', 'string', 'max:255'],
-            'partner_logo' => ['nullable', 'image', 'max:2048'],
-            'footer_logo' => ['nullable', 'image', 'max:2048'],
+            'partner_logo' => ['nullable', 'file', 'mimes:jpeg,png,jpg,svg,webp', 'max:5120'],
+            'footer_logo' => ['nullable', 'file', 'mimes:jpeg,png,jpg,svg,webp', 'max:5120'],
+            'layout_preset' => ['nullable', 'string', 'in:balanced,visual_heavy,text_heavy'],
+            'doc_format' => ['nullable', 'string', 'in:a4_flyer,roll_banner,factsheet_2col,pitch_poster'],
+            'color_theme' => ['nullable', 'string', 'in:stas_official,ocean_tech,crimson_innovation,slate_monochrome'],
+            'print_mode' => ['nullable', 'string', 'in:light,dark'],
+            'boilerplate_type' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'in:draft,published'],
         ]);
 
@@ -123,6 +131,24 @@ class ProjectController extends Controller
             Log::warning('Failed to send project created email: '.$e->getMessage());
         }
 
+        ActivityLogger::logProject(
+            action: 'project.created',
+            description: "Membuat proyek riset baru \"{$project->name}\"",
+            project: $project,
+            properties: [
+                'name' => $project->name,
+                'title' => $project->title,
+                'category' => $project->category,
+                'status' => $project->status,
+                'layout_preset' => $project->layout_preset,
+                'doc_format' => $project->doc_format,
+                'color_theme' => $project->color_theme,
+                'print_mode' => $project->print_mode,
+            ],
+            user: $request->user(),
+            request: $request
+        );
+
         return redirect()
             ->route('projects.show', $project)
             ->with('success', 'Project berhasil dibuat!');
@@ -149,6 +175,7 @@ class ProjectController extends Controller
 
         return Inertia::render('Admin/Projects/Form', [
             'project' => $project,
+            'categories' => $this->getAvailableCategories(),
         ]);
     }
 
@@ -175,12 +202,17 @@ class ProjectController extends Controller
             'footer_youtube' => ['nullable', 'string', 'max:255'],
             'partner_logo' => ['nullable'],
             'footer_logo' => ['nullable'],
+            'layout_preset' => ['nullable', 'string', 'in:balanced,visual_heavy,text_heavy'],
+            'doc_format' => ['nullable', 'string', 'in:a4_flyer,roll_banner,factsheet_2col,pitch_poster'],
+            'color_theme' => ['nullable', 'string', 'in:stas_official,ocean_tech,crimson_innovation,slate_monochrome'],
+            'print_mode' => ['nullable', 'string', 'in:light,dark'],
+            'boilerplate_type' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'in:draft,published'],
         ]);
 
         if ($request->hasFile('main_image')) {
             $request->validate([
-                'main_image' => ['image', 'max:5120'],
+                'main_image' => ['image', 'max:10240'],
             ]);
             // Delete old image
             if ($project->main_image) {
@@ -194,7 +226,7 @@ class ProjectController extends Controller
 
         if ($request->hasFile('partner_logo')) {
             $request->validate([
-                'partner_logo' => ['image', 'max:2048'],
+                'partner_logo' => ['file', 'mimes:jpeg,png,jpg,svg,webp', 'max:5120'],
             ]);
             if ($project->partner_logo) {
                 Storage::disk('public')->delete($project->partner_logo);
@@ -255,6 +287,20 @@ class ProjectController extends Controller
         } catch (\Throwable $e) {
             Log::warning('Failed to send project update email: '.$e->getMessage());
         }
+
+        ActivityLogger::logProject(
+            action: $oldStatus !== $newStatus ? 'project.status_changed' : 'project.updated',
+            description: "Memperbarui informasi proyek riset \"{$project->name}\"",
+            project: $project,
+            properties: [
+                'name' => $project->name,
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'updated_fields' => array_keys($validated),
+            ],
+            user: $request->user(),
+            request: $request
+        );
 
         return redirect()
             ->route('projects.show', $project)
@@ -324,7 +370,22 @@ class ProjectController extends Controller
             Log::warning('Failed to send project deleted email: '.$e->getMessage());
         }
 
+        $projectName = $project->name;
+        $projectId = $project->id;
+
         $project->delete();
+
+        ActivityLogger::logProject(
+            action: 'project.deleted',
+            description: "Menghapus proyek riset \"{$projectName}\"",
+            project: null,
+            properties: [
+                'deleted_id' => $projectId,
+                'name' => $projectName,
+            ],
+            user: $user,
+            request: request()
+        );
 
         return redirect()
             ->route('projects.index')
@@ -377,141 +438,117 @@ class ProjectController extends Controller
             Log::warning('Failed to send project duplicate email: '.$e->getMessage());
         }
 
+        ActivityLogger::logProject(
+            action: 'project.duplicated',
+            description: "Menduplikasi proyek riset \"{$project->name}\" menjadi \"{$newProject->name}\"",
+            project: $newProject,
+            properties: [
+                'original_id' => $project->id,
+                'original_name' => $project->name,
+                'new_id' => $newProject->id,
+                'new_name' => $newProject->name,
+            ],
+            user: $user,
+            request: request()
+        );
+
         return redirect()
             ->route('projects.edit', $newProject)
             ->with('success', 'Project berhasil diduplikasi!');
     }
 
     /**
-     * Download project as PDF (Authenticated user).
+     * AI Assistant: Generate complete structured project content based on prompt.
      */
-    public function downloadPdf(Project $project)
+    public function aiGenerateProject(Request $request): JsonResponse
     {
-        $this->authorizeUserOwnsProject($project);
-        $user = Auth::user();
+        $prompt = $request->input('topic') ?: $request->input('prompt');
+        $category = $request->input('category');
+        $notes = $request->input('notes') ?: $request->input('custom_instructions');
+
+        if (empty($prompt) || strlen(trim($prompt)) < 3) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Silakan masukkan topik riset atau ide proyek (minimal 3 karakter).',
+            ], 422);
+        }
 
         try {
-            Mail::to($user->email)->send(
-                new ProjectNotificationMail($user, $project, 'pdf_downloaded')
+            $layoutPreset = $request->input('layout_preset') ?: 'balanced';
+            $generated = AiAssistantService::generateProjectContent(trim($prompt), [
+                'category' => $category,
+                'notes' => $notes,
+                'layout_preset' => $layoutPreset,
+            ]);
+
+            ActivityLogger::logProject(
+                action: 'project.ai_generated',
+                description: "Menghasilkan draf konten riset menggunakan AI Assistant (\"{$generated['name']}\")",
+                project: null,
+                properties: [
+                    'prompt' => $prompt,
+                    'generated_name' => $generated['name'] ?? null,
+                    'generated_category' => $generated['category'] ?? null,
+                ],
+                user: $request->user(),
+                request: $request
             );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Konten proyek berhasil dihasilkan oleh AI Assistant!',
+                'data' => $generated,
+            ]);
         } catch (\Throwable $e) {
-            Log::warning('Failed to send project PDF email: '.$e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+            ], 422);
         }
-
-        $images = $this->preparePdfImages($project);
-
-        $pdf = Pdf::loadView('pdf.project', [
-            'project' => $project,
-            'images' => $images,
-        ]);
-
-        $pdf->setPaper('a4', 'portrait');
-
-        $filename = str_replace(' ', '_', strtolower($project->name)).'_'.date('Ymd').'.pdf';
-
-        return $pdf->download($filename);
     }
 
     /**
-     * Download project as PDF for public visitors (Published projects only).
+     * AI Assistant: Polish or generate specific project section.
      */
-    public function publicPdf(Project $project)
+    public function aiPolishSection(Request $request): JsonResponse
     {
-        abort_unless($project->status === 'published', 404);
-
-        $images = $this->preparePdfImages($project);
-
-        $pdf = Pdf::loadView('pdf.project', [
-            'project' => $project,
-            'images' => $images,
-        ]);
-
-        $pdf->setPaper('a4', 'portrait');
-
-        $filename = str_replace(' ', '_', strtolower($project->name)).'_'.date('Ymd').'.pdf';
-
-        return $pdf->download($filename);
-    }
-
-    /**
-     * Convert all project images to base64 data URIs for reliable PDF rendering.
-     *
-     * @return array<string, string|null>
-     */
-    private function preparePdfImages(Project $project): array
-    {
-        $images = [
-            'main_image' => null,
-            'partner_logo' => null,
-            'stas_logo' => null,
-            'telu_logo' => null,
-            'qr_code' => null,
-        ];
-
-        // Main image
-        if (! empty($project->main_image)) {
-            $path = storage_path('app/public/'.$project->main_image);
-            if (file_exists($path)) {
-                $images['main_image'] = $this->fileToBase64DataUri($path);
-            }
+        $section = $request->input('section');
+        $context = $request->input('context', []);
+        if ($request->has('current_data') && is_array($request->input('current_data'))) {
+            $context = array_merge($context, $request->input('current_data'));
         }
 
-        // Partner logo (custom or default telu)
-        if (! empty($project->partner_logo)) {
-            $path = storage_path('app/public/'.$project->partner_logo);
-            if (file_exists($path)) {
-                $images['partner_logo'] = $this->fileToBase64DataUri($path);
-            }
-        }
-        if (! $images['partner_logo']) {
-            $teluPath = public_path('assets/img/telu.png');
-            if (file_exists($teluPath)) {
-                $images['partner_logo'] = $this->fileToBase64DataUri($teluPath);
-            }
+        $text = (string) ($request->input('text') ?: $request->input('prompt') ?: '');
+        $hasDescription = ! empty($context['description']) || ! empty($context['project_name']) || ! empty($context['name']) || ! empty($context['title']);
+
+        if (empty($section) || (empty($text) && ! $hasDescription)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Silakan isi Nama Proyek atau Deskripsi Singkat terlebih dahulu agar AI memiliki informasi untuk menyusun konten.',
+            ], 422);
         }
 
-        // STAS RG logo
-        $stasPath = public_path('assets/img/stas.png');
-        if (file_exists($stasPath)) {
-            $images['stas_logo'] = $this->fileToBase64DataUri($stasPath);
+        try {
+            $result = AiAssistantService::generateSection(
+                $section,
+                $text,
+                $context
+            );
+
+            $polishedText = is_string($result) ? $result : ($result['content'] ?? ($result['solution'] ?? json_encode($result)));
+
+            return response()->json([
+                'success' => true,
+                'section' => $section,
+                'polished_text' => $polishedText,
+                'data' => $result,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+            ], 422);
         }
-
-        // TELU logo (always available for fallback)
-        $teluPath = public_path('assets/img/telu.png');
-        if (file_exists($teluPath)) {
-            $images['telu_logo'] = $this->fileToBase64DataUri($teluPath);
-        }
-
-        // QR code — SVG to base64 data URI
-        if (! empty($project->qr_code_path)) {
-            $qrPath = storage_path('app/public/'.$project->qr_code_path);
-            if (file_exists($qrPath)) {
-                $images['qr_code'] = $this->fileToBase64DataUri($qrPath);
-            }
-        }
-
-        return $images;
-    }
-
-    /**
-     * Convert a local file to a base64 data URI string.
-     */
-    private function fileToBase64DataUri(string $filePath): ?string
-    {
-        if (! file_exists($filePath)) {
-            return null;
-        }
-
-        $mime = mime_content_type($filePath);
-
-        // SVG files need special mime handling
-        if (str_ends_with(strtolower($filePath), '.svg')) {
-            $mime = 'image/svg+xml';
-        }
-
-        $data = base64_encode(file_get_contents($filePath));
-
-        return "data:{$mime};base64,{$data}";
     }
 
     /**
@@ -559,6 +596,7 @@ class ProjectController extends Controller
                 'footer_website' => $project->footer_website,
                 'footer_instagram' => $project->footer_instagram,
                 'footer_youtube' => $project->footer_youtube,
+                'layout_preset' => $project->layout_preset ?? 'balanced',
                 'status' => $project->status,
                 'created_at' => $project->created_at->format('d M Y'),
                 'updated_at' => $project->updated_at->format('d M Y'),
@@ -581,19 +619,12 @@ class ProjectController extends Controller
             mkdir($directory, 0755, true);
         }
 
-        $logoPath = public_path('assets/img/stas.png');
-
-        $qr = QrCode::format('svg')
+        QrCode::format('svg')
             ->size(200)
             ->errorCorrection('H')
             ->margin(1)
-            ->color(13, 90, 52);
-
-        if (file_exists($logoPath)) {
-            $qr->merge($logoPath, 0.28, true);
-        }
-
-        $qr->generate($url, $fullPath);
+            ->color(13, 90, 52)
+            ->generate($url, $fullPath);
 
         return $filename;
     }
@@ -604,5 +635,33 @@ class ProjectController extends Controller
     private function authorizeUserOwnsProject(Project $project): void
     {
         abort_unless($project->user_id === Auth::id(), 403);
+    }
+
+    /**
+     * Get list of unique categories (defaults + existing project categories).
+     *
+     * @return list<string>
+     */
+    private function getAvailableCategories(): array
+    {
+        $defaultCategories = [
+            'Smart Agriculture',
+            'Internet of Things (IoT)',
+            'Aviation & AI',
+            'Cybersecurity',
+            'Telecommunication',
+            'Renewable Energy',
+            'Healthcare Tech',
+            'Robotics & Automation',
+            'Aquaculture / IoT',
+        ];
+
+        $dbCategories = Project::whereNotNull('category')
+            ->where('category', '!=', '')
+            ->distinct()
+            ->pluck('category')
+            ->toArray();
+
+        return array_values(array_unique(array_filter(array_merge($defaultCategories, $dbCategories))));
     }
 }

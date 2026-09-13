@@ -6,6 +6,7 @@ use App\Mail\AccountApprovedMail;
 use App\Mail\AccountRejectedMail;
 use App\Mail\AccountStatusChangedMail;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -114,6 +115,18 @@ class UserController extends Controller
             }
         }
 
+        ActivityLogger::logUser(
+            action: 'user.created_by_admin',
+            description: "Admin membuat akun baru \"{$user->name}\" ({$user->email}) dengan status {$user->status}",
+            subjectUser: $user,
+            properties: [
+                'role' => $user->role,
+                'status' => $user->status,
+            ],
+            actor: $request->user(),
+            request: $request
+        );
+
         return back()->with('success', "Akun {$user->name} ({$user->email}) berhasil ditambahkan ke sistem!");
     }
 
@@ -135,6 +148,18 @@ class UserController extends Controller
             Log::warning('Failed to send account approval email: '.$e->getMessage());
         }
 
+        ActivityLogger::logUser(
+            action: 'user.approved',
+            description: "Menyetujui pendaftaran akun \"{$user->name}\" ({$user->email}) sebagai Admin",
+            subjectUser: $user,
+            properties: [
+                'email' => $user->email,
+                'role' => 'admin',
+            ],
+            actor: Auth::user(),
+            request: request()
+        );
+
         return back()->with('success', "Akun {$user->name} ({$user->email}) berhasil disetujui sebagai Admin!");
     }
 
@@ -155,6 +180,18 @@ class UserController extends Controller
         } catch (\Throwable $e) {
             Log::warning('Failed to send account rejection email: '.$e->getMessage());
         }
+
+        ActivityLogger::logUser(
+            action: 'user.rejected',
+            description: "Menolak pendaftaran akun \"{$user->name}\" ({$user->email}). Alasan: {$reason}",
+            subjectUser: $user,
+            properties: [
+                'email' => $user->email,
+                'reason' => $reason,
+            ],
+            actor: $request->user(),
+            request: $request
+        );
 
         return back()->with('success', "Akun {$user->name} telah ditolak.");
     }
@@ -183,6 +220,18 @@ class UserController extends Controller
             Log::warning('Failed to send account status change email: '.$e->getMessage());
         }
 
+        ActivityLogger::logUser(
+            action: 'user.status_toggled',
+            description: "Mengubah status akun \"{$user->name}\" ({$user->email}) menjadi {$statusLabel}",
+            subjectUser: $user,
+            properties: [
+                'old_status' => $newStatus === User::STATUS_APPROVED ? User::STATUS_INACTIVE : User::STATUS_APPROVED,
+                'new_status' => $newStatus,
+            ],
+            actor: Auth::user(),
+            request: request()
+        );
+
         return back()->with('success', "Akun {$user->name} berhasil {$statusLabel}.");
     }
 
@@ -196,7 +245,23 @@ class UserController extends Controller
         }
 
         $userName = $user->name;
+        $userEmail = $user->email;
+        $deletedUserId = $user->id;
+
         $user->delete();
+
+        ActivityLogger::logUser(
+            action: 'user.deleted',
+            description: "Menghapus akun pengguna \"{$userName}\" ({$userEmail}) dari sistem",
+            subjectUser: null,
+            properties: [
+                'deleted_user_id' => $deletedUserId,
+                'name' => $userName,
+                'email' => $userEmail,
+            ],
+            actor: Auth::user(),
+            request: request()
+        );
 
         return back()->with('success', "Akun {$userName} berhasil dihapus dari sistem.");
     }

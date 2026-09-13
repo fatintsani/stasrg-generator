@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -41,6 +42,13 @@ class GoogleAuthController extends Controller
                 ]);
 
                 if ($user->isPending()) {
+                    ActivityLogger::logAuth(
+                        action: 'auth.google_login_pending',
+                        description: "Percobaan login Google untuk akun belum disetujui: \"{$user->email}\"",
+                        user: $user,
+                        properties: ['google_id' => $googleUser->getId()]
+                    );
+
                     return redirect()->route('login')->withErrors([
                         'email' => 'Akun Google Anda masih menunggu persetujuan admin.',
                     ]);
@@ -62,11 +70,21 @@ class GoogleAuthController extends Controller
 
                 Auth::login($user, true);
 
+                ActivityLogger::logAuth(
+                    action: 'auth.google_login',
+                    description: "Login berhasil sebagai \"{$user->name}\" via Google OAuth",
+                    user: $user,
+                    properties: [
+                        'auth_method' => 'google_oauth',
+                        'google_id' => $googleUser->getId(),
+                    ]
+                );
+
                 return redirect()->intended(route('dashboard'));
             }
 
             // Register new pending user from Google profile
-            User::create([
+            $newUser = User::create([
                 'name' => $googleUser->getName() ?? 'User STAS-RG',
                 'username' => 'google_'.substr(md5($googleUser->getId()), 0, 8),
                 'email' => $googleUser->getEmail(),
@@ -77,6 +95,13 @@ class GoogleAuthController extends Controller
                 'password' => null,
                 'is_biometric_enabled' => false,
             ]);
+
+            ActivityLogger::logUser(
+                action: 'user.registered_google',
+                description: "Pendaftaran akun baru dari Google OAuth: \"{$newUser->name}\" ({$newUser->email})",
+                subjectUser: $newUser,
+                properties: ['google_id' => $googleUser->getId()]
+            );
 
             return redirect()->route('login')->with('status', 'Pendaftaran melalui Google berhasil! Akun Anda sedang menunggu persetujuan admin sebelum dapat digunakan.');
         } catch (Throwable $e) {

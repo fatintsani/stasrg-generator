@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\PasskeyCredential;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -110,6 +111,18 @@ class PasskeyController extends Controller
         Auth::login($user, true);
         $request->session()->regenerate();
 
+        ActivityLogger::logAuth(
+            action: 'auth.passkey_login',
+            description: "Login berhasil sebagai \"{$user->name}\" via Passkey/Biometrik",
+            user: $user,
+            properties: [
+                'auth_method' => 'passkey_biometrics',
+                'device_name' => $passkey->device_name,
+                'counter' => $passkey->counter,
+            ],
+            request: $request
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Autentikasi biometrik berhasil.',
@@ -189,6 +202,17 @@ class PasskeyController extends Controller
 
         $user->update(['is_biometric_enabled' => true]);
 
+        ActivityLogger::logAuth(
+            action: 'auth.passkey_registered',
+            description: "Mendaftarkan Passkey biometrik baru ({$passkey->device_name})",
+            user: $user,
+            properties: [
+                'device_name' => $passkey->device_name,
+                'credential_id' => $passkey->credential_id,
+            ],
+            request: $request
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Passkey biometrik perangkat berhasil didaftarkan.',
@@ -206,12 +230,21 @@ class PasskeyController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
+        $deviceName = $passkey->device_name;
         $passkey->delete();
 
         // If no passkeys left, mark is_biometric_enabled false
         if ($user->passkeys()->count() === 0) {
             $user->update(['is_biometric_enabled' => false]);
         }
+
+        ActivityLogger::logAuth(
+            action: 'auth.passkey_deleted',
+            description: "Menghapus Passkey biometrik ({$deviceName})",
+            user: $user,
+            properties: ['device_name' => $deviceName],
+            request: $request
+        );
 
         return response()->json([
             'success' => true,

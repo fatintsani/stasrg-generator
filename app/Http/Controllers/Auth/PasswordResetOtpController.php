@@ -7,6 +7,7 @@ use App\Mail\PasswordChangedMail;
 use App\Mail\PasswordResetOtpMail;
 use App\Models\PasswordResetOtp;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -90,6 +91,14 @@ class PasswordResetOtpController extends Controller
             report($e);
         }
 
+        ActivityLogger::logAuth(
+            action: 'auth.otp_requested',
+            description: "Permintaan kode OTP pemulihan kata sandi untuk email \"{$email}\"",
+            user: $user,
+            properties: ['email' => $email],
+            request: $request
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Kode OTP pemulihan telah dikirim ke email Anda.',
@@ -127,6 +136,15 @@ class PasswordResetOtpController extends Controller
             'reset_token' => $resetToken,
             'is_verified' => true,
         ]);
+
+        $user = User::where('email', $email)->first();
+        ActivityLogger::logAuth(
+            action: 'auth.otp_verified',
+            description: "Kode OTP pemulihan kata sandi berhasil diverifikasi untuk \"{$email}\"",
+            user: $user,
+            properties: ['email' => $email],
+            request: $request
+        );
 
         return response()->json([
             'success' => true,
@@ -190,6 +208,14 @@ class PasswordResetOtpController extends Controller
 
         // Delete used OTP
         $otpRecord->delete();
+
+        ActivityLogger::logAuth(
+            action: 'auth.password_reset',
+            description: "Kata sandi akun \"{$email}\" berhasil diubah melalui pemulihan OTP",
+            user: $user,
+            properties: ['email' => $email],
+            request: $request
+        );
 
         return redirect()->route('login')->with('status', 'Kata sandi Anda telah berhasil diperbarui!');
     }

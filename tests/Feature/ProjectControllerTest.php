@@ -158,51 +158,6 @@ class ProjectControllerTest extends TestCase
         $response->assertRedirect(route('projects.edit', $duplicated));
     }
 
-    public function test_user_can_download_project_pdf(): void
-    {
-        $user = User::factory()->create();
-        $project = Project::factory()->create([
-            'user_id' => $user->id,
-            'name' => 'Flyer PDF Test',
-            'title' => 'CAGE MONITORING',
-        ]);
-
-        $response = $this->actingAs($user)->get("/projects/{$project->slug}/pdf");
-
-        $response->assertOk();
-        $response->assertHeader('content-type', 'application/pdf');
-    }
-
-    public function test_guest_can_download_published_project_pdf(): void
-    {
-        $user = User::factory()->create();
-        $project = Project::factory()->create([
-            'user_id' => $user->id,
-            'name' => 'Public Flyer Test',
-            'title' => 'PUBLIC MONITORING',
-            'status' => 'published',
-        ]);
-
-        $response = $this->get("/public/projects/{$project->slug}/pdf");
-
-        $response->assertOk();
-        $response->assertHeader('content-type', 'application/pdf');
-    }
-
-    public function test_guest_cannot_download_draft_project_pdf(): void
-    {
-        $user = User::factory()->create();
-        $project = Project::factory()->create([
-            'user_id' => $user->id,
-            'name' => 'Draft Flyer Test',
-            'status' => 'draft',
-        ]);
-
-        $response = $this->get("/public/projects/{$project->slug}/pdf");
-
-        $response->assertNotFound();
-    }
-
     public function test_guest_can_view_published_project_showcase_detail(): void
     {
         $user = User::factory()->create();
@@ -246,5 +201,33 @@ class ProjectControllerTest extends TestCase
 
         $response->assertRedirect(route('projects.index'));
         $this->assertDatabaseMissing('projects', ['id' => $project->id]);
+    }
+
+    public function test_user_can_create_and_update_project_with_layout_presets(): void
+    {
+        $user = User::factory()->create();
+
+        // Create with visual_heavy preset
+        $response = $this->actingAs($user)->post('/projects', [
+            'name' => 'IoT Hardware Project',
+            'title' => 'SMART DRONE ROBOTICS',
+            'layout_preset' => 'visual_heavy',
+            'status' => 'published',
+        ]);
+
+        $project = Project::where('name', 'IoT Hardware Project')->first();
+        $this->assertNotNull($project);
+        $this->assertEquals('visual_heavy', $project->layout_preset);
+
+        // Update to text_heavy preset
+        $updateResponse = $this->actingAs($user)->put("/projects/{$project->slug}", [
+            'name' => 'IoT Hardware Project (Updated)',
+            'title' => 'SMART DRONE ROBOTICS',
+            'layout_preset' => 'text_heavy',
+            'status' => 'published',
+        ]);
+
+        $project->refresh();
+        $this->assertEquals('text_heavy', $project->layout_preset);
     }
 }

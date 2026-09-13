@@ -7,6 +7,7 @@ import {
     List,
     FilePlus2,
     Users,
+    Activity,
     Settings,
     LogOut,
     ChevronLeft,
@@ -68,6 +69,13 @@ export default function AdminSidebar({
             href: '/users',
             icon: Users,
             active: currentPath.startsWith('/users'),
+        },
+        {
+            id: 'activity-logs',
+            name: 'Activity Logs',
+            href: '/activity-logs',
+            icon: Activity,
+            active: currentPath.startsWith('/activity-logs'),
         },
         {
             id: 'settings',

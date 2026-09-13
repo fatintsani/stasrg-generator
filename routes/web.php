@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\PasskeyController;
@@ -42,6 +43,7 @@ Route::get('/', function () {
                     'footer_website' => $project->footer_website,
                     'footer_instagram' => $project->footer_instagram,
                     'footer_youtube' => $project->footer_youtube,
+                    'layout_preset' => $project->layout_preset ?? 'balanced',
                     'status' => $project->status,
                     'created_at' => $project->created_at->format('d M Y'),
                     'updated_at' => $project->updated_at->format('d M Y'),
@@ -76,8 +78,10 @@ Route::get('/', function () {
 Route::get('/showcase/{project:slug}', [ProjectController::class, 'publicShow'])->name('projects.showcase.show');
 Route::get('/riset/{project:slug}', [ProjectController::class, 'publicShow'])->name('projects.riset.show');
 
-// Public PDF Download for Published Projects
-Route::get('/public/projects/{project:slug}/pdf', [ProjectController::class, 'publicPdf'])->name('projects.public-pdf');
+// Public Tracking for Export / Print actions
+Route::post('/activity-logs/track-export', [ActivityLogController::class, 'trackExport'])
+    ->middleware('throttle:30,1')
+    ->name('activity-logs.track-export');
 
 Route::get('/privacy', function () {
     return Inertia::render('Privacy');
@@ -129,13 +133,15 @@ Route::middleware('guest')->group(function () {
 
 // Authenticated & Approved Routes
 Route::middleware(['auth', 'approved'])->group(function () {
-    // Admin Dashboard
+    // Admin Dashboard & Global Search
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/search/global', [DashboardController::class, 'globalSearch'])->name('admin.global-search');
 
     // Project Management
     Route::resource('projects', ProjectController::class);
     Route::post('/projects/{project}/duplicate', [ProjectController::class, 'duplicate'])->name('projects.duplicate');
-    Route::get('/projects/{project}/pdf', [ProjectController::class, 'downloadPdf'])->name('projects.pdf');
+    Route::post('/projects/ai-generate', [ProjectController::class, 'aiGenerateProject'])->name('projects.ai-generate');
+    Route::post('/projects/ai-section', [ProjectController::class, 'aiPolishSection'])->name('projects.ai-section');
 
     // User & Approval Management
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -145,10 +151,17 @@ Route::middleware(['auth', 'approved'])->group(function () {
     Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 
+    // Activity & Audit Logs
+    Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+    Route::get('/activity-logs/export-csv', [ActivityLogController::class, 'exportCsv'])->name('activity-logs.export-csv');
+    Route::post('/activity-logs/prune', [ActivityLogController::class, 'destroyOld'])->name('activity-logs.prune');
+
     // Settings & Configuration
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
     Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile.update');
     Route::post('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password.update');
+    Route::post('/settings/ai', [SettingsController::class, 'updateAiSettings'])->name('settings.ai.update');
+    Route::post('/settings/ai/test', [SettingsController::class, 'testAiConnection'])->name('settings.ai.test');
     Route::post('/settings/maintenance/toggle', [SettingsController::class, 'toggleMaintenance'])->name('settings.maintenance.toggle');
     Route::post('/settings/maintenance/clear-cache', [SettingsController::class, 'clearCache'])->name('settings.maintenance.clear-cache');
     Route::post('/settings/maintenance/optimize', [SettingsController::class, 'optimizeSystem'])->name('settings.maintenance.optimize');
