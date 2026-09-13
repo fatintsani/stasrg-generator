@@ -91,11 +91,15 @@ Route::get('/terms', function () {
 Route::middleware('guest')->group(function () {
     // Login
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
-    Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('login.store');
+    Route::post('/login', [AuthenticatedSessionController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('login.store');
 
     // Register / Create User
     Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
-    Route::post('/register', [RegisteredUserController::class, 'store'])->name('register.store');
+    Route::post('/register', [RegisteredUserController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('register.store');
 
     // Google OAuth
     Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
@@ -103,16 +107,24 @@ Route::middleware('guest')->group(function () {
 
     // Forgot Password & Mailpit OTP
     Route::get('/forgot-password', [PasswordResetOtpController::class, 'create'])->name('password.request');
-    Route::post('/forgot-password/send-otp', [PasswordResetOtpController::class, 'sendOtp'])->name('password.send-otp');
-    Route::post('/forgot-password/verify-otp', [PasswordResetOtpController::class, 'verifyOtp'])->name('password.verify-otp');
+    Route::post('/forgot-password/send-otp', [PasswordResetOtpController::class, 'sendOtp'])
+        ->middleware('throttle:5,1')
+        ->name('password.send-otp');
+    Route::post('/forgot-password/verify-otp', [PasswordResetOtpController::class, 'verifyOtp'])
+        ->middleware('throttle:10,1')
+        ->name('password.verify-otp');
 
     // Reset Password
     Route::get('/reset-password/{token?}', [PasswordResetOtpController::class, 'showReset'])->name('password.reset');
-    Route::post('/reset-password', [PasswordResetOtpController::class, 'resetPassword'])->name('password.update');
+    Route::post('/reset-password', [PasswordResetOtpController::class, 'resetPassword'])
+        ->middleware('throttle:5,1')
+        ->name('password.update');
 
     // Passkey / Biometric WebAuthn Authentication
     Route::get('/auth/passkey/challenge', [PasskeyController::class, 'challenge'])->name('auth.passkey.challenge');
-    Route::post('/auth/passkey/verify', [PasskeyController::class, 'verify'])->name('auth.passkey.verify');
+    Route::post('/auth/passkey/verify', [PasskeyController::class, 'verify'])
+        ->middleware('throttle:10,1')
+        ->name('auth.passkey.verify');
 });
 
 // Authenticated & Approved Routes

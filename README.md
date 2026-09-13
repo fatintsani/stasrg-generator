@@ -7,162 +7,287 @@
 </p>
 
 <p align="center">
-  <strong>Platform Internal Otomasi & Standardisasi Dokumen Proyek Riset STAS RG</strong><br>
+  <strong>Platform Otomasi, Manajemen & Standardisasi Dokumen Riset STAS RG</strong><br>
   <em>Center of Excellence Sustainable Technology and Applied Sciences Research Group (CoE STAS-RG) – Telkom University</em>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Laravel-12.x-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 12" />
+  <img src="https://img.shields.io/badge/React-19.x-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" />
+  <img src="https://img.shields.io/badge/Inertia.js-v3-9553E9?style=for-the-badge&logo=inertia&logoColor=white" alt="Inertia.js" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS v4" />
+  <img src="https://img.shields.io/badge/Vite-8.x-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite 8" />
+  <img src="https://img.shields.io/badge/PHP-8.3%2B-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.3+" />
 </p>
 
 ---
 
 ## 📌 Ringkasan Proyek (Overview)
 
-**STAS RG Generator** adalah platform internal yang dirancang untuk mengorganisir, mengelola metadata, dan menghasilkan dokumen proyek riset yang terstandarisasi di lingkungan kelompok riset **Center of Excellence Sustainable Technology and Applied Sciences Research Group (CoE STAS-RG) – Fakultas Ilmu Terapan, Telkom University**.
+**STAS RG Generator** adalah platform web terpadu yang dirancang khusus untuk mengelola repositori hasil penelitian, mengotomasi pembuatan dokumen publikasi/flyer terstandarisasi, dan menyajikan showcase riset publik di lingkungan kelompok riset **Center of Excellence Sustainable Technology and Applied Sciences Research Group (CoE STAS-RG)**, Fakultas Ilmu Terapan, Telkom University.
 
-Aplikasi ini dibangun menggunakan arsitektur modern **Laravel 12 + Inertia.js (React) + Vite + Tailwind CSS + Framer Motion + Lucide React**.
-
----
-
-## ✨ Fitur Utama (Features)
-
-1. **🎨 Contemporary SaaS & Strict Zero Shadows**:
-   - **Strict Zero Shadows**: Tampilan modern tanpa bayangan (`box-shadow: none !important`), mengandalkan hierarki card ber-radius 24px (`rounded-3xl`), border presisi 1px (`border-zinc-200` / `border-emerald-200`), dan palet warna netral minimalis.
-   - **Zero Emojis**: Menggunakan icon vektor SVG presisi (**Lucide React**) untuk tampilan profesional.
-   - **Tipografi Editorial**: Menggunakan font **Plus Jakarta Sans** (Google Fonts) dengan spacing yang lega dan nyaman dibaca.
-
-2. **🌓 Dark Mode & Light Mode**:
-   - Dukungan tema Gelap (Dark Mode) dan Terang (Light Mode) dengan transisi halus.
-   - Deteksi preferensi sistem otomatis (`prefers-color-scheme`) dan tersimpan permanen di `localStorage`.
-
-3. **🌐 Dukungan Multi-Bahasa (i18n) & Flag Switcher**:
-   - Penggantian bahasa instan antara **Bahasa Indonesia (ID)** dan **English (EN)** melalui tombol bendera bersih tanpa teks.
-   - Terintegrasi penuh ke seluruh bagian halaman (Navbar, Hero, About, Principles, How It Works, Internal Security, Footer, Privacy, dan Terms).
-
-4. **🧭 Navigation & Active ScrollSpy**:
-   - Menu navigasi berada di posisi tengah (**Centered Navigation**) dalam wadah *frosted pill*.
-   - Indikator tautan aktif (**Active Link**) dinamis yang menyorot menu sesuai posisi scroll pengguna.
-
-5. **📄 Halaman Kebijakan Privasi & Ketentuan Riset**:
-   - **Kebijakan Privasi (`/privacy`)**: Informasi tata kelola data riset, enkripsi SSO, dan perlindungan arsip.
-   - **Ketentuan Riset (`/terms`)**: Regulasi hak kekayaan intelektual (HKI), integritas akademik, dan standar templating CoE STAS-RG.
-   - Menggunakan header navigasi dan footer yang konsisten dengan halaman utama.
-
-6. **⚡ Komponen Interaktif**:
-   - **Hero Section**: Modern SaaS Showcase Card dengan metrik live registry, verifikasi integritas, dan access tier.
-   - **About Platform**: Ringkasan platform beserta 2 feature card terpadu (*Centralized Workspace* & *Standardized Outputs*).
-   - **Operational Principles**: 3 kartu fase alur kerja (*Organized*, *Consistent*, *Efficient*).
-   - **Sequential Protocol**: Panduan 3 langkah alur ekspor dokumen (*Create Project*, *Fill Information*, *Generate & Manage*).
-   - **Internal Security & CTA**: Kartu modern login SSO terproteksi.
-   - **Rich 3-Column Footer**: Informasi institusi, channel media sosial lab (GitHub, LinkedIn, Instagram, Web, Email), navigasi terpadu, dan kartu lokasi laboratorium Fakultas Ilmu Terapan Telkom University dengan tombol langsung ke Google Maps.
+Platform ini mengintegrasikan alur kerja riset mulai dari pencatatan data dan inovasi riset, media visual, logo kolaborator, hingga ekspor dokumen PDF berkualitas cetak dengan QR Code otomatis yang dapat diakses publik.
 
 ---
 
-## 🛠️ Tech Stack
+## ✨ Fitur & Modul Utama (Key Features)
 
-- **Backend**: [Laravel 12](https://laravel.com) (PHP 8.5+)
-- **SPA Bridge**: [Inertia.js v3](https://inertiajs.com) (`@inertiajs/react`)
-- **Frontend**: [React 19](https://react.dev)
-- **Styling**: [Tailwind CSS v4](https://tailwindcss.com)
-- **Icons**: [Lucide React](https://lucide.dev)
-- **Animation**: [Framer Motion](https://www.framer.com/motion/)
-- **Bundler**: [Vite 8](https://vitejs.dev)
-- **Typography**: [Plus Jakarta Sans](https://fonts.google.com/specimen/Plus+Jakarta+Sans)
+### 1. 🌐 Landing Page & Showcase Publik
+- **Hero Metrics & Live Registry**: Tampilan metrik real-time jumlah riset terdaftar, proyek terpublikasi, variasi kategori, dan jumlah peneliti yang terlibat.
+- **Interactive Research Showcase**: Katalog riset publik interaktif dengan filter kategori instan, pencarian cepat, kartu proyek visual, serta tautan langsung ke detail dan unduhan PDF.
+- **Halaman Detail Riset Publik (`/showcase/{slug}` & `/riset/{slug}`)**:
+  - Tampilan komprehensif memuat latar belakang masalah, solusi inovatif, spesifikasi teknis, dan manfaat implementasi.
+  - Galeri visual proyek dan logo mitra/kolaborator.
+  - Generator **QR Code verifikasi interaktif** yang mengarah langsung ke URL publik riset.
+  - Tombol unduh dokumen flyer PDF resmi secara instan.
+- **Halaman Legalitas & Tata Kelola**:
+  - **Kebijakan Privasi (`/privacy`)**: Kebijakan retensi data riset, enkripsi SSO, dan perlindungan privasi peneliti.
+  - **Ketentuan Riset (`/terms`)**: Regulasi hak kekayaan intelektual (HKI), integritas akademik, dan standar templating CoE STAS-RG.
+
+### 2. 🎨 Contemporary SaaS Design System (Strict Zero Shadows)
+- **Strict Zero Shadows**: Estetika modern tanpa bayangan (`box-shadow: none !important`), mengedepankan hierarki kartu bersudut lengkung 24px (`rounded-3xl`), border presisi 1px (`border-zinc-200` / `border-zinc-800`), dan palet warna netral minimalis dengan aksen hijau emerald.
+- **Vektor Presisi & Tipografi Editorial**: Ikon vektor SVG profesional menggunakan **Lucide React** dan tipografi modern **Plus Jakarta Sans**.
+- **Dark Mode & Light Mode**: Transisi tema mulus dengan deteksi preferensi sistem otomatis (`prefers-color-scheme`) dan tersimpan di `localStorage`.
+- **Multi-Bahasa (i18n)**: Penggantian bahasa instan antara **Bahasa Indonesia (ID)** dan **English (EN)** dengan flag toggle yang bersih.
+- **Centered Frosted Glass Navigation**: Navigasi tengah bergaya *frosted pill* dengan *Active ScrollSpy* dinamis.
+
+### 3. 🔐 Autentikasi Modern & Keamanan Berlapis
+- **Multi-Metode Login**:
+  - Autentikasi standar Email & Password terproteksi *rate limiter*.
+  - **Google OAuth 2.0 Single Sign-On (SSO)** via Laravel Socialite.
+  - **Passkey / Biometric WebAuthn**: Login tanpa password menggunakan sidik jari (Fingerprint), TouchID, FaceID, atau Windows Hello.
+- **Alur Persetujuan Pengguna (User Approval Workflow)**:
+  - Pendaftaran akun baru diverifikasi terlebih dahulu oleh administrator melalui middleware `approved` sebelum diberikan akses ke dashboard.
+- **Pemulihan Akun dengan OTP Email**:
+  - Mekanisme Reset Password aman menggunakan 6-digit One-Time Password (OTP) via Mailpit/SMTP.
+
+### 4. 📊 Dashboard Admin & Manajemen Proyek Riset
+- **Ringkasan Analitik**: Pantauan status proyek (Draft vs Published), metrik statistik, dan log aktivitas terbaru.
+- **Formulir Proyek dengan Real-Time Live Preview**:
+  - Formulir dinamis dilengkapi fitur *split live preview* (`ProjectPreview.jsx`) untuk melihat hasil flyer sebelum disimpan.
+  - **Rich Text Editor** kustom untuk formulasi uraian masalah, solusi, dan deskripsi teknis.
+  - Pengunggahan gambar utama (*Main Image*) dan logo mitra (*Partner Logo*).
+  - Generate otomatis tautan slug SEO-friendly dan QR Code publik.
+  - Fitur **Duplikasi Proyek (One-Click Clone)** untuk mempercepat input riset serupa.
+  - Kontrol status publikasi langsung (*Draft / Published*).
+
+### 5. 📄 Generator Dokumen PDF Terstandarisasi
+- **Flyer Riset Standar CoE STAS-RG**: Layout A4 resmi yang terstruktur untuk kebutuhan pameran, hibah, arsip, dan diseminasi hasil penelitian.
+- **Ekspor Dokumen Beresolusi Tinggi**: Ditenagai oleh **Laravel DomPDF** (`barryvdh/laravel-dompdf`) dengan integrasi logo institusi, barcode/QR Code tersemat, spesifikasi, dan ringkasan eksekutif.
+- **Akses Unduhan Fleksibel**: Dapat diunduh oleh administrator melalui dashboard maupun oleh publik via halaman detail riset.
+
+### 6. 👥 Manajemen Pengguna & Tim Peneliti
+- Daftar seluruh peneliti dan pengguna terdaftar.
+- Fitur verifikasi persetujuan (*Approve*) atau penolakan (*Reject*) akun pendaftar baru.
+- Kontrol status akun (*Active / Suspended*), pengaturan hak akses, dan penghapusan pengguna.
+
+### 7. ⚙️ Pengaturan Akun & Pemeliharaan Sistem
+- **Manajemen Profil**: Pembaruan nama, email, dan unggah/hapus avatar profil.
+- **Manajemen Kredensial Passkey**: Pendaftaran dan penghapusan perangkat biometrik WebAuthn.
+- **Utilitas Pemeliharaan Sistem**:
+  - Pembersihan Cache Aplikasi (*Clear Application Cache*).
+  - Optimasi Konfigurasi & Route (*System Optimize*).
+  - Pengalihan Mode Pemeliharaan (*Maintenance Mode Toggle*).
 
 ---
 
-## 🚀 Panduan Memulai (Quick Start)
+## 🛠️ Tech Stack & Arsitektur
 
-### 1. Prasyarat Lingkungan
-Pastikan telah terinstal:
-- PHP >= 8.2 (Disarankan PHP 8.4 / 8.5)
-- Composer >= 2.x
-- Node.js >= 20.x & npm
+| Layer | Teknologi / Library | Keterangan |
+| :--- | :--- | :--- |
+| **Backend Framework** | [Laravel 12.x](https://laravel.com) | PHP 8.3+ Framework |
+| **Frontend Framework** | [React 19.x](https://react.dev) | Modern Component-Based UI |
+| **SPA Bridge** | [Inertia.js v3](https://inertiajs.com) | Client-side routing tanpa REST API overhead |
+| **Build Tool & Bundler**| [Vite 8.x](https://vitejs.dev) | Hot Module Replacement (HMR) berkecepatan tinggi |
+| **CSS & Styling** | [Tailwind CSS v4](https://tailwindcss.com) | Utility-first CSS dengan aturan Strict Zero Shadows |
+| **Animasi** | [Framer Motion](https://www.framer.com/motion/) | Transisi UI & mikro-animasi dinamis |
+| **Iconography** | [Lucide React](https://lucide.dev) | Ikon vektor presisi dan konsisten |
+| **PDF Generation** | [Laravel DomPDF](https://github.com/barryvdh/laravel-dompdf) | Render dokumen flyer PDF berbasis template Blade |
+| **QR Code Engine** | SimpleSoftwareIO QrCode & QRCode.react | Pembuatan QR Code dinamis server-side & client-side |
+| **Autentikasi Eksternal**| Laravel Socialite & WebAuthn | Google OAuth SSO & Biometric Passkey |
+| **Database** | SQLite / MySQL / PostgreSQL | Relational Database Management |
 
-### 2. Instalasi Dependensi
+---
+
+## 🚀 Panduan Memulai (Installation & Setup)
+
+### 1. Prasyarat Sistem
+Pastikan perangkat Anda telah memiliki:
+- **PHP** >= 8.3 (Disarankan ekstensi `pdo`, `mbstring`, `openssl`, `gd`/`imagick`, `fileinfo` aktif)
+- **Composer** >= 2.x
+- **Node.js** >= 20.x & **npm**
+
+### 2. Kloning & Instalasi Dependensi
 ```bash
-# Masuk ke direktori proyek
+# Masuk ke direktori kerja
 cd stasrg-generator
 
-# Instal dependensi PHP
+# Instal dependensi backend (Composer)
 composer install
 
-# Instal dependensi Node.js
+# Instal dependensi frontend (NPM)
 npm install
 ```
 
-### 3. Konfigurasi Environment
+### 3. Konfigurasi Environment (`.env`)
 ```bash
-# Salin file environment jika belum ada
+# Salin template environment jika belum ada
 cp .env.example .env
 
-# Generate Application Key
+# Generate Application Encryption Key
 php artisan key:generate
 ```
 
-### 4. Menjalankan Server Pengembangan (Dev Server)
+Sesuaikan konfigurasi database dan mailer pada file `.env`:
+```ini
+APP_NAME="STAS RG Generator"
+APP_URL=http://localhost:8000
 
-Jalankan backend Laravel dan frontend Vite:
+DB_CONNECTION=sqlite
+# atau DB_CONNECTION=mysql / pgsql sesuai server database Anda
+
+# Konfigurasi Mailpit / Mailer untuk OTP Reset Password
+MAIL_MAILER=smtp
+MAIL_HOST=127.0.0.1
+MAIL_PORT=1025
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS="no-reply@stasrg.telkomuniversity.ac.id"
+MAIL_FROM_NAME="${APP_NAME}"
+
+# Konfigurasi Google OAuth SSO (Opsional)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_REDIRECT_URI="${APP_URL}/auth/google/callback"
+```
+
+### 4. Migrasi Database & Storage Symlink
+```bash
+# Jalankan migrasi database
+php artisan migrate
+
+# Buat symbolic link untuk folder storage publik (gambar riset, avatar, dll.)
+php artisan storage:link
+```
+
+*(Opsional)* Anda dapat menjalankan seeder jika tersedia:
+```bash
+php artisan db:seed
+```
+
+### 5. Menjalankan Server Pengembangan
+Jalankan backend Laravel dan frontend Vite secara bersamaan:
 
 ```bash
-# Terminal 1 - Jalankan backend Laravel
+# Menggunakan script komposer bawaan (menjalankan Laravel dev server & Vite)
+composer run dev
+```
+
+Atau jalankan di dua terminal terpisah:
+```bash
+# Terminal 1: Backend Laravel
 php artisan serve
 
-# Terminal 2 - Jalankan Vite Dev Server
+# Terminal 2: Frontend Vite HMR
 npm run dev
 ```
 
-Buka peramban di: **`http://localhost:8000`**
+Buka peramban di alamat: **`http://localhost:8000`**
 
-### 5. Kompilasi Produksi (Production Build)
+### 6. Kompilasi Produksi (Production Build)
+Untuk keperluan deployment pada server produksi:
 ```bash
 npm run build
+php artisan optimize
 ```
 
 ---
 
-## 📂 Struktur Direktori Utama
+## 📂 Struktur Direktori Proyek
 
 ```
 stasrg-generator/
 ├── app/
-│   └── Http/
-│       └── Middleware/HandleInertiaRequests.php  # Middleware Inertia
-├── docs/
-│   └── design.md                                 # Dokumentasi Design System & UI Specs
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── Auth/                             # Controller Autentikasi (Login, Google, Passkey, OTP)
+│   │   │   ├── DashboardController.php           # Controller Admin Dashboard
+│   │   │   ├── ProjectController.php             # Controller CRUD Proyek, Ekspor PDF & Showcase
+│   │   │   ├── SettingsController.php            # Controller Profil, Passkey & Maintenance
+│   │   │   └── UserController.php                # Controller Manajemen User & Approval
+│   │   └── Middleware/
+│   │       ├── EnsureUserIsApproved.php          # Middleware Proteksi Persetujuan Akun
+│   │       └── HandleInertiaRequests.php         # Shared Data Inertia (Auth, Flash, dll)
+│   └── Models/
+│       ├── Passkey.php                           # Model Kredensial Passkey WebAuthn
+│       ├── Project.php                           # Model Entitas Proyek Riset
+│       └── User.php                              # Model Pengguna & Peneliti
+├── database/
+│   ├── factories/                                # Model Factories untuk Testing
+│   ├── migrations/                               # Database Schema Migrations
+│   └── seeders/                                  # Database Seeders
 ├── public/
-│   └── assets/
-│       └── img/
-│           ├── stas.png                          # Logo STAS RG
-│           └── telu.png                          # Logo Telkom University
+│   ├── assets/img/                               # Aset Statis (Logo STAS RG & Telkom University)
+│   └── storage/                                  # Symlink ke storage/app/public
 ├── resources/
 │   ├── css/
-│   │   └── app.css                               # Konfigurasi Tailwind v4 & Strict Zero-Shadow rules
+│   │   └── app.css                               # Tailwind CSS v4 setup & Zero-Shadow Utilities
 │   ├── js/
 │   │   ├── Components/
-│   │   │   ├── AboutSection.jsx                  # Komponen About Platform
-│   │   │   ├── Footer.jsx                        # Komponen 3-Column Editorial Footer
-│   │   │   ├── HeroSection.jsx                   # Komponen SaaS Hero & Metric Showcase
-│   │   │   ├── HowItWorksSection.jsx             # Komponen Sequential Protocol
-│   │   │   ├── InternalNoteBanner.jsx            # Komponen Security & Login CTA
-│   │   │   ├── Navbar.jsx                        # Komponen Centered Navbar + Theme & Flag Toggle
-│   │   │   └── PrinciplesSection.jsx             # Komponen Operational Principles
+│   │   │   ├── Admin/                            # Komponen Dashboard (Sidebar, Header, Preview, Editor)
+│   │   │   ├── AboutSection.jsx                  # Seksi Tentang Platform
+│   │   │   ├── AlertModal.jsx                    # Modal Dialog Notifikasi & Konfirmasi
+│   │   │   ├── BiometricModal.jsx                # Modal Verifikasi & Registrasi Passkey
+│   │   │   ├── Footer.jsx                        # 3-Column Editorial Footer + Lokasi Lab
+│   │   │   ├── HeroSection.jsx                   # Hero Section + Real-Time Registry Metrics
+│   │   │   ├── HowItWorksSection.jsx             # Seksi Alur Protokol 3 Langkah
+│   │   │   ├── InternalNoteBanner.jsx            # Banner Keamanan & SSO Portal
+│   │   │   ├── Navbar.jsx                        # Navigasi Frosted Glass + Switcher Bahasa & Tema
+│   │   │   ├── PrinciplesSection.jsx             # Seksi Prinsip Operasional
+│   │   │   └── ProjectShowcaseSection.jsx        # Katalog Showcase Riset Interaktif
 │   │   ├── Context/
-│   │   │   └── AppContext.jsx                    # Context Provider Dark Mode & i18n
+│   │   │   └── AppContext.jsx                    # State Provider untuk Tema & Bahasa (i18n)
+│   │   ├── Layouts/
+│   │   │   └── AdminLayout.jsx                   # Shell Layout Admin Panel
 │   │   ├── Pages/
-│   │   │   ├── Welcome.jsx                       # Root Inertia Landing Page
+│   │   │   ├── Admin/                            # Halaman Dashboard, Proyek, Pengguna, Pengaturan
+│   │   │   ├── Auth/                             # Halaman Login, Register, Forgot & Reset Password
+│   │   │   ├── Public/                           # Halaman Detail Riset Publik (Showcase)
 │   │   │   ├── Privacy.jsx                       # Halaman Kebijakan Privasi
-│   │   │   └── Terms.jsx                         # Halaman Ketentuan Riset
-│   │   ├── translations/
-│   │   │   └── translations.js                   # Kamus Terjemahan ID & EN
-│   │   └── app.jsx                               # Client Mount Entrypoint
+│   │   │   ├── Terms.jsx                         # Halaman Ketentuan Riset
+│   │   │   └── Welcome.jsx                       # Landing Page Utama
+│   │   └── translations/
+│   │       └── translations.js                   # Kamus Bahasa Indonesia & Inggris
 │   └── views/
-│       └── app.blade.php                         # Blade Root Template
+│       ├── app.blade.php                         # Root HTML Blade Shell
+│       ├── emails/                               # Template Email OTP
+│       └── pdf/                                  # Template Blade untuk Dokumen PDF Flyer Riset
 ├── routes/
-│   └── web.php                                   # Routing Web Laravel (/, /privacy, /terms)
-└── vite.config.js                                # Konfigurasi Vite & React Plugin
+│   ├── web.php                                   # Rute Web & Endpoint Aplikasi
+│   └── console.php                               # Artisan CLI Commands
+└── vite.config.js                                # Konfigurasi Vite, React & Tailwind CSS
+```
+
+---
+
+## 🧪 Pengujian & Standar Kualitas Kode
+
+Proyek ini dilengkapi dengan suite pengujian otomatis (Unit & Feature Tests) dan linter standar Laravel:
+
+```bash
+# Menjalankan pengujian otomatis menggunakan PHPUnit
+php artisan test
+
+# Menjalankan Laravel Pint untuk memastikan standar format kode PSR-12
+vendor/bin/pint --format agent
 ```
 
 ---
 
 ## 🔒 Lisensi & Hak Cipta
 
-© 2025 **CoE STAS-RG – Fakultas Ilmu Terapan, Telkom University**. All rights reserved.
-Akses sistem ini terbatas khusus untuk civitas akademik dan peneliti internal yang berwenang.
+© **Center of Excellence Sustainable Technology and Applied Sciences Research Group (CoE STAS-RG)**<br>
+Fakultas Ilmu Terapan, Telkom University. Seluruh Hak Cipta Dilindungi.
+
+Akses sistem ini terbatas khusus untuk civitas akademika, peneliti, dan staf yang berwenang di lingkungan Telkom University.

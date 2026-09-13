@@ -4,10 +4,11 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
+use Throwable;
 
 class GoogleAuthController extends Controller
 {
@@ -78,9 +79,13 @@ class GoogleAuthController extends Controller
             ]);
 
             return redirect()->route('login')->with('status', 'Pendaftaran melalui Google berhasil! Akun Anda sedang menunggu persetujuan admin sebelum dapat digunakan.');
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
+            Log::error('Google OAuth Authentication failed: '.$e->getMessage(), [
+                'exception' => $e,
+            ]);
+
             return redirect()->route('login')->withErrors([
-                'email' => 'Gagal masuk melalui akun Google: '.$e->getMessage(),
+                'email' => 'Gagal melakukan autentikasi melalui akun Google. Silakan coba kembali atau gunakan email dan kata sandi.',
             ]);
         }
     }
