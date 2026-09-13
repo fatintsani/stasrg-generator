@@ -7,7 +7,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { AppProvider } from './Context/AppContext';
 import { AlertProvider } from './Context/AlertContext';
 
-const appName = import.meta.env.VITE_APP_NAME || 'STAS RG Generator';
+const appName = import.meta.env.VITE_APP_NAME || 'STAS RG Projects';
 
 createInertiaApp({
     title: (title) => `${title ? `${title} - ` : ''}${appName}`,

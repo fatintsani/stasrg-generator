@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>{{ $subject ?? 'Pemberitahuan — STAS RG Generator' }}</title>
+    <title>{{ $subject ?? 'Pemberitahuan — STAS RG Projects' }}</title>
     <!--[if mso]>
     <noscript>
         <xml>
@@ -397,7 +397,7 @@
                                             </tr>
                                             <tr>
                                                 <td align="left" style="padding-top: 12px; font-size: 10.5px; color: #94A3B8; line-height: 1.5;">
-                                                    Email ini dikirimkan secara otomatis oleh sistem internal STASIKATOR / STAS RG Generator. Harap jangan membalas langsung ke email ini.
+                                                    Email ini dikirimkan secara otomatis oleh sistem internal STASIKATOR / STAS RG Projects. Harap jangan membalas langsung ke email ini.
                                                 </td>
                                             </tr>
                                             <tr>

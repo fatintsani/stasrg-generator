@@ -14,7 +14,7 @@ function PrivacyContent() {
 
     return (
         <div className="min-h-screen bg-white dark:bg-[#090D16] text-slate-900 dark:text-zinc-100 flex flex-col transition-colors selection:bg-[#0D5A34] selection:text-white">
-            <Head title={`${p.title} — STAS RG Generator`} />
+            <Head title={`${p.title} — STAS RG Projects`} />
 
             <Navbar />
 

@@ -13,7 +13,7 @@
     </div>
 
     <p>
-        Terima kasih telah mendaftar di <strong>STAS RG Generator Platform</strong>. Akun Anda telah berhasil dibuat dan saat ini sedang dalam proses review verifikasi oleh Tim Administrator Lab CoE STAS-RG.
+        Terima kasih telah mendaftar di <strong>STAS RG Projects Platform</strong>. Akun Anda telah berhasil dibuat dan saat ini sedang dalam proses review verifikasi oleh Tim Administrator Lab CoE STAS-RG.
     </p>
 
     <!-- Account Details Card -->

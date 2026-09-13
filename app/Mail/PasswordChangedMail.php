@@ -21,7 +21,7 @@ class PasswordChangedMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Pemberitahuan Perubahan Kata Sandi — STAS-RG Generator',
+            subject: 'Pemberitahuan Perubahan Kata Sandi — STAS-RG Projects',
         );
     }
 

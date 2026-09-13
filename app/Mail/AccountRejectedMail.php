@@ -21,7 +21,7 @@ class AccountRejectedMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Status Permohonan Akun — STAS-RG Generator',
+            subject: 'Status Permohonan Akun — STAS-RG Projects',
         );
     }
 

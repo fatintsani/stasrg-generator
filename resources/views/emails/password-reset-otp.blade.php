@@ -13,7 +13,7 @@
     </div>
 
     <p>
-        Kami menerima permintaan pengaturan ulang kata sandi untuk akun STAS RG Generator Anda. Gunakan kode <strong>One-Time Password (OTP)</strong> berikut untuk memverifikasi identitas Anda:
+        Kami menerima permintaan pengaturan ulang kata sandi untuk akun STAS RG Projects Anda. Gunakan kode <strong>One-Time Password (OTP)</strong> berikut untuk memverifikasi identitas Anda:
     </p>
 
     <!-- Prominent OTP Box -->

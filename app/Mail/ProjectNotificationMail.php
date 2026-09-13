@@ -23,14 +23,14 @@ class ProjectNotificationMail extends Mailable
     public function envelope(): Envelope
     {
         $subject = match ($this->eventType) {
-            'created' => "Project Baru Dibuat: {$this->project->title} — STAS-RG Generator",
-            'updated' => "Pembaruan Data Project: {$this->project->title} — STAS-RG Generator",
-            'published' => "Project Telah Dipublikasikan: {$this->project->title} — STAS-RG Generator",
-            'unpublished' => "Status Publikasi Project Ditarik: {$this->project->title} — STAS-RG Generator",
-            'duplicated' => "Project Berhasil Diduplikasi: {$this->project->title} — STAS-RG Generator",
-            'deleted' => "Project Telah Dihapus: {$this->project->title} — STAS-RG Generator",
-            'pdf_downloaded' => "Dokumen PDF Project Telah Digenerate: {$this->project->title} — STAS-RG Generator",
-            default => "Pemberitahuan Project: {$this->project->title} — STAS-RG Generator",
+            'created' => "Project Baru Dibuat: {$this->project->title} — STAS-RG Projects",
+            'updated' => "Pembaruan Data Project: {$this->project->title} — STAS-RG Projects",
+            'published' => "Project Telah Dipublikasikan: {$this->project->title} — STAS-RG Projects",
+            'unpublished' => "Status Publikasi Project Ditarik: {$this->project->title} — STAS-RG Projects",
+            'duplicated' => "Project Berhasil Diduplikasi: {$this->project->title} — STAS-RG Projects",
+            'deleted' => "Project Telah Dihapus: {$this->project->title} — STAS-RG Projects",
+            'pdf_downloaded' => "Dokumen PDF Project Telah Digenerate: {$this->project->title} — STAS-RG Projects",
+            default => "Pemberitahuan Project: {$this->project->title} — STAS-RG Projects",
         };
 
         return new Envelope(

@@ -282,7 +282,7 @@
     <div class="ambient-glow-2"></div>
 
     <!-- Header Dual Logos -->
-    <a href="{{ url('/') }}" class="header-brand" title="Menuju Beranda STAS-RG Generator">
+    <a href="{{ url('/') }}" class="header-brand" title="Menuju Beranda STAS-RG Projects">
         <img src="{{ asset('assets/img/telu.png') }}" alt="Telkom University" onerror="this.style.display='none'">
         <div class="brand-divider"></div>
         <img src="{{ asset('assets/img/stas.png') }}" alt="STAS-RG" onerror="this.src='/assets/img/STAS RG.png'">

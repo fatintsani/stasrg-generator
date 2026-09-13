@@ -37,7 +37,7 @@ export default function AuthLayout({ children, title, subtitle, badge }) {
 
     return (
         <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#090D16] text-slate-900 dark:text-white flex flex-col justify-between selection:bg-emerald-100 selection:text-emerald-900 transition-colors">
-            <Head title={title ? `${title} - STAS RG Generator` : 'STAS RG Generator'} />
+            <Head title={title ? `${title} - STAS RG Projects` : 'STAS RG Projects'} />
 
             {/* Top Navigation Bar */}
             <header className="sticky top-0 z-40 w-full bg-white/90 dark:bg-[#090D16]/90 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800/80 transition-colors">

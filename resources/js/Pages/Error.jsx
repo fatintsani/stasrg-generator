@@ -106,7 +106,7 @@ export default function ErrorPage({ status = 404, message }) {
             <Link
                 href="/"
                 className="relative z-10 flex items-center justify-center gap-3 pt-4 pb-6 group"
-                title="Menuju Beranda STAS-RG Generator"
+                title="Menuju Beranda STAS-RG Projects"
             >
                 <img
                     src="/assets/img/telu.png"

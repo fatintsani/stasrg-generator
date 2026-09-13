@@ -20,7 +20,7 @@ class ProfileUpdatedMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Profil Akun Berhasil Diperbarui — STAS-RG Generator',
+            subject: 'Profil Akun Berhasil Diperbarui — STAS-RG Projects',
         );
     }
 

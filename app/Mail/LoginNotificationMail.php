@@ -22,7 +22,7 @@ class LoginNotificationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Aktivitas Masuk Akun Terdeteksi — STAS-RG Generator',
+            subject: 'Aktivitas Masuk Akun Terdeteksi — STAS-RG Projects',
         );
     }
 

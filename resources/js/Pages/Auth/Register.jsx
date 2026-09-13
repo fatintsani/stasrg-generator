@@ -55,7 +55,7 @@ function RegisterFormContent() {
     return (
         <AuthLayout
             title="Daftar Akun Baru"
-            subtitle="Buat akun untuk mengajukan akses ke platform STAS RG Generator."
+            subtitle="Buat akun untuk mengajukan akses ke platform STAS RG Projects."
             badge={null}
         >
             <motion.div

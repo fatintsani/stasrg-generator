@@ -20,7 +20,7 @@ class AdminNewUserAlertMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Notifikasi Pendaftar Baru Menunggu Persetujuan — STAS-RG Generator',
+            subject: 'Notifikasi Pendaftar Baru Menunggu Persetujuan — STAS-RG Projects',
         );
     }
 

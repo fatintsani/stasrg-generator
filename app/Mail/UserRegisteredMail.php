@@ -20,7 +20,7 @@ class UserRegisteredMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Pendaftaran Akun Berhasil — STAS-RG Generator',
+            subject: 'Pendaftaran Akun Berhasil — STAS-RG Projects',
         );
     }
 

@@ -21,7 +21,7 @@ class PasswordResetOtpMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Kode OTP Pemulihan Kata Sandi — STAS RG Generator',
+            subject: 'Kode OTP Pemulihan Kata Sandi — STAS RG Projects',
         );
     }
 

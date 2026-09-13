@@ -15,7 +15,7 @@ function LandingContent({ publishedProjects = [], stats = {} }) {
 
     const pageTitle = t?.nav?.brand 
         ? `${t.nav.brand} - Project & Document Platform` 
-        : 'STAS RG Generator - Project & Document Platform';
+        : 'STAS RG Projects - Project & Document Platform';
 
     const pageDesc = t?.hero?.subtitle || 'A simple internal platform for organizing and generating standardized STAS RG project documents.';
 

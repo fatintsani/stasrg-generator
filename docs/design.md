@@ -1,6 +1,6 @@
-# STAS RG Generator (STASIKATOR) — Global Design System & Specification
+# STAS RG Projects (STASIKATOR) — Global Design System & Specification
 
-Dokumentasi ini adalah **Single Source of Truth (SSOT)** standar visual, tata letak, tipografi, palet warna, aturan komponen, sistem notifikasi email, dan identitas visual **STAS-RG Generator (STASIKATOR)** berbasis **Contemporary Editorial & Modern Research Laboratory UI**.
+Dokumentasi ini adalah **Single Source of Truth (SSOT)** standar visual, tata letak, tipografi, palet warna, aturan komponen, sistem notifikasi email, dan identitas visual **STAS-RG Projects (STASIKATOR)** berbasis **Contemporary Editorial & Modern Research Laboratory UI**.
 
 ---
 

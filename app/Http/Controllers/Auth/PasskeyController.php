@@ -152,7 +152,7 @@ class PasskeyController extends Controller
         return response()->json([
             'challenge' => base64_encode($challenge),
             'rp' => [
-                'name' => config('app.name', 'STAS RG Generator'),
+                'name' => config('app.name', 'STAS RG Projects'),
                 'id' => $host,
             ],
             'user' => [

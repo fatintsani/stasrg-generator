@@ -294,7 +294,7 @@ Daftar Berkas Dokumen Flyer:
 ${files.map((f, i) => `${i + 1}. ${f.filename}${f.projectName ? ` (${f.projectName})` : ''}`).join('\n')}
 
 Format Dokumen : Gambar PNG Resolusi Tinggi (Standar A4 Cetak 300 DPI)
-Dihasilkan Oleh: STAS RG Generator Platform
+Dihasilkan Oleh: STAS RG Projects Platform
 Lembaga        : Center of Excellence Sustainable Technology and Applied Sciences Research Group
 Institusi      : Telkom University
 =====================================================`;

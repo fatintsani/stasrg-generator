@@ -1,7 +1,7 @@
 export const translations = {
     id: {
         nav: {
-            brand: 'STAS RG Generator',
+            brand: 'STAS RG Projects',
             overview: 'Overview',
             about: 'Tentang',
             principles: 'Prinsip',
@@ -10,7 +10,7 @@ export const translations = {
         },
         hero: {
             badge: 'INTERNAL PLATFORM',
-            title: 'STAS RG Generator',
+            title: 'STAS RG Projects',
             subtitle: 'Platform internal untuk mengorganisir dan menghasilkan dokumen proyek STAS RG yang terstandarisasi secara otomatis.',
             getStarted: 'Mulai Sekarang',
             viewDocs: 'Lihat Dokumentasi',
@@ -30,9 +30,9 @@ export const translations = {
         },
         about: {
             tag: 'TENTANG PLATFORM',
-            title: 'Tentang STAS RG Generator',
+            title: 'Tentang STAS RG Projects',
             ref: 'REF: STAS-RG-ARCH-DOC-2025',
-            description: 'STAS RG Generator adalah platform internal yang dirancang untuk mempermudah proses penyusunan, pengelolaan, dan standardisasi informasi serta dokumen proyek di lingkungan kelompok riset CoE STAS-RG.',
+            description: 'STAS RG Projects adalah platform internal yang dirancang untuk mempermudah proses penyusunan, pengelolaan, dan standardisasi informasi serta dokumen proyek di lingkungan kelompok riset CoE STAS-RG.',
             card1Title: 'Ruang Kerja Terpusat',
             card1Desc: 'Berfungsi sebagai sumber kebenaran tunggal yang otoritatif untuk inisiatif penelitian, spesifikasi, atribusi tim, dan target capaian. Mengeliminasi spreadsheet terpisah dan draf dokumen yang tercecer.',
             card1Item1: 'Katalogisasi metadata terpadu untuk inisiatif CoE STAS-RG',
@@ -110,11 +110,11 @@ export const translations = {
         },
         internal: {
             noticeTitle: 'Dirancang Khusus Penggunaan Internal',
-            noticeDesc: 'STAS RG Generator menyediakan ruang kerja terpusat untuk mengelola informasi proyek dan menyusun dokumen proyek terstandarisasi di lingkungan CoE STAS-RG.',
+            noticeDesc: 'STAS RG Projects menyediakan ruang kerja terpusat untuk mengelola informasi proyek dan menyusun dokumen proyek terstandarisasi di lingkungan CoE STAS-RG.',
             noticeRestricted: 'Terbatas hanya untuk peneliti, pimpinan proyek, dan kontributor internal CoE STAS-RG.',
             ctaTitle: 'Siap untuk Memulai?',
-            ctaDesc: 'Akses STAS RG Generator dan mulai kelola informasi proyek riset Anda.',
-            ctaButton: 'Login ke STAS Generator',
+            ctaDesc: 'Akses STAS RG Projects dan mulai kelola informasi proyek riset Anda.',
+            ctaButton: 'Login ke STAS RG Projects',
             ctaAuth: 'STAS-AUTH: SSO AKTIF',
         },
         footer: {
@@ -136,12 +136,12 @@ export const translations = {
             tag: 'DOKUMEN KEBIJAKAN',
             title: 'Kebijakan Privasi',
             lastUpdated: 'Terakhir Diperbarui: 11 September 2025',
-            lead: 'Kebijakan ini menjelaskan bagaimana Center of Excellence Sustainable Technology and Applied Sciences Research Group (CoE STAS-RG) Telkom University mengelola, melindungi, dan memperlakukan data serta informasi riset internal di dalam platform STAS RG Generator.',
+            lead: 'Kebijakan ini menjelaskan bagaimana Center of Excellence Sustainable Technology and Applied Sciences Research Group (CoE STAS-RG) Telkom University mengelola, melindungi, dan memperlakukan data serta informasi riset internal di dalam platform STAS RG Projects.',
             backHome: 'Kembali ke Beranda',
             sections: [
                 {
                     title: '1. Cakupan & Tujuan Pengumpulan Data',
-                    content: 'STAS RG Generator mengumpulkan data proyek riset, atribusi peneliti, spesifikasi teknis, serta metadata dokumen yang diinputkan oleh anggota grup riset. Seluruh data semata-mata digunakan untuk standardisasi, kompilasi dokumen otomatis, dan pengelolaan arsip penelitian CoE STAS-RG Fakultas Ilmu Terapan Telkom University.',
+                    content: 'STAS RG Projects mengumpulkan data proyek riset, atribusi peneliti, spesifikasi teknis, serta metadata dokumen yang diinputkan oleh anggota grup riset. Seluruh data semata-mata digunakan untuk standardisasi, kompilasi dokumen otomatis, dan pengelolaan arsip penelitian CoE STAS-RG Fakultas Ilmu Terapan Telkom University.',
                 },
                 {
                     title: '2. Keamanan & Akses Single Sign-On (SSO)',
@@ -149,7 +149,7 @@ export const translations = {
                 },
                 {
                     title: '3. Perlindungan & Kerahasiaan Data Riset',
-                    content: 'Data penelitian yang tersimpan di dalam platform tidak akan dipublikasikan ke pihak luar tanpa persetujuan eksplisit dari pimpinan riset dan penulis terkait. STAS RG Generator tidak menjual atau menyebarkan data kepada pihak ketiga komersial.',
+                    content: 'Data penelitian yang tersimpan di dalam platform tidak akan dipublikasikan ke pihak luar tanpa persetujuan eksplisit dari pimpinan riset dan penulis terkait. STAS RG Projects tidak menjual atau menyebarkan data kepada pihak ketiga komersial.',
                 },
                 {
                     title: '4. Penyimpanan & Retensi Dokumen',
@@ -165,12 +165,12 @@ export const translations = {
             tag: 'KETENTUAN OPERASIONAL',
             title: 'Ketentuan Riset',
             lastUpdated: 'Terakhir Diperbarui: 11 September 2025',
-            lead: 'Ketentuan ini mengatur hak, kewajiban, dan standar etika bagi seluruh anggota peneliti, dosen, asisten riset, dan kolaborator yang menggunakan platform STAS RG Generator di lingkungan CoE STAS-RG Telkom University.',
+            lead: 'Ketentuan ini mengatur hak, kewajiban, dan standar etika bagi seluruh anggota peneliti, dosen, asisten riset, dan kolaborator yang menggunakan platform STAS RG Projects di lingkungan CoE STAS-RG Telkom University.',
             backHome: 'Kembali ke Beranda',
             sections: [
                 {
                     title: '1. Otorisasi Penggunaan Platform',
-                    content: 'Penggunaan platform STAS RG Generator terbatas pada anggota civitas akademika yang terafiliasi resmi dengan CoE STAS-RG Telkom University. Setiap pengguna bertanggung jawab penuh atas kerahasiaan akun dan aktivitas yang dilakukan melalui akun tersebut.',
+                    content: 'Penggunaan platform STAS RG Projects terbatas pada anggota civitas akademika yang terafiliasi resmi dengan CoE STAS-RG Telkom University. Setiap pengguna bertanggung jawab penuh atas kerahasiaan akun dan aktivitas yang dilakukan melalui akun tersebut.',
                 },
                 {
                     title: '2. Integritas & Standar Etika Ilmiah',
@@ -313,7 +313,7 @@ export const translations = {
             },
             footer: {
                 copyright: '© 2026 CoE STAS-RG Telkom University. Seluruh hak cipta dilindungi.',
-                version: 'STAS RG Generator v1.0.0 (Core)',
+                version: 'STAS RG Projects v1.0.0 (Core)',
                 connected: 'Sistem Terhubung (MySQL)',
             },
             dashboard: {
@@ -759,7 +759,7 @@ export const translations = {
     },
     en: {
         nav: {
-            brand: 'STAS RG Generator',
+            brand: 'STAS RG Projects',
             overview: 'Overview',
             about: 'About',
             principles: 'Principles',
@@ -768,7 +768,7 @@ export const translations = {
         },
         hero: {
             badge: 'INTERNAL PLATFORM',
-            title: 'STAS RG Generator',
+            title: 'STAS RG Projects',
             subtitle: 'A simple internal platform for organizing and generating standardized STAS RG project documents automatically.',
             getStarted: 'Get Started',
             viewDocs: 'View Documentation',
@@ -788,9 +788,9 @@ export const translations = {
         },
         about: {
             tag: 'ABOUT PLATFORM',
-            title: 'About STAS RG Generator',
+            title: 'About STAS RG Projects',
             ref: 'REF: STAS-RG-ARCH-DOC-2025',
-            description: 'STAS RG Generator is an internal platform designed to simplify the process of preparing, managing, and standardizing project information and project documents within the CoE STAS-RG research environment.',
+            description: 'STAS RG Projects is an internal platform designed to simplify the process of preparing, managing, and standardizing project information and project documents within the CoE STAS-RG research environment.',
             card1Title: 'Centralized Workspace',
             card1Desc: 'Functions as the authoritative single source of truth for research initiatives, specifications, team attributions, and milestones. Eliminate disparate spreadsheets and orphaned draft documents across local workstations.',
             card1Item1: 'Unified metadata cataloging for CoE STAS-RG initiatives',
@@ -834,11 +834,11 @@ export const translations = {
         },
         internal: {
             noticeTitle: 'Designed for Internal Use',
-            noticeDesc: 'STAS RG Generator provides a centralized workspace for managing project information and preparing standardized project documents within the CoE STAS-RG environment.',
+            noticeDesc: 'STAS RG Projects provides a centralized workspace for managing project information and preparing standardized project documents within the CoE STAS-RG environment.',
             noticeRestricted: 'Restricted to authorized CoE STAS-RG researchers, project leads, and internal contributors.',
             ctaTitle: 'Ready to Get Started?',
-            ctaDesc: 'Access STAS RG Generator and start managing your project information.',
-            ctaButton: 'Login to STAS RG Generator',
+            ctaDesc: 'Access STAS RG Projects and start managing your project information.',
+            ctaButton: 'Login to STAS RG Projects',
             ctaAuth: 'STAS-AUTH: SSO ENABLED',
         },
         footer: {
@@ -860,12 +860,12 @@ export const translations = {
             tag: 'POLICY DOCUMENT',
             title: 'Privacy Policy',
             lastUpdated: 'Last Updated: September 11, 2025',
-            lead: 'This policy describes how the Center of Excellence Sustainable Technology and Applied Sciences Research Group (CoE STAS-RG) Telkom University manages, protects, and handles internal research data and information within the STAS RG Generator platform.',
+            lead: 'This policy describes how the Center of Excellence Sustainable Technology and Applied Sciences Research Group (CoE STAS-RG) Telkom University manages, protects, and handles internal research data and information within the STAS RG Projects platform.',
             backHome: 'Back to Home',
             sections: [
                 {
                     title: '1. Scope & Data Collection Purpose',
-                    content: 'STAS RG Generator collects research project parameters, contributor attributions, technical specifications, and document metadata inputted by research group members. All data is exclusively utilized for standardization, automated compilation, and archiving within CoE STAS-RG School of Applied Sciences, Telkom University.',
+                    content: 'STAS RG Projects collects research project parameters, contributor attributions, technical specifications, and document metadata inputted by research group members. All data is exclusively utilized for standardization, automated compilation, and archiving within CoE STAS-RG School of Applied Sciences, Telkom University.',
                 },
                 {
                     title: '2. Security & Single Sign-On (SSO) Access',
@@ -873,11 +873,11 @@ export const translations = {
                 },
                 {
                     title: '3. Protection & Research Data Confidentiality',
-                    content: 'Research data stored in the platform will not be disclosed to external parties without explicit consent from research leads and respective authors. STAS RG Generator does not sell or distribute data to commercial third parties.',
+                    content: 'Research data stored in the platform will not be disclosed to external parties without explicit consent from research leads and respective authors. STAS RG Projects does not sell or distribute data to commercial third parties.',
                 },
                 {
                     title: '4. Document Storage & Retention',
-                    content: 'Generated documents and project metadata are stored in secure centralized repositories with scheduled backup mechanisms to maintain long-term academic continuity and integrity.',
+                    content: 'Generated documents and project metadata are stored in secure centralized repositories with scheduled backup mechanisms to maintain long-term academic integrity and continuity.',
                 },
                 {
                     title: '5. Contact & Governance Inquiries',
@@ -889,12 +889,12 @@ export const translations = {
             tag: 'OPERATIONAL TERMS',
             title: 'Terms of Research',
             lastUpdated: 'Last Updated: September 11, 2025',
-            lead: 'These terms govern the rights, responsibilities, and ethical standards for all researchers, faculty, research assistants, and collaborators utilizing the STAS RG Generator platform within CoE STAS-RG Telkom University.',
+            lead: 'These terms govern the rights, responsibilities, and ethical standards for all researchers, faculty, research assistants, and collaborators utilizing the STAS RG Projects platform within CoE STAS-RG Telkom University.',
             backHome: 'Back to Home',
             sections: [
                 {
                     title: '1. Platform Authorization',
-                    content: 'Access to STAS RG Generator is restricted to academic members officially affiliated with CoE STAS-RG Telkom University. Users are fully responsible for maintaining account credential confidentiality.',
+                    content: 'Access to STAS RG Projects is restricted to academic members officially affiliated with CoE STAS-RG Telkom University. Users are fully responsible for maintaining account credential confidentiality.',
                 },
                 {
                     title: '2. Research Integrity & Scientific Ethics',
@@ -1037,7 +1037,7 @@ export const translations = {
             },
             footer: {
                 copyright: '© 2026 CoE STAS-RG Telkom University. All rights reserved.',
-                version: 'STAS RG Generator v1.0.0 (Core)',
+                version: 'STAS RG Projects v1.0.0 (Core)',
                 connected: 'System Connected (MySQL)',
             },
             dashboard: {

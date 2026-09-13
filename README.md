@@ -110,7 +110,7 @@ php artisan key:generate
 
 Sesuaikan database dan konfigurasi email di `.env`:
 ```ini
-APP_NAME="STAS RG Generator"
+APP_NAME="STAS RG Projects"
 APP_URL=http://localhost:8000
 
 DB_CONNECTION=sqlite

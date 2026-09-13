@@ -20,7 +20,7 @@ class AccountApprovedMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Akun Anda Telah Disetujui — STAS-RG Generator',
+            subject: 'Akun Anda Telah Disetujui — STAS-RG Projects',
         );
     }
 

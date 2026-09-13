@@ -23,7 +23,7 @@ class AccountStatusChangedMail extends Mailable
         $statusText = $this->status === 'active' ? 'Diaktifkan' : 'Dinonaktifkan';
 
         return new Envelope(
-            subject: "Status Akun Anda Telah {$statusText} — STAS-RG Generator",
+            subject: "Status Akun Anda Telah {$statusText} — STAS-RG Projects",
         );
     }
 

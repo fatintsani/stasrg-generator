@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>STAS RG Generator — Platform Showcase Riset & Generator Dokumen</title>
+    <title>STAS RG Projects — Platform Showcase Riset & Manajemen Dokumen</title>
 
     <!-- Favicon & Touch Icons -->
     <link rel="icon" type="image/png" href="{{ asset('assets/img/stas.png') }}">
@@ -12,8 +12,8 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/img/stas.png') }}">
 
     <!-- SEO Meta Tags -->
-    <meta name="description" content="STAS RG Generator — Platform publikasi riset, showcase inovasi, dan generator dokumen ilmiah resmi STAS Research Group Telkom University.">
-    <meta name="keywords" content="STAS Research Group, Telkom University, Smart Agriculture, IoT, Research Showcase, RG Generator, Dokumen Ilmiah, Riset Indonesia">
+    <meta name="description" content="STAS RG Projects — Platform publikasi riset, showcase inovasi, dan generator dokumen ilmiah resmi STAS Research Group Telkom University.">
+    <meta name="keywords" content="STAS Research Group, Telkom University, Smart Agriculture, IoT, Research Showcase, RG Projects, Dokumen Ilmiah, Riset Indonesia">
     <meta name="author" content="STAS Research Group Telkom University">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#10b981">
@@ -23,15 +23,15 @@
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="STAS RG Generator">
-    <meta property="og:title" content="STAS RG Generator — Platform Showcase Riset & Generator Dokumen">
+    <meta property="og:site_name" content="STAS RG Projects">
+    <meta property="og:title" content="STAS RG Projects — Platform Showcase Riset & Manajemen Dokumen">
     <meta property="og:description" content="Platform publikasi riset, showcase inovasi, dan generator dokumen ilmiah resmi STAS Research Group Telkom University.">
     <meta property="og:image" content="{{ asset('assets/img/stas.png') }}">
     <meta property="og:url" content="{{ url()->current() }}">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="STAS RG Generator — Platform Showcase Riset & Generator Dokumen">
+    <meta name="twitter:title" content="STAS RG Projects — Platform Showcase Riset & Manajemen Dokumen">
     <meta name="twitter:description" content="Platform publikasi riset, showcase inovasi, dan generator dokumen ilmiah resmi STAS Research Group Telkom University.">
     <meta name="twitter:image" content="{{ asset('assets/img/stas.png') }}">
 
