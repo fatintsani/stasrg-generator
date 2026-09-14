@@ -25,7 +25,7 @@ function LandingContent({ publishedProjects = [], stats = {} }) {
                 <meta name="description" content={pageDesc} />
             </Head>
 
-            <div className="min-h-screen flex flex-col bg-[#FAFBFD] dark:bg-[#070D18] text-slate-900 dark:text-slate-100 selection:bg-emerald-100 selection:text-emerald-900 font-sans antialiased transition-colors">
+            <div className="min-h-screen flex flex-col bg-[#FAFBFD] dark:bg-[#070D18] text-slate-900 dark:text-slate-100 selection:bg-[#0AB600]/20 selection:text-[#0AB600] font-sans antialiased transition-colors">
                 {/* Top Sticky Header */}
                 <Navbar />
 

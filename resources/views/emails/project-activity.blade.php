@@ -94,7 +94,7 @@
                 <td class="card-value" style="padding: 10px 0; font-size: 13px; vertical-align: middle; border-bottom: 1px solid #EDF2F7;">
                     @php
                         $bgStyle = match($eventType) {
-                            'published', 'pdf_downloaded' => 'background-color: #ECFDF5; border: 1px solid #A7F3D0; color: #0D5A34;',
+                            'published', 'pdf_downloaded' => 'background-color: #ECFDF5; border: 1px solid #A7F3D0; color: #0AB600;',
                             'unpublished' => 'background-color: #FFF7ED; border: 1px solid #FED7AA; color: #9A3412;',
                             'deleted' => 'background-color: #FEF2F2; border: 1px solid #FECACA; color: #991B1B;',
                             default => 'background-color: #EFF6FF; border: 1px solid #BFDBFE; color: #1E40AF;',
@@ -126,24 +126,24 @@
     @if($eventType !== 'deleted')
         <div class="button-wrapper" style="margin: 26px 0 20px 0; text-align: left;">
             @if($eventType === 'published')
-                <a href="{{ url('/#projects-showcase') }}" class="btn-primary" target="_blank" style="display: inline-block; background-color: #0D5A34; color: #FFFFFF !important; font-size: 13px; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 12px; text-align: center; box-shadow: 0 2px 6px rgba(13, 90, 52, 0.15);">
+                <a href="{{ url('/#projects-showcase') }}" class="btn-primary" target="_blank" style="display: inline-block; background-color: #0AB600; color: #FFFFFF !important; font-size: 13px; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 12px; text-align: center; box-shadow: 0 2px 6px rgba(10, 182, 0, 0.15);">
                     Lihat di Showcase Publik
                 </a>
             @else
-                <a href="{{ url('/projects/' . ($project->slug ?? $project->id)) }}" class="btn-primary" target="_blank" style="display: inline-block; background-color: #0D5A34; color: #FFFFFF !important; font-size: 13px; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 12px; text-align: center; box-shadow: 0 2px 6px rgba(13, 90, 52, 0.15);">
+                <a href="{{ url('/projects/' . ($project->slug ?? $project->id)) }}" class="btn-primary" target="_blank" style="display: inline-block; background-color: #0AB600; color: #FFFFFF !important; font-size: 13px; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 12px; text-align: center; box-shadow: 0 2px 6px rgba(10, 182, 0, 0.15);">
                     Buka Detail Project
                 </a>
             @endif
         </div>
     @else
         <div class="button-wrapper" style="margin: 26px 0 20px 0; text-align: left;">
-            <a href="{{ url('/projects') }}" class="btn-primary" target="_blank" style="display: inline-block; background-color: #0D5A34; color: #FFFFFF !important; font-size: 13px; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 12px; text-align: center; box-shadow: 0 2px 6px rgba(13, 90, 52, 0.15);">
+            <a href="{{ url('/projects') }}" class="btn-primary" target="_blank" style="display: inline-block; background-color: #0AB600; color: #FFFFFF !important; font-size: 13px; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 12px; text-align: center; box-shadow: 0 2px 6px rgba(10, 182, 0, 0.15);">
                 Kembali ke Daftar Project
             </a>
         </div>
     @endif
 
-    <div class="info-callout" style="background-color: #F8FAFC; border-left: 3px solid #0D5A34; border-radius: 0 10px 10px 0; padding: 12px 16px; margin: 20px 0 0 0; font-size: 12px; color: #475569; line-height: 1.5;">
+    <div class="info-callout" style="background-color: #F8FAFC; border-left: 3px solid #0AB600; border-radius: 0 10px 10px 0; padding: 12px 16px; margin: 20px 0 0 0; font-size: 12px; color: #475569; line-height: 1.5;">
         Seluruh histori perubahan dan versi dokumen tersimpan pada repositori audit laboratorium STAS-RG.
     </div>
 @endsection

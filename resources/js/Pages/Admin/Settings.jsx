@@ -48,7 +48,9 @@ import {
     Bot,
     XCircle,
     FlaskConical,
-    Lightbulb
+    Lightbulb,
+    Type,
+    Headphones,
 } from 'lucide-react';
 
 function IndonesiaFlag({ className = "w-4 h-3" }) {
@@ -80,13 +82,107 @@ function EnglishFlag({ className = "w-4 h-3" }) {
     );
 }
 
-export default function Settings({ user, passkeys = [], projectStats = {}, systemInfo = {}, aiSettings = {} }) {
-    const { theme, setTheme, language, setLanguage, t } = useApp();
+export default function Settings({ user, passkeys = [], projectStats = {}, systemInfo = {}, aiSettings = {}, appFont: initialAppFont = 'plus-jakarta-sans' }) {
+    const { theme, setTheme, language, setLanguage, appFont, setAppFont, t } = useApp();
     const s = t?.admin?.settings || {};
     const aiTrans = t?.aiSettings || {};
     const { showSuccess, showError, showWarning, showConfirm } = useAlert();
     const [isEnrolling, setIsEnrolling] = useState(false);
     const [deletingPasskeyId, setDeletingPasskeyId] = useState(null);
+
+    // Font State & Options (Curated options: Plus Jakarta Sans, Poppins, Outfit)
+    const fontOptions = [
+        {
+            key: 'plus-jakarta-sans',
+            name: 'Plus Jakarta Sans',
+            badge: 'Default',
+            category: 'Geometric Sans',
+            description: 'Font bawaan resmi STAS-RG. Bersih, modern, dan sangat profesional untuk publikasi riset.',
+            specimenClass: 'font-specimen-plus-jakarta-sans',
+            isDefault: true,
+        },
+        {
+            key: 'poppins',
+            name: 'Poppins',
+            category: 'Geometric Sans',
+            description: 'Geometris, hangat, dan kontemporer dengan karakter ramah dan tegas.',
+            specimenClass: 'font-specimen-poppins',
+            isDefault: false,
+        },
+        {
+            key: 'outfit',
+            name: 'Outfit',
+            category: 'Modern Sans',
+            description: 'Elegan, futuristik, dan tech-forward dengan proporsi modern.',
+            specimenClass: 'font-specimen-outfit',
+            isDefault: false,
+        },
+    ];
+
+    const [selectedFont, setSelectedFont] = useState(appFont || initialAppFont || 'plus-jakarta-sans');
+    const [isSavingFont, setIsSavingFont] = useState(false);
+
+    useEffect(() => {
+        if (appFont) {
+            setSelectedFont(appFont);
+        }
+    }, [appFont]);
+
+    const handleSelectFontPreview = (fontKey) => {
+        setSelectedFont(fontKey);
+        setAppFont(fontKey);
+    };
+
+    const handleSaveFont = (e) => {
+        if (e) e.preventDefault();
+        setIsSavingFont(true);
+
+        router.post('/settings/font', { app_font: selectedFont }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                const currentFontObj = fontOptions.find((f) => f.key === selectedFont);
+                showSuccess(
+                    s.fontSaveSuccessTitle || 'Font Berhasil Diperbarui',
+                    (s.fontSaveSuccessMsg || 'Font default antarmuka sistem telah diubah ke {font}.').replace(
+                        '{font}',
+                        currentFontObj?.name || selectedFont
+                    )
+                );
+                setIsSavingFont(false);
+            },
+            onError: (err) => {
+                showError('Gagal Menyimpan Font', Object.values(err)[0] || 'Terjadi kesalahan.');
+                setIsSavingFont(false);
+            },
+            onFinish: () => {
+                setIsSavingFont(false);
+            },
+        });
+    };
+
+    const handleResetFontDefault = () => {
+        setSelectedFont('plus-jakarta-sans');
+        setAppFont('plus-jakarta-sans');
+        setIsSavingFont(true);
+
+        router.post('/settings/font', { app_font: 'plus-jakarta-sans' }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                showSuccess(
+                    s.fontSaveSuccessTitle || 'Font Berhasil Diperbarui',
+                    'Font default dikembalikan ke Plus Jakarta Sans.'
+                );
+                setIsSavingFont(false);
+            },
+            onError: (err) => {
+                showError('Gagal Mengembalikan Font', Object.values(err)[0] || 'Terjadi kesalahan.');
+                setIsSavingFont(false);
+            },
+            onFinish: () => {
+                setIsSavingFont(false);
+            },
+        });
+    };
 
     // Profile form state
     const [profileName, setProfileName] = useState(user?.name || '');
@@ -644,7 +740,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/80 text-[#0D5A34] dark:text-emerald-400">
+                            <div className="p-2 rounded-xl bg-[#0AB600]/10 border border-[#0AB600]/30 text-[#0AB600]">
                                 <SettingsIcon className="w-5 h-5" />
                             </div>
                             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
@@ -674,8 +770,8 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                     <Layers className="w-3.5 h-3.5 text-zinc-400" />
                                     {s.statTotal || 'Total'}: <strong className="text-slate-900 dark:text-white">{projectStats.total || 0}</strong>
                                 </span>
-                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-medium border border-emerald-200/60 dark:border-emerald-800/60">
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#0AB600]/10 text-[#0AB600] font-medium border border-[#0AB600]/30">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-[#0AB600]" />
                                     {s.statPublished || 'Published'}: <strong>{projectStats.published || 0}</strong>
                                 </span>
                                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800/60 font-medium">
@@ -688,7 +784,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                         <div className="shrink-0 pt-2 sm:pt-0">
                             <Link
                                 href="/projects/create"
-                                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#0D5A34] hover:bg-[#094226] text-white text-xs sm:text-sm font-semibold shadow-sm transition-all duration-150 cursor-pointer group"
+                                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#0AB600] hover:bg-[#089600] text-white text-xs sm:text-sm font-semibold shadow-sm transition-all duration-150 cursor-pointer group"
                             >
                                 <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
                                 <span>{s.btnNewProject || 'Input Proyek Baru'}</span>
@@ -708,7 +804,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                         <div className="bg-white dark:bg-[#121824] p-5 sm:p-6 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs">
                             <div className="flex items-center justify-between gap-4 pb-4 border-b border-zinc-100 dark:border-zinc-800/80">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/80 text-[#0D5A34] dark:text-emerald-400">
+                                    <div className="p-2 rounded-xl bg-[#0AB600]/10 border border-[#0AB600]/30 text-[#0AB600]">
                                         <Fingerprint className="w-5 h-5" />
                                     </div>
                                     <div>
@@ -724,7 +820,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                 <span
                                     className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border shrink-0 ${
                                         user.is_biometric_enabled || passkeys.length > 0
-                                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                                            ? 'bg-[#0AB600]/10 text-[#0AB600] border-[#0AB600]/30'
                                             : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700'
                                     }`}
                                 >
@@ -758,7 +854,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                                 className="flex items-center justify-between p-3 rounded-xl bg-zinc-50/80 dark:bg-zinc-900/60 border border-zinc-200/70 dark:border-zinc-800/70"
                                             >
                                                 <div className="flex items-center gap-2.5">
-                                                    <div className="p-1.5 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-emerald-600 dark:text-emerald-400">
+                                                    <div className="p-1.5 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-[#0AB600]">
                                                         <Laptop className="w-4 h-4" />
                                                     </div>
                                                     <div>
@@ -804,7 +900,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                         type="button"
                                         onClick={handleEnrollPasskey}
                                         disabled={isEnrolling}
-                                        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-emerald-50 hover:bg-emerald-100/80 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-[#0D5A34] dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80 text-xs font-bold transition-all cursor-pointer"
+                                        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#0AB600]/10 hover:bg-[#0AB600]/15/80 dark:bg-[#0AB600]/10 dark:hover:bg-[#0AB600]/15 text-[#0AB600] border border-[#0AB600]/30 text-xs font-bold transition-all cursor-pointer"
                                     >
                                         <Fingerprint className="w-4 h-4" />
                                         <span>
@@ -821,7 +917,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                             {/* Card Header */}
                             <div className="flex items-center justify-between gap-4 pb-4 border-b border-zinc-100 dark:border-zinc-800/80">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-xl bg-gradient-to-br from-[#0D5A34] to-emerald-600 text-white shadow-xs">
+                                    <div className="p-2 rounded-xl bg-gradient-to-br from-[#0AB600] to-[#089600] text-white shadow-xs">
                                         <Sparkles className="w-5 h-5" />
                                     </div>
                                     <div>
@@ -837,11 +933,11 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                 <span
                                     className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border shrink-0 flex items-center gap-1.5 ${
                                         aiSettings?.has_api_key
-                                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                                            ? 'bg-[#0AB600]/10 text-[#0AB600] border-[#0AB600]/30'
                                             : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
                                     }`}
                                 >
-                                    <span className={`w-1.5 h-1.5 rounded-full ${aiSettings?.has_api_key ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${aiSettings?.has_api_key ? 'bg-[#0AB600]' : 'bg-amber-500'}`}></span>
                                     {aiSettings?.has_api_key ? (aiTrans.statusConfigured || 'API Key Terpasang') : (aiTrans.statusNotConfigured || 'Belum Dikonfigurasi')}
                                 </span>
                             </div>
@@ -862,7 +958,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                                 if (prov === 'gemini') setAiModel('gemini-3.6-flash');
                                                 else if (prov === 'openai') setAiModel('gpt-4o-mini');
                                             }}
-                                            className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-[#0D5A34]"
+                                            className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-[#0AB600]"
                                         >
                                             <option value="gemini">Google Gemini AI (Direkomendasikan)</option>
                                             <option value="openai">OpenAI (ChatGPT / Custom Endpoint)</option>
@@ -877,7 +973,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                         <select
                                             value={aiModel}
                                             onChange={(e) => setAiModel(e.target.value)}
-                                            className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-[#0D5A34]"
+                                            className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-[#0AB600]"
                                         >
                                             {aiProvider === 'gemini' ? (
                                                 <>
@@ -902,7 +998,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                 <div className="space-y-1.5">
                                     <div className="flex items-center justify-between">
                                         <label className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
-                                            <KeyRound className="w-3.5 h-3.5 text-emerald-600" />
+                                            <KeyRound className="w-3.5 h-3.5 text-[#0AB600]" />
                                             <span>{aiTrans.labelApiKey || 'API Key AI'}</span>
                                         </label>
                                         {aiProvider === 'gemini' && (
@@ -910,7 +1006,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                                 href="https://aistudio.google.com/app/apikey"
                                                 target="_blank"
                                                 rel="noreferrer"
-                                                className="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-semibold"
+                                                className="text-[10px] text-[#0AB600] hover:underline flex items-center gap-1 font-semibold"
                                             >
                                                 <span>Dapatkan API Key Gemini Gratis</span>
                                                 <ExternalLink className="w-3 h-3" />
@@ -923,7 +1019,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                             value={aiApiKey}
                                             onChange={(e) => setAiApiKey(e.target.value)}
                                             placeholder={aiSettings?.has_api_key ? "API Key tersimpan (masukkan baru untuk mengganti)" : "Masukkan Google Gemini API Key (AIzaSy...)"}
-                                            className="w-full px-3 py-2 pr-10 text-xs font-mono bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-[#0D5A34] transition-colors"
+                                            className="w-full px-3 py-2 pr-10 text-xs font-mono bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-[#0AB600] transition-colors"
                                         />
                                         <button
                                             type="button"
@@ -949,7 +1045,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                             value={aiCustomEndpoint}
                                             onChange={(e) => setAiCustomEndpoint(e.target.value)}
                                             placeholder="https://api.openai.com/v1"
-                                            className="w-full px-3 py-2 text-xs font-mono bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-[#0D5A34]"
+                                            className="w-full px-3 py-2 text-xs font-mono bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-[#0AB600]"
                                         />
                                     </div>
                                 )}
@@ -965,12 +1061,12 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                     >
                                         {isTestingAi ? (
                                             <>
-                                                <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+                                                <Loader2 className="w-4 h-4 animate-spin text-[#0AB600]" />
                                                 <span>{aiTrans.testingConnection || 'Menguji Koneksi API...'}</span>
                                             </>
                                         ) : (
                                             <>
-                                                <FlaskConical className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                                <FlaskConical className="w-4 h-4 text-[#0AB600]" />
                                                 <span>{aiTrans.btnTestConnection || 'Tes Koneksi API'}</span>
                                             </>
                                         )}
@@ -980,7 +1076,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                     <button
                                         type="submit"
                                         disabled={isSavingAi || isTestingAi}
-                                        className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0D5A34] hover:bg-[#094226] text-white text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                                        className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0AB600] hover:bg-[#089600] text-white text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50"
                                     >
                                         {isSavingAi ? (
                                             <>
@@ -1001,12 +1097,12 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                             {aiTestResult && (
                                 <div className={`p-4 rounded-xl border text-xs transition-all animate-in fade-in duration-200 ${
                                     aiTestResult.success
-                                        ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800/80 text-emerald-950 dark:text-emerald-200'
+                                        ? 'bg-[#0AB600]/10 border-[#0AB600]/30 text-slate-900 dark:text-[#0AB600]'
                                         : 'bg-rose-50/80 dark:bg-rose-950/30 border-rose-300 dark:border-rose-800/80 text-rose-950 dark:text-rose-200'
                                 }`}>
                                     <div className="flex items-start gap-3">
                                         {aiTestResult.success ? (
-                                            <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                                            <CheckCircle2 className="w-5 h-5 text-[#0AB600] shrink-0 mt-0.5" />
                                         ) : (
                                             <XCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                                         )}
@@ -1017,7 +1113,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                                 </p>
                                                 {aiTestResult.latency_ms && (
                                                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-white/80 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
-                                                        <Activity className="w-3 h-3 text-emerald-500" />
+                                                        <Activity className="w-3 h-3 text-[#0AB600]" />
                                                         <span>{aiTestResult.latency_ms} ms</span>
                                                     </span>
                                                 )}
@@ -1065,10 +1161,10 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                     className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border shrink-0 flex items-center gap-1.5 ${
                                         isMaintenanceActive
                                             ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
-                                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                                            : 'bg-[#0AB600]/10 text-[#0AB600] border-[#0AB600]/30'
                                     }`}
                                 >
-                                    <span className={`w-1.5 h-1.5 rounded-full ${isMaintenanceActive ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}></span>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${isMaintenanceActive ? 'bg-amber-500 animate-pulse' : 'bg-[#0AB600]'}`}></span>
                                     {isMaintenanceActive ? (s.statusMaintenance || 'Mode Maintenance') : (s.statusOnline || 'Online')}
                                 </span>
                             </div>
@@ -1105,7 +1201,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                             disabled={isTogglingMaintenance}
                                             className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs disabled:opacity-50 ${
                                                 isMaintenanceActive
-                                                    ? 'bg-[#0D5A34] hover:bg-[#094226] text-white'
+                                                    ? 'bg-[#0AB600] hover:bg-[#089600] text-white'
                                                     : 'bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700'
                                             }`}
                                         >
@@ -1142,7 +1238,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                     <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200/80 dark:border-zinc-800/80 flex flex-col justify-between gap-3">
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-xs">
-                                                <RefreshCw className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                                <RefreshCw className="w-3.5 h-3.5 text-[#0AB600]" />
                                                 <span>{s.btnClearCache || 'Bersihkan Cache & Views'}</span>
                                             </div>
                                             <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
@@ -1237,7 +1333,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
 
                                     <div className="p-2.5 rounded-xl bg-zinc-50/80 dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-zinc-800/60">
                                         <p className="text-[10px] text-zinc-400">{s.labelStorageUsage || 'Penyimpanan'}</p>
-                                        <p className="font-semibold text-emerald-600 dark:text-emerald-400 font-mono mt-0.5">
+                                        <p className="font-semibold text-[#0AB600] font-mono mt-0.5">
                                             {systemInfo?.storage_size || '0 MB'}
                                         </p>
                                     </div>
@@ -1245,6 +1341,50 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                 </div>
                             </div>
 
+                        </div>
+
+                        {/* Card: Kontak Support Developer */}
+                        <div className="bg-white dark:bg-[#121824] p-5 sm:p-6 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs space-y-4">
+                            <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
+                                <div className="flex items-center gap-3">
+                                    <div>
+                                        <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                                            Kontak Support Developer
+                                        </h3>
+                                        <p className="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">
+                                            Bantuan teknis langsung, penanganan kendala server, atau konsultasi kustomisasi sistem.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/70 dark:border-zinc-800/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div className="flex items-center gap-3.5">
+                                    <img
+                                        src="/assets/img/icon/profile_dev.png"
+                                        alt="Developer Profile"
+                                        className="w-12 h-12 rounded-xl object-cover border border-[#0AB600]/30 shadow-xs shrink-0"
+                                    />
+                                    <div className="space-y-0.5">
+                                        <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
+                                            Nomor WhatsApp Developer:
+                                        </span>
+                                        <p className="text-sm font-bold text-slate-900 dark:text-white font-mono flex items-center gap-2">
+                                            <span>+62 831-3397-7214</span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <a
+                                    href="https://wa.me/6283133977214?text=Halo%20Developer%20STAS%20RG%2C%20saya%20admin%20membutuhkan%20bantuan%20teknis%20sistem."
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#0AB600] hover:bg-[#099900] text-white text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer"
+                                >
+                                    <Headphones className="w-3.5 h-3.5" />
+                                    <span>Hubungi via WhatsApp</span>
+                                </a>
+                            </div>
                         </div>
 
                     </div>
@@ -1269,7 +1409,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                         onClick={() => setTheme('light')}
                                         className={`flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
                                             theme === 'light'
-                                                ? 'bg-emerald-50/80 dark:bg-emerald-950/50 border-[#0D5A34] text-[#0D5A34] dark:text-emerald-300 font-semibold shadow-2xs'
+                                                ? 'bg-[#0AB600]/10 border-[#0AB600] text-[#0AB600] font-semibold shadow-2xs'
                                                 : 'bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300'
                                         }`}
                                     >
@@ -1277,7 +1417,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                             <Sun className="w-3.5 h-3.5 text-amber-500" />
                                             <span>{s.themeLight || 'Mode Terang'}</span>
                                         </div>
-                                        {theme === 'light' && <Check className="w-3.5 h-3.5 text-[#0D5A34] dark:text-emerald-400" />}
+                                        {theme === 'light' && <Check className="w-3.5 h-3.5 text-[#0AB600]" />}
                                     </button>
 
                                     <button
@@ -1285,7 +1425,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                         onClick={() => setTheme('dark')}
                                         className={`flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
                                             theme === 'dark'
-                                                ? 'bg-emerald-50/80 dark:bg-emerald-950/50 border-[#0D5A34] dark:border-emerald-500 text-[#0D5A34] dark:text-emerald-300 font-semibold shadow-2xs'
+                                                ? 'bg-[#0AB600]/10 border-[#0AB600] text-[#0AB600] font-semibold shadow-2xs'
                                                 : 'bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300'
                                         }`}
                                     >
@@ -1293,7 +1433,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                             <Moon className="w-3.5 h-3.5 text-indigo-400" />
                                             <span>{s.themeDark || 'Mode Gelap'}</span>
                                         </div>
-                                        {theme === 'dark' && <Check className="w-3.5 h-3.5 text-emerald-400" />}
+                                        {theme === 'dark' && <Check className="w-3.5 h-3.5 text-[#0AB600]" />}
                                     </button>
                                 </div>
                             </div>
@@ -1309,7 +1449,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                         onClick={() => setLanguage('id')}
                                         className={`flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
                                             language === 'id'
-                                                ? 'bg-emerald-50/80 dark:bg-emerald-950/50 border-[#0D5A34] dark:border-emerald-500 text-[#0D5A34] dark:text-emerald-300 font-semibold shadow-2xs'
+                                                ? 'bg-[#0AB600]/10 border-[#0AB600] text-[#0AB600] font-semibold shadow-2xs'
                                                 : 'bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300'
                                         }`}
                                     >
@@ -1317,7 +1457,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                             <IndonesiaFlag className="w-4 h-3" />
                                             <span>{s.langId || 'Indonesia'}</span>
                                         </div>
-                                        {language === 'id' && <Check className="w-3.5 h-3.5 text-[#0D5A34] dark:text-emerald-400" />}
+                                        {language === 'id' && <Check className="w-3.5 h-3.5 text-[#0AB600]" />}
                                     </button>
 
                                     <button
@@ -1325,7 +1465,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                         onClick={() => setLanguage('en')}
                                         className={`flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
                                             language === 'en'
-                                                ? 'bg-emerald-50/80 dark:bg-emerald-950/50 border-[#0D5A34] dark:border-emerald-500 text-[#0D5A34] dark:text-emerald-300 font-semibold shadow-2xs'
+                                                ? 'bg-[#0AB600]/10 border-[#0AB600] text-[#0AB600] font-semibold shadow-2xs'
                                                 : 'bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300'
                                         }`}
                                     >
@@ -1333,9 +1473,98 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                             <EnglishFlag className="w-4 h-3" />
                                             <span>{s.langEn || 'English'}</span>
                                         </div>
-                                        {language === 'en' && <Check className="w-3.5 h-3.5 text-[#0D5A34] dark:text-emerald-400" />}
+                                        {language === 'en' && <Check className="w-3.5 h-3.5 text-[#0AB600]" />}
                                     </button>
                                 </div>
+                            </div>
+
+                            {/* Typography & Font Family Selector */}
+                            <div className="space-y-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className="p-1 rounded-lg bg-[#0AB600]/10 text-[#0AB600]">
+                                            <Type className="w-3.5 h-3.5" />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-900 dark:text-white">
+                                                {s.fontLabel || 'Font Default Aplikasi'}
+                                            </label>
+                                            <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                                                {s.fontDesc || 'Pilih font default untuk seluruh antarmuka aplikasi. Default: Plus Jakarta Sans.'}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {selectedFont !== 'plus-jakarta-sans' && (
+                                        <button
+                                            type="button"
+                                            onClick={handleResetFontDefault}
+                                            disabled={isSavingFont}
+                                            title="Kembalikan ke Plus Jakarta Sans"
+                                            className="text-[10px] text-rose-600 dark:text-rose-400 hover:underline font-semibold cursor-pointer shrink-0"
+                                        >
+                                            {s.btnResetFont || 'Kembalikan ke Default'}
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Font Option Chips (Plus Jakarta Sans, Poppins, Outfit) */}
+                                <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-2">
+                                    {fontOptions.map((font) => {
+                                        const isSelected = selectedFont === font.key;
+                                        return (
+                                            <button
+                                                key={font.key}
+                                                type="button"
+                                                onClick={() => handleSelectFontPreview(font.key)}
+                                                className={`flex flex-col text-left p-2.5 rounded-xl border transition-all cursor-pointer ${
+                                                    isSelected
+                                                        ? 'bg-[#0AB600]/10 border-[#0AB600] ring-1 ring-[#0AB600]/30 dark:ring-[#0AB600]/20'
+                                                        : 'bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
+                                                }`}
+                                            >
+                                                <div className="flex items-center justify-between w-full">
+                                                    <span className={`text-xs font-bold text-slate-900 dark:text-white ${font.specimenClass}`}>
+                                                        {font.name}
+                                                    </span>
+                                                    <div className="flex items-center gap-1">
+                                                        {font.isDefault && (
+                                                            <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[#0AB600]/15 dark:bg-[#0AB600]/15 text-[#0AB600] font-medium">
+                                                                Default
+                                                            </span>
+                                                        )}
+                                                        {isSelected && (
+                                                            <Check className="w-3.5 h-3.5 text-[#0AB600]" />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <span className={`text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-1 ${font.specimenClass}`}>
+                                                    Aa Bb Cc Gg 1 2 3
+                                                </span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Save Button */}
+                                <button
+                                    type="button"
+                                    onClick={handleSaveFont}
+                                    disabled={isSavingFont}
+                                    className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[#0AB600] hover:bg-[#089600] text-white text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                                >
+                                    {isSavingFont ? (
+                                        <>
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                            <span>{s.fontSaving || 'Menyimpan Font...'}</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Check className="w-3.5 h-3.5" />
+                                            <span>{s.btnSaveFont || 'Simpan Font Default'}</span>
+                                        </>
+                                    )}
+                                </button>
                             </div>
                         </div>
 
@@ -1345,8 +1574,8 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                 <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
                                     {s.profileTitle || 'Profil Akun'}
                                 </h3>
-                                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[10px] font-semibold text-emerald-800 dark:text-emerald-300">
-                                    <Shield className="w-3 h-3 text-emerald-600" />
+                                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#0AB600]/10 border border-[#0AB600]/30 text-[10px] font-semibold text-[#0AB600]">
+                                    <Shield className="w-3 h-3 text-[#0AB600]" />
                                     <span>{s.roleAdmin || 'Administrator'}</span>
                                 </div>
                             </div>
@@ -1369,9 +1598,9 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                                 <img
                                                     src={avatarPreview}
                                                     alt="Preview"
-                                                    className="w-14 h-14 rounded-2xl object-cover border-2 border-emerald-500 shadow-sm"
+                                                    className="w-14 h-14 rounded-2xl object-cover border-2 border-[#0AB600] shadow-sm"
                                                 />
-                                                <span className="absolute -top-1 -right-1 px-1.5 py-0.2 bg-emerald-500 text-white text-[9px] font-bold rounded-full">
+                                                <span className="absolute -top-1 -right-1 px-1.5 py-0.2 bg-[#0AB600] text-white text-[9px] font-bold rounded-full">
                                                     {s.badgeNewAvatar || 'Baru'}
                                                 </span>
                                             </div>
@@ -1382,7 +1611,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                                 className="w-14 h-14 rounded-2xl object-cover border border-zinc-200 dark:border-zinc-700 shadow-xs"
                                             />
                                         ) : (
-                                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#0D5A34] to-[#147a47] text-white font-bold text-lg flex items-center justify-center shadow-xs">
+                                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#0AB600] to-[#147a47] text-white font-bold text-lg flex items-center justify-center shadow-xs">
                                                 {user.name ? user.name.charAt(0).toUpperCase() : 'A'}
                                             </div>
                                         )}
@@ -1400,17 +1629,17 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
 
                                     <div className="flex-1 min-w-0 space-y-2">
                                         {isCompressingAvatar ? (
-                                            <div className="p-3 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/70 dark:bg-emerald-950/30 space-y-1.5 animate-in fade-in">
-                                                <div className="flex items-center justify-between text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                                            <div className="p-3 rounded-xl border border-[#0AB600]/30 bg-[#0AB600]/10 space-y-1.5 animate-in fade-in">
+                                                <div className="flex items-center justify-between text-xs font-bold text-[#0AB600]">
                                                     <div className="flex items-center gap-2">
-                                                        <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600 dark:text-emerald-400" />
+                                                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0AB600]" />
                                                         <span className="text-[11px]">{avatarCompressionProgress?.stage || 'Mengompresi foto otomatis...'}</span>
                                                     </div>
                                                     <span className="text-[11px] font-mono">{avatarCompressionProgress?.percent || 0}%</span>
                                                 </div>
-                                                <div className="w-full bg-emerald-200 dark:bg-emerald-900 rounded-full h-1.5 overflow-hidden">
+                                                <div className="w-full bg-[#0AB600]/20 dark:bg-[#0AB600]/15 rounded-full h-1.5 overflow-hidden">
                                                     <div
-                                                        className="bg-[#0D5A34] dark:bg-emerald-400 h-1.5 rounded-full transition-all duration-300"
+                                                        className="bg-[#0AB600] h-1.5 rounded-full transition-all duration-300"
                                                         style={{ width: `${avatarCompressionProgress?.percent || 15}%` }}
                                                     />
                                                 </div>
@@ -1454,8 +1683,8 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                         )}
 
                                         {avatarCompressionStats?.wasCompressed && (
-                                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300">
-                                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0AB600]/10 border border-[#0AB600]/30 text-[11px] font-semibold text-[#0AB600]">
+                                                <CheckCircle2 className="w-3.5 h-3.5 text-[#0AB600] shrink-0" />
                                                 <span>Dikompresi: {avatarCompressionStats.originalSizeStr} &rarr; {avatarCompressionStats.compressedSizeStr} (Hemat {avatarCompressionStats.savedPercent}%)</span>
                                             </div>
                                         )}
@@ -1478,7 +1707,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                         onChange={(e) => setProfileName(e.target.value)}
                                         placeholder={s.placeholderFullName || 'Nama Pengguna'}
                                         required
-                                        className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-[#0D5A34] transition-colors"
+                                        className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-[#0AB600] transition-colors"
                                     />
                                 </div>
 
@@ -1508,7 +1737,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                     <button
                                         type="submit"
                                         disabled={isSavingProfile}
-                                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0D5A34] hover:bg-[#094226] text-white text-xs font-bold transition-all shadow-xs disabled:opacity-50 cursor-pointer"
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0AB600] hover:bg-[#089600] text-white text-xs font-bold transition-all shadow-xs disabled:opacity-50 cursor-pointer"
                                     >
                                         {isSavingProfile ? (
                                             <>
@@ -1529,7 +1758,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                             <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800/80 text-[11px] text-zinc-400 space-y-1">
                                 <div className="flex justify-between">
                                     <span>{s.labelAccountStatus || 'Status Akun'}:</span>
-                                    <span className="font-semibold text-emerald-600 dark:text-emerald-400 uppercase">{user.status}</span>
+                                    <span className="font-semibold text-[#0AB600] uppercase">{user.status}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>{s.labelJoinedSince || 'Bergabung Sejak'}:</span>
@@ -1542,7 +1771,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                         <div className="bg-white dark:bg-[#121824] p-5 sm:p-6 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs space-y-4">
                             <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
                                 <div className="flex items-center gap-2.5">
-                                    <div className="p-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[#0D5A34] dark:text-emerald-400">
+                                    <div className="p-1.5 rounded-xl bg-[#0AB600]/10 border border-[#0AB600]/30 text-[#0AB600]">
                                         <Lock className="w-4 h-4" />
                                     </div>
                                     <div>
@@ -1570,7 +1799,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                             onChange={(e) => setCurrentPassword(e.target.value)}
                                             placeholder={s.placeholderCurrentPassword || 'Masukkan kata sandi saat ini'}
                                             required
-                                            className="w-full px-3 py-2 pr-10 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-[#0D5A34] transition-colors"
+                                            className="w-full px-3 py-2 pr-10 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-[#0AB600] transition-colors"
                                         />
                                         <button
                                             type="button"
@@ -1586,7 +1815,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                 <div className="space-y-1">
                                     <label className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 flex items-center justify-between">
                                         <span>{s.labelNewPassword || 'Kata Sandi Baru'}</span>
-                                        <span className={`text-[10px] ${newPassword.length >= 8 ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400'}`}>
+                                        <span className={`text-[10px] ${newPassword.length >= 8 ? 'text-[#0AB600]' : 'text-zinc-400'}`}>
                                             {s.passwordRuleMin || 'Min. 8 Karakter'}
                                         </span>
                                     </label>
@@ -1598,7 +1827,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                             placeholder={s.placeholderNewPassword || 'Minimal 8 karakter'}
                                             required
                                             minLength={8}
-                                            className="w-full px-3 py-2 pr-10 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-[#0D5A34] transition-colors"
+                                            className="w-full px-3 py-2 pr-10 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-[#0AB600] transition-colors"
                                         />
                                         <button
                                             type="button"
@@ -1617,7 +1846,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                         {confirmPassword && (
                                             <span className={`inline-flex items-center gap-1 text-[10px] font-semibold ${
                                                 newPassword === confirmPassword
-                                                    ? 'text-emerald-600 dark:text-emerald-400'
+                                                    ? 'text-[#0AB600]'
                                                     : 'text-rose-500'
                                             }`}>
                                                 {newPassword === confirmPassword ? (
@@ -1642,7 +1871,7 @@ export default function Settings({ user, passkeys = [], projectStats = {}, syste
                                             placeholder={s.placeholderConfirmPassword || 'Ulangi kata sandi baru'}
                                             required
                                             minLength={8}
-                                            className="w-full px-3 py-2 pr-10 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-[#0D5A34] transition-colors"
+                                            className="w-full px-3 py-2 pr-10 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-[#0AB600] transition-colors"
                                         />
                                         <button
                                             type="button"

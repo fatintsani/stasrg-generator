@@ -230,4 +230,80 @@ class ProjectControllerTest extends TestCase
         $project->refresh();
         $this->assertEquals('text_heavy', $project->layout_preset);
     }
+
+    public function test_user_can_create_and_update_trifold_brochure_with_independent_panel_data_and_categories(): void
+    {
+        $user = User::factory()->create();
+
+        $payload = [
+            'name' => 'Brosur Inovasi Teknologi Terapan',
+            'title' => 'Inovasi Smart Agriculture',
+            'doc_format' => 'brochure_trifold',
+            'layout_preset' => 'balanced',
+            'status' => 'published',
+            'problem_solution' => [
+                'panels' => [
+                    [
+                        'id' => 1,
+                        'title' => 'Inovasi Smart Agriculture',
+                        'subtitle' => 'Mitra Tani Sejahtera',
+                        'category' => 'Smart Agriculture',
+                        'description' => 'Sistem monitoring kesuburan tanah.',
+                    ],
+                    [
+                        'id' => 2,
+                        'title' => 'Inovasi IoT Monitoring Node',
+                        'subtitle' => 'Mitra Industri IoT',
+                        'category' => 'Internet of Things (IoT)',
+                        'description' => 'Node sensor multi-parameter.',
+                    ],
+                    [
+                        'id' => 3,
+                        'title' => 'Inovasi AI Computer Vision',
+                        'subtitle' => 'Mitra AI Lab',
+                        'category' => 'Artificial Intelligence (AI)',
+                        'description' => 'Deteksi hama otomatis berbasis kamera.',
+                    ],
+                ],
+            ],
+        ];
+
+        // 1. Create trifold brochure
+        $response = $this->actingAs($user)->post('/projects', $payload);
+        $response->assertRedirect();
+
+        $primaryProject = Project::where('name', 'Inovasi Smart Agriculture')->first();
+        $this->assertNotNull($primaryProject);
+        $this->assertEquals('Smart Agriculture', $primaryProject->category);
+        $this->assertEquals('brochure_trifold', $primaryProject->doc_format);
+
+        $trifoldGroup = $primaryProject->problem_solution['trifold_group'];
+        $this->assertNotEmpty($trifoldGroup);
+
+        // Check companion projects exist
+        $allTrifoldProjects = Project::whereJsonContains('problem_solution->trifold_group', $trifoldGroup)->get();
+        $this->assertCount(3, $allTrifoldProjects);
+
+        $kotak2 = $allTrifoldProjects->firstWhere('problem_solution.panel_index', 1);
+        $this->assertNotNull($kotak2);
+        $this->assertEquals('Inovasi IoT Monitoring Node', $kotak2->title);
+        $this->assertEquals('Internet of Things (IoT)', $kotak2->category);
+
+        $kotak3 = $allTrifoldProjects->firstWhere('problem_solution.panel_index', 2);
+        $this->assertNotNull($kotak3);
+        $this->assertEquals('Inovasi AI Computer Vision', $kotak3->title);
+        $this->assertEquals('Artificial Intelligence (AI)', $kotak3->category);
+
+        // 2. Update panel 2 category and title
+        $updatedPayload = $payload;
+        $updatedPayload['problem_solution']['panels'][1]['category'] = 'Advanced IoT & Robotics';
+        $updatedPayload['problem_solution']['panels'][1]['title'] = 'Autonomous IoT Rover';
+
+        $updateResponse = $this->actingAs($user)->put("/projects/{$primaryProject->slug}", $updatedPayload);
+        $updateResponse->assertRedirect();
+
+        $kotak2->refresh();
+        $this->assertEquals('Autonomous IoT Rover', $kotak2->title);
+        $this->assertEquals('Advanced IoT & Robotics', $kotak2->category);
+    }
 }

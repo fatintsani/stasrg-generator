@@ -1,14 +1,18 @@
 <?php
 
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\PasskeyController;
 use App\Http\Controllers\Auth\PasswordResetOtpController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MediaAssetController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectTemplateController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\UserController;
 use App\Models\Project;
 use App\Models\User;
@@ -40,6 +44,9 @@ Route::get('/', function () {
                     'project_url' => $project->project_url,
                     'qr_code_path' => $project->qr_code_path ? asset('storage/'.$project->qr_code_path) : null,
                     'partner_logo' => $project->partner_logo ? asset('storage/'.$project->partner_logo) : null,
+                    'partner_logos' => ! empty($project->partner_logos) && is_array($project->partner_logos)
+                        ? array_map(fn ($p) => str_starts_with($p, 'http') ? $p : asset('storage/'.$p), $project->partner_logos)
+                        : ($project->partner_logo ? [asset('storage/'.$project->partner_logo)] : []),
                     'footer_website' => $project->footer_website,
                     'footer_instagram' => $project->footer_instagram,
                     'footer_youtube' => $project->footer_youtube,
@@ -78,6 +85,9 @@ Route::get('/', function () {
 Route::get('/showcase/{project:slug}', [ProjectController::class, 'publicShow'])->name('projects.showcase.show');
 Route::get('/riset/{project:slug}', [ProjectController::class, 'publicShow'])->name('projects.riset.show');
 
+// Public QR Code Scan Tracking Gateway & Redirect
+Route::get('/qr/{project:slug}', [AnalyticsController::class, 'trackQr'])->name('qr.track');
+
 // Public Tracking for Export / Print actions
 Route::post('/activity-logs/track-export', [ActivityLogController::class, 'trackExport'])
     ->middleware('throttle:30,1')
@@ -90,6 +100,20 @@ Route::get('/privacy', function () {
 Route::get('/terms', function () {
     return Inertia::render('Terms');
 })->name('terms');
+
+// Public Support & Helpdesk Page and Submission
+Route::get('/support', function () {
+    return Inertia::render('Support');
+})->name('support');
+
+// Public Documentation Page
+Route::get('/documentation', function () {
+    return Inertia::render('Documentation');
+})->name('documentation');
+
+Route::post('/support/submit', [SupportTicketController::class, 'submit'])
+    ->middleware('throttle:10,1')
+    ->name('support.submit');
 
 // Guest Authentication Routes
 Route::middleware('guest')->group(function () {
@@ -143,6 +167,12 @@ Route::middleware(['auth', 'approved'])->group(function () {
     Route::post('/projects/ai-generate', [ProjectController::class, 'aiGenerateProject'])->name('projects.ai-generate');
     Route::post('/projects/ai-section', [ProjectController::class, 'aiPolishSection'])->name('projects.ai-section');
 
+    // Project Template Management & Custom Template Builder
+    Route::resource('templates', ProjectTemplateController::class);
+    Route::post('/templates/{template}/duplicate', [ProjectTemplateController::class, 'duplicate'])->name('templates.duplicate');
+    Route::post('/templates/save-from-project', [ProjectTemplateController::class, 'saveFromProject'])->name('templates.save-from-project');
+    Route::get('/api/templates', [ProjectTemplateController::class, 'apiList'])->name('api.templates.index');
+
     // User & Approval Management
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
@@ -156,10 +186,29 @@ Route::middleware(['auth', 'approved'])->group(function () {
     Route::get('/activity-logs/export-csv', [ActivityLogController::class, 'exportCsv'])->name('activity-logs.export-csv');
     Route::post('/activity-logs/prune', [ActivityLogController::class, 'destroyOld'])->name('activity-logs.prune');
 
+    // Analytics & Insights
+    Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+    Route::get('/analytics/export-csv', [AnalyticsController::class, 'exportCsv'])->name('analytics.export-csv');
+
+    // Media & Asset Library (Verified Partner Logos & Icon Bank)
+    Route::get('/media-library', [MediaAssetController::class, 'index'])->name('media-assets.index');
+    Route::post('/media-library', [MediaAssetController::class, 'store'])->name('media-assets.store');
+    Route::match(['put', 'post'], '/media-library/{mediaAsset}', [MediaAssetController::class, 'update'])->name('media-assets.update');
+    Route::delete('/media-library/{mediaAsset}', [MediaAssetController::class, 'destroy'])->name('media-assets.destroy');
+    Route::get('/api/media-assets', [MediaAssetController::class, 'apiList'])->name('api.media-assets.index');
+
+    // Support & Helpdesk Tickets
+    Route::get('/support-tickets', [SupportTicketController::class, 'index'])->name('support-tickets.index');
+    Route::get('/support-tickets/export-csv', [SupportTicketController::class, 'exportCsv'])->name('support-tickets.export-csv');
+    Route::get('/support-tickets/{ticket}', [SupportTicketController::class, 'show'])->name('support-tickets.show');
+    Route::put('/support-tickets/{ticket}', [SupportTicketController::class, 'update'])->name('support-tickets.update');
+    Route::delete('/support-tickets/{ticket}', [SupportTicketController::class, 'destroy'])->name('support-tickets.destroy');
+
     // Settings & Configuration
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
     Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile.update');
     Route::post('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password.update');
+    Route::post('/settings/font', [SettingsController::class, 'updateAppFont'])->name('settings.font.update');
     Route::post('/settings/ai', [SettingsController::class, 'updateAiSettings'])->name('settings.ai.update');
     Route::post('/settings/ai/test', [SettingsController::class, 'testAiConnection'])->name('settings.ai.test');
     Route::post('/settings/maintenance/toggle', [SettingsController::class, 'toggleMaintenance'])->name('settings.maintenance.toggle');

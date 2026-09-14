@@ -13,7 +13,7 @@ function PrivacyContent() {
     const sectionIcons = [FileText, Lock, Shield, Database, UserCheck];
 
     return (
-        <div className="min-h-screen bg-white dark:bg-[#090D16] text-slate-900 dark:text-zinc-100 flex flex-col transition-colors selection:bg-[#0D5A34] selection:text-white">
+        <div className="min-h-screen bg-white dark:bg-[#090D16] text-slate-900 dark:text-zinc-100 flex flex-col transition-colors selection:bg-[#0AB600] selection:text-white">
             <Head title={`${p.title} — STAS RG Projects`} />
 
             <Navbar />
@@ -26,7 +26,7 @@ function PrivacyContent() {
                     transition={{ duration: 0.4 }}
                     className="mb-12 pb-8 border-b border-zinc-200/60 dark:border-zinc-800/60"
                 >
-                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/70 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold uppercase tracking-wider mb-5">
+                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#0AB600]/10 border border-[#0AB600]/30 text-[#0AB600] text-xs font-semibold uppercase tracking-wider mb-5">
                         <ShieldCheck className="w-3.5 h-3.5" />
                         <span>{p.tag}</span>
                     </div>
@@ -55,10 +55,10 @@ function PrivacyContent() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.35, delay: idx * 0.08 }}
                                 whileHover={{ y: -3 }}
-                                className="p-7 sm:p-8 rounded-3xl bg-zinc-50/70 dark:bg-zinc-900/60 border border-zinc-200/80 dark:border-zinc-800/80 hover:border-emerald-300/80 dark:hover:border-emerald-700/80 transition-all"
+                                className="p-7 sm:p-8 rounded-3xl bg-zinc-50/70 dark:bg-zinc-900/60 border border-zinc-200/80 dark:border-zinc-800/80 hover:border-[#0AB600]/40 dark:hover:border-[#0AB600]/40 transition-all"
                             >
                                 <div className="flex items-start gap-5">
-                                    <div className="p-3 rounded-2xl bg-emerald-100/70 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 shrink-0">
+                                    <div className="p-3 rounded-2xl bg-[#0AB600]/15 dark:bg-[#0AB600]/10 text-[#0AB600] shrink-0">
                                         <Icon className="w-5 h-5" />
                                     </div>
                                     <div className="space-y-2.5 flex-1">

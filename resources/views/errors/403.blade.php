@@ -4,12 +4,7 @@
 @section('title', 'Akses Ditolak')
 
 @section('content')
-    <div class="status-badge badge-403">
-        <span class="badge-dot"></span>
-        HTTP 403 • Forbidden
-    </div>
-
-    <div class="error-code">403</div>
+    <img src="{{ asset('assets/img/icon/aksesditolak.png') }}" alt="Akses Ditolak" style="width: 120px; height: auto; margin: 0 auto 16px; display: block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.04));">
     <h1 class="error-title">Akses Ditolak</h1>
     
     <p class="error-description">

@@ -36,7 +36,7 @@ export default function AuthLayout({ children, title, subtitle, badge }) {
     const { theme, toggleTheme, language, toggleLanguage, t } = useApp();
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#090D16] text-slate-900 dark:text-white flex flex-col justify-between selection:bg-emerald-100 selection:text-emerald-900 transition-colors">
+        <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#090D16] text-slate-900 dark:text-white flex flex-col justify-between selection:bg-[#0AB600]/15 selection:text-[#0AB600] transition-colors">
             <Head title={title ? `${title} - STAS RG Projects` : 'STAS RG Projects'} />
 
             {/* Top Navigation Bar */}
@@ -48,7 +48,7 @@ export default function AuthLayout({ children, title, subtitle, badge }) {
                             href="/"
                             className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg text-zinc-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/80 transition-colors"
                         >
-                            <ArrowLeft className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            <ArrowLeft className="w-4 h-4 text-[#0AB600]" />
                             <span>{language === 'id' ? 'Beranda' : 'Home'}</span>
                         </Link>
 
@@ -93,7 +93,7 @@ export default function AuthLayout({ children, title, subtitle, badge }) {
                             onClick={toggleTheme}
                             aria-label="Toggle theme mode"
                             title={theme === 'dark' ? 'Beralih ke Light Mode' : 'Beralih ke Dark Mode'}
-                            className="p-1.5 rounded-lg bg-transparent flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-[#0D5A34] dark:hover:text-emerald-400 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg bg-transparent flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-[#0AB600] dark:hover:text-[#0AB600] transition-colors cursor-pointer"
                         >
                             {theme === 'dark' ? (
                                 <Sun className="w-4 h-4 text-amber-400" />
@@ -112,8 +112,8 @@ export default function AuthLayout({ children, title, subtitle, badge }) {
                     {(badge || title) && (
                         <div className="text-center mb-6">
                             {badge && (
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/70 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-[11px] font-semibold tracking-wide mb-3">
-                                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0AB600]/10 border border-[#0AB600]/30 text-[#0AB600] text-[11px] font-semibold tracking-wide mb-3">
+                                    <ShieldCheck className="w-3.5 h-3.5 text-[#0AB600]" />
                                     <span>{badge}</span>
                                 </div>
                             )}
@@ -143,11 +143,11 @@ export default function AuthLayout({ children, title, subtitle, badge }) {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <Link href="/privacy" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                        <Link href="/privacy" className="hover:text-[#0AB600] dark:hover:text-[#0AB600] transition-colors">
                             {t.footer?.privacy || 'Kebijakan Privasi'}
                         </Link>
                         <span className="text-zinc-300 dark:text-zinc-700">•</span>
-                        <Link href="/terms" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                        <Link href="/terms" className="hover:text-[#0AB600] dark:hover:text-[#0AB600] transition-colors">
                             {t.footer?.terms || 'Ketentuan Riset'}
                         </Link>
                     </div>

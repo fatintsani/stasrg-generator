@@ -421,3 +421,54 @@ export function UsersSkeleton() {
         </div>
     );
 }
+
+/**
+ * Analytics & Insights Page Skeleton
+ */
+export function AnalyticsSkeleton() {
+    return (
+        <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
+            {/* Header & Filter Skeleton */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-3xl bg-white dark:bg-[#121824] border border-zinc-200/80 dark:border-zinc-800">
+                <div className="space-y-2">
+                    <Skeleton className="h-7 w-64 rounded-xl" />
+                    <Skeleton className="h-4 w-96 max-w-full rounded-lg" />
+                </div>
+                <div className="flex items-center gap-2.5">
+                    <Skeleton className="h-10 w-32 rounded-xl" />
+                    <Skeleton className="h-10 w-36 rounded-xl" />
+                </div>
+            </div>
+
+            {/* 4 Metric Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="p-5 rounded-2xl bg-white dark:bg-[#121824] border border-zinc-200/80 dark:border-zinc-800 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <Skeleton className="h-4 w-28 rounded-md" />
+                            <Skeleton className="w-9 h-9 rounded-xl" />
+                        </div>
+                        <Skeleton className="h-8 w-24 rounded-lg" />
+                        <Skeleton className="h-3 w-36 rounded-sm" />
+                    </div>
+                ))}
+            </div>
+
+            {/* Chart Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 p-6 rounded-3xl bg-white dark:bg-[#121824] border border-zinc-200/80 dark:border-zinc-800 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <Skeleton className="h-5 w-48 rounded-lg" />
+                        <Skeleton className="h-8 w-32 rounded-xl" />
+                    </div>
+                    <Skeleton className="h-64 w-full rounded-2xl" />
+                </div>
+                <div className="p-6 rounded-3xl bg-white dark:bg-[#121824] border border-zinc-200/80 dark:border-zinc-800 space-y-4">
+                    <Skeleton className="h-5 w-44 rounded-lg" />
+                    <Skeleton className="h-64 w-full rounded-2xl" />
+                </div>
+            </div>
+        </div>
+    );
+}
+

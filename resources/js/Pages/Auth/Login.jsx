@@ -127,9 +127,9 @@ function LoginFormContent({ status }) {
                     <button
                         type="button"
                         onClick={() => setIsBiometricOpen(true)}
-                        className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-3.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/40 text-emerald-900 dark:text-emerald-300 text-xs font-semibold border border-emerald-200/80 dark:border-emerald-800/60 transition-all cursor-pointer"
+                        className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-3.5 rounded-xl bg-[#0AB600]/10 hover:bg-[#0AB600]/15 dark:hover:bg-[#0AB600]/20 text-slate-900 dark:text-[#0AB600] text-xs font-semibold border border-[#0AB600]/30 transition-all cursor-pointer"
                     >
-                        <Fingerprint className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <Fingerprint className="w-4 h-4 text-[#0AB600] shrink-0" />
                         <span className="truncate">Passkey / Touch ID</span>
                     </button>
                 </div>
@@ -163,7 +163,7 @@ function LoginFormContent({ status }) {
                                 placeholder="Masukkan email atau username Anda"
                                 className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/80 border ${
                                     errors.email ? 'border-rose-400 dark:border-rose-600' : 'border-zinc-200 dark:border-zinc-800'
-                                } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0D5A34] dark:focus:border-emerald-500 transition-colors`}
+                                } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0AB600] dark:focus:border-[#0AB600] transition-colors`}
                             />
                         </div>
                         {errors.email && !isPendingError && !isRejectedError && !isInactiveError && (
@@ -182,7 +182,7 @@ function LoginFormContent({ status }) {
                             </label>
                             <Link
                                 href="/forgot-password"
-                                className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 hover:underline"
+                                className="text-[11px] font-semibold text-[#0AB600] hover:underline"
                             >
                                 Lupa kata sandi?
                             </Link>
@@ -199,7 +199,7 @@ function LoginFormContent({ status }) {
                                 placeholder="Masukkan kata sandi Anda"
                                 className={`w-full pl-10 pr-10 py-2.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/80 border ${
                                     errors.password ? 'border-rose-400 dark:border-rose-600' : 'border-zinc-200 dark:border-zinc-800'
-                                } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0D5A34] dark:focus:border-emerald-500 transition-colors`}
+                                } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0AB600] dark:focus:border-[#0AB600] transition-colors`}
                             />
                             <button
                                 type="button"
@@ -225,7 +225,7 @@ function LoginFormContent({ status }) {
                                 type="checkbox"
                                 checked={data.remember}
                                 onChange={(e) => setData('remember', e.target.checked)}
-                                className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-[#0D5A34] focus:ring-0 accent-[#0D5A34] dark:accent-emerald-500 cursor-pointer"
+                                className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-[#0AB600] focus:ring-0 accent-[#0AB600] dark:accent-[#0AB600] cursor-pointer"
                             />
                             <span className="text-xs text-zinc-600 dark:text-zinc-400">
                                 Ingat saya pada perangkat ini
@@ -237,7 +237,7 @@ function LoginFormContent({ status }) {
                     <button
                         type="submit"
                         disabled={processing}
-                        className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-[#0D5A34] hover:bg-[#094226] disabled:opacity-70 text-white text-xs sm:text-sm font-semibold border border-[#0D5A34] transition-all duration-200 cursor-pointer mt-2"
+                        className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-[#0AB600] hover:bg-[#089600] disabled:opacity-70 text-white text-xs sm:text-sm font-semibold border border-[#0AB600] transition-all duration-200 cursor-pointer mt-2"
                     >
                         <LogIn className="w-4 h-4" />
                         <span>{processing ? 'Memverifikasi...' : 'Masuk ke Platform'}</span>
@@ -250,7 +250,7 @@ function LoginFormContent({ status }) {
                         Belum memiliki akun terdaftar?{' '}
                         <Link
                             href="/register"
-                            className="font-bold text-[#0D5A34] dark:text-emerald-400 hover:underline inline-flex items-center gap-0.5"
+                            className="font-bold text-[#0AB600] hover:underline inline-flex items-center gap-0.5"
                         >
                             <span>Daftar Akun Baru</span>
                             <ArrowRight className="w-3.5 h-3.5" />

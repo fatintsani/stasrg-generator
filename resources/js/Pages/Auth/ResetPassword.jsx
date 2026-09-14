@@ -39,7 +39,7 @@ function ResetPasswordFormContent({ token, email }) {
                     {/* User Email Indicator */}
                     {data.email && (
                         <div className="text-center mb-2">
-                            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50/70 dark:bg-emerald-950/50 py-1.5 px-3 rounded-lg inline-block font-mono">
+                            <span className="text-xs font-semibold text-[#0AB600] bg-[#0AB600]/10 py-1.5 px-3 rounded-lg inline-block font-mono">
                                 {data.email}
                             </span>
                         </div>
@@ -70,7 +70,7 @@ function ResetPasswordFormContent({ token, email }) {
                                 placeholder={t.auth?.reset?.newPasswordPlaceholder}
                                 className={`w-full pl-10 pr-10 py-2.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/80 border ${
                                     errors.password ? 'border-rose-400 dark:border-rose-600' : 'border-zinc-200 dark:border-zinc-800'
-                                } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0D5A34] dark:focus:border-emerald-500 transition-colors`}
+                                } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0AB600] dark:focus:border-[#0AB600] transition-colors`}
                             />
                             <button
                                 type="button"
@@ -105,7 +105,7 @@ function ResetPasswordFormContent({ token, email }) {
                                 placeholder={t.auth?.reset?.confirmPasswordPlaceholder}
                                 className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/80 border ${
                                     errors.password_confirmation ? 'border-rose-400 dark:border-rose-600' : 'border-zinc-200 dark:border-zinc-800'
-                                } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0D5A34] dark:focus:border-emerald-500 transition-colors`}
+                                } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0AB600] dark:focus:border-[#0AB600] transition-colors`}
                             />
                         </div>
                         {errors.password_confirmation && (
@@ -120,7 +120,7 @@ function ResetPasswordFormContent({ token, email }) {
                     <button
                         type="submit"
                         disabled={processing}
-                        className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-[#0D5A34] hover:bg-[#094226] disabled:opacity-70 text-white text-xs sm:text-sm font-semibold border border-[#0D5A34] transition-all duration-200 cursor-pointer pt-2"
+                        className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-[#0AB600] hover:bg-[#089600] disabled:opacity-70 text-white text-xs sm:text-sm font-semibold border border-[#0AB600] transition-all duration-200 cursor-pointer pt-2"
                     >
                         <ShieldCheck className="w-4 h-4" />
                         <span>{processing ? t.auth?.reset?.submitting : t.auth?.reset?.submitButton}</span>

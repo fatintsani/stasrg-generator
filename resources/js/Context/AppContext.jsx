@@ -22,6 +22,17 @@ export function AppProvider({ children }) {
         return 'id'; // default Indonesian as requested
     });
 
+    // Font State ('plus-jakarta-sans' | 'poppins' | 'inter' | 'outfit' | 'dm-sans' | 'montserrat' | 'roboto')
+    const [appFont, setAppFontState] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const domFont = document.documentElement.getAttribute('data-font');
+            if (domFont) return domFont;
+            const savedFont = localStorage.getItem('stas_font');
+            if (savedFont) return savedFont;
+        }
+        return 'plus-jakarta-sans';
+    });
+
     // Sync theme class with <html> element
     useEffect(() => {
         const root = document.documentElement;
@@ -33,10 +44,25 @@ export function AppProvider({ children }) {
         localStorage.setItem('stas_theme', theme);
     }, [theme]);
 
+    // Sync font data-font attribute with <html> element
+    useEffect(() => {
+        const root = document.documentElement;
+        root.setAttribute('data-font', appFont);
+        localStorage.setItem('stas_font', appFont);
+    }, [appFont]);
+
     // Persist language
     useEffect(() => {
         localStorage.setItem('stas_lang', language);
     }, [language]);
+
+    const setAppFont = (font) => {
+        setAppFontState(font);
+        if (typeof window !== 'undefined') {
+            document.documentElement.setAttribute('data-font', font);
+            localStorage.setItem('stas_font', font);
+        }
+    };
 
     const toggleTheme = () => {
         setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
@@ -70,6 +96,21 @@ export function AppProvider({ children }) {
         return lang === 'id' ? primary : merge(primary, fallback);
     };
 
+    // Support Modal State
+    const [isSupportOpen, setIsSupportOpen] = useState(false);
+    const openSupportModal = () => setIsSupportOpen(true);
+    const closeSupportModal = () => setIsSupportOpen(false);
+
+    // Auto-open Support Modal if ?support=1 or #support is present in URL
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('support') === '1' || window.location.hash === '#support') {
+                setIsSupportOpen(true);
+            }
+        }
+    }, []);
+
     const t = getMergedTranslations(language);
 
     return (
@@ -81,7 +122,13 @@ export function AppProvider({ children }) {
                 language,
                 setLanguage,
                 toggleLanguage,
+                appFont,
+                setAppFont,
                 t,
+                isSupportOpen,
+                setIsSupportOpen,
+                openSupportModal,
+                closeSupportModal,
             }}
         >
             {children}

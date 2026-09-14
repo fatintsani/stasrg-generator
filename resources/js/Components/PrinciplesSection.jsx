@@ -35,7 +35,7 @@ export default function PrinciplesSection() {
             <div className="max-w-6xl mx-auto">
                 {/* Section Header */}
                 <div className="text-center max-w-2xl mx-auto mb-16">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/70 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold uppercase tracking-wider mb-4">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0AB600]/10 dark:bg-[#0AB600]/15 border border-[#0AB600]/25 dark:border-[#0AB600]/30 text-[#0AB600] text-xs font-semibold uppercase tracking-wider mb-4">
                         <Compass className="w-3 h-3" />
                         <span>{t.principles.tag}</span>
                     </span>
@@ -59,21 +59,21 @@ export default function PrinciplesSection() {
                                 whileHover={{ y: -4 }}
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.3, delay: index * 0.05 }}
-                                className="group p-7 sm:p-8 rounded-3xl bg-white dark:bg-zinc-900/70 border border-zinc-200/80 dark:border-zinc-800/80 hover:border-emerald-300/80 dark:hover:border-emerald-700/80 flex flex-col justify-between transition-all cursor-default"
+                                className="group p-7 sm:p-8 rounded-3xl bg-white dark:bg-zinc-900/70 border border-zinc-200/80 dark:border-zinc-800/80 hover:border-[#0AB600]/40 dark:hover:border-[#0AB600]/40 flex flex-col justify-between transition-all cursor-default"
                             >
                                 <div>
                                     {/* Card Header */}
                                     <div className="flex items-center justify-between pb-5 mb-5 border-b border-zinc-100 dark:border-zinc-800">
-                                        <span className="text-xs font-bold tracking-wider text-zinc-500 dark:text-zinc-400 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors uppercase">
+                                        <span className="text-xs font-bold tracking-wider text-zinc-500 dark:text-zinc-400 group-hover:text-[#0AB600] transition-colors uppercase">
                                             {item.phase}
                                         </span>
-                                        <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center transition-transform group-hover:scale-105">
+                                        <div className="w-9 h-9 rounded-xl bg-[#0AB600]/10 dark:bg-[#0AB600]/20 text-[#0AB600] flex items-center justify-center transition-transform group-hover:scale-105">
                                             <IconComponent className="w-4 h-4" />
                                         </div>
                                     </div>
 
                                     {/* Title & Description */}
-                                    <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-emerald-900 dark:group-hover:text-emerald-300 transition-colors">
+                                    <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-[#0AB600] transition-colors">
                                         {item.title}
                                     </h3>
                                     <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
@@ -83,7 +83,7 @@ export default function PrinciplesSection() {
 
                                 {/* Bottom Tag */}
                                 <div className="mt-8 pt-4 border-t border-zinc-100 dark:border-zinc-800/80">
-                                    <span className="text-xs font-semibold tracking-wide text-zinc-400 dark:text-zinc-500 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
+                                    <span className="text-xs font-semibold tracking-wide text-zinc-400 dark:text-zinc-500 group-hover:text-[#0AB600] transition-colors">
                                         {item.tag}
                                     </span>
                                 </div>

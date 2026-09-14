@@ -99,7 +99,7 @@ export default function Show({ project }) {
                                     <span
                                         className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${
                                             project.status === 'published'
-                                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                                                ? 'bg-[#0AB600]/10 text-[#0AB600] border-[#0AB600]/30'
                                                 : 'bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-500/30'
                                         }`}
                                     >
@@ -109,7 +109,7 @@ export default function Show({ project }) {
                                         Format: {project.doc_format === 'social_feed' ? 'Instagram / LinkedIn Feed (1:1)' : project.doc_format === 'social_story' ? 'Instagram Story / WA Status (9:16)' : project.doc_format === 'roll_banner' ? 'X-Banner / Roll-up' : project.doc_format === 'factsheet_2col' ? 'Factsheet 2-Kolom' : project.doc_format === 'pitch_poster' ? 'Pitch Poster (16:9)' : 'A4 Flyer'}
                                     </span>
                                     {(!project.doc_format || project.doc_format === 'a4_flyer') && (
-                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#0D5A34] dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shrink-0">
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#0AB600]/10 text-[#0AB600] border border-[#0AB600]/30 shrink-0">
                                             {project.layout_preset === 'visual_heavy' ? 'Mode B (Visual-Heavy)' : project.layout_preset === 'text_heavy' ? 'Mode C (Text/Spec-Heavy)' : 'Mode A (Balanced)'}
                                         </span>
                                     )}
@@ -130,7 +130,7 @@ export default function Show({ project }) {
                                 href={`/showcase/${project.slug}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-xs font-semibold border border-emerald-200/60 dark:border-emerald-800/60 transition-all shrink-0"
+                                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0AB600]/10 hover:bg-[#0AB600]/15 dark:hover:bg-[#0AB600]/15 text-[#0AB600] text-xs font-semibold border border-[#0AB600]/30 transition-all shrink-0"
                             >
                                 <Eye className="w-3.5 h-3.5" />
                                 <span>Lihat di Showcase</span>
@@ -174,11 +174,11 @@ export default function Show({ project }) {
                             <button
                                 type="button"
                                 onClick={() => setIsExportModalOpen(true)}
-                                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-[#0D5A34] dark:text-emerald-300 text-xs font-bold border border-emerald-300/80 dark:border-emerald-800 whitespace-nowrap transition-all cursor-pointer shadow-xs"
-                                title="Buka Multi-Format & Sosmed Exporter (1:1 Feed, 9:16 Story, PNG, JPG, Salin Gambar)"
+                                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0AB600]/10 hover:bg-[#0AB600]/15 dark:hover:bg-[#0AB600]/15 text-[#0AB600] text-xs font-bold border border-[#0AB600]/30 whitespace-nowrap transition-all cursor-pointer shadow-xs"
+                                title="Buka Share & Multi-Format Exporter (1:1 Feed, 9:16 Story, PNG, JPG, Salin Gambar)"
                             >
-                                <Share2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                                <span>Export Multi-Format</span>
+                                <Share2 className="w-3.5 h-3.5 text-[#0AB600]" />
+                                <span>Share</span>
                             </button>
 
                             <button
@@ -195,7 +195,7 @@ export default function Show({ project }) {
                                 type="button"
                                 onClick={handleDownloadPng}
                                 disabled={pngLoading}
-                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0D5A34] hover:bg-[#094226] text-white text-xs font-semibold shadow-sm whitespace-nowrap transition-all cursor-pointer disabled:cursor-wait"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0AB600] hover:bg-[#089600] text-white text-xs font-semibold shadow-sm whitespace-nowrap transition-all cursor-pointer disabled:cursor-wait"
                                 title="Download Gambar PNG Resolusi Tinggi (300 DPI)"
                             >
                                 {pngLoading ? (

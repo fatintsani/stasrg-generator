@@ -6,6 +6,7 @@ use Database\Factories\ProjectFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class Project extends Model
@@ -36,12 +37,15 @@ class Project extends Model
         'social_links',
         'footer_logo',
         'partner_logo',
+        'partner_logos',
         'status',
         'layout_preset',
+        'design_style',
         'doc_format',
         'color_theme',
         'print_mode',
         'boilerplate_type',
+        'layout_schema',
     ];
 
     /**
@@ -54,6 +58,8 @@ class Project extends Model
             'specifications' => 'array',
             'problem_solution' => 'array',
             'social_links' => 'array',
+            'partner_logos' => 'array',
+            'layout_schema' => 'array',
         ];
     }
 
@@ -106,5 +112,13 @@ class Project extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * The analytics events associated with this project.
+     */
+    public function analytics(): HasMany
+    {
+        return $this->hasMany(ProjectAnalytic::class);
     }
 }

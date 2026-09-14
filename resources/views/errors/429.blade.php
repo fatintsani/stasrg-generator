@@ -4,12 +4,7 @@
 @section('title', 'Terlalu Banyak Permintaan')
 
 @section('content')
-    <div class="status-badge badge-429">
-        <span class="badge-dot"></span>
-        HTTP 429 • Too Many Requests
-    </div>
-
-    <div class="error-code">429</div>
+    <img src="{{ asset('assets/img/icon/terlalubanyakpermintaan.png') }}" alt="Terlalu Banyak Permintaan" style="width: 120px; height: auto; margin: 0 auto 16px; display: block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.04));">
     <h1 class="error-title">Terlalu Banyak Permintaan</h1>
     
     <p class="error-description">

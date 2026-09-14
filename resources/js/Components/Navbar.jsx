@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { Sun, Moon, LayoutDashboard, LogIn } from 'lucide-react';
+import { Sun, Moon, LayoutDashboard, LogIn, LifeBuoy } from 'lucide-react';
 import { useApp } from '../Context/AppContext';
 
 function IndonesiaFlag({ className = "w-5 h-3.5" }) {
@@ -36,17 +36,33 @@ export default function Navbar() {
     const { theme, toggleTheme, language, toggleLanguage, t } = useApp();
     const { props: pageProps } = usePage() || { props: {} };
     const user = pageProps?.auth?.user;
-    const [activeSection, setActiveSection] = useState('overview');
+    const [activeSection, setActiveSection] = useState(() => {
+        if (typeof window !== 'undefined' && window.location.pathname === '/support') {
+            return 'support';
+        }
+        return 'overview';
+    });
 
     const navItems = [
-        { name: t.nav?.overview || 'Overview', href: '#overview', id: 'overview' },
-        { name: 'Showcase', href: '#projects-showcase', id: 'projects-showcase' },
-        { name: t.nav?.about || 'Tentang', href: '#about', id: 'about' },
-        { name: t.nav?.principles || 'Prinsip', href: '#principles', id: 'principles' },
-        { name: t.nav?.howItWorks || 'Cara Kerja', href: '#how-it-works', id: 'how-it-works' },
+        { name: t.nav?.overview || 'Overview', href: '/#overview', id: 'overview' },
+        { name: 'Showcase', href: '/#projects-showcase', id: 'projects-showcase' },
+        { name: t.nav?.about || 'Tentang', href: '/#about', id: 'about' },
+        { name: t.nav?.principles || 'Prinsip', href: '/#principles', id: 'principles' },
+        { name: t.nav?.howItWorks || 'Cara Kerja', href: '/#how-it-works', id: 'how-it-works' },
+        { name: t.nav?.support || 'Bantuan', href: '/support', id: 'support' },
     ];
 
-    const handleNavClick = (e, targetId) => {
+    const handleNavClick = (e, item) => {
+        if (item.id === 'support' || item.href === '/support') {
+            if (typeof window !== 'undefined' && window.location.pathname === '/support') {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                setActiveSection('support');
+            }
+            return;
+        }
+
+        const targetId = item.id;
         const element = document.getElementById(targetId);
         if (element) {
             e.preventDefault();
@@ -59,6 +75,11 @@ export default function Navbar() {
     };
 
     useEffect(() => {
+        if (typeof window !== 'undefined' && window.location.pathname === '/support') {
+            setActiveSection('support');
+            return;
+        }
+
         const handleScroll = () => {
             const sectionIds = ['overview', 'projects-showcase', 'about', 'principles', 'how-it-works'];
             const scrollPosition = window.scrollY + 100;
@@ -87,8 +108,8 @@ export default function Navbar() {
                 
                 {/* Left: Brand Logo & Title */}
                 <a 
-                    href="#overview" 
-                    onClick={(e) => handleNavClick(e, 'overview')}
+                    href="/#overview" 
+                    onClick={(e) => handleNavClick(e, { id: 'overview' })}
                     className="flex items-center gap-2.5 group shrink-0"
                 >
                     <img 
@@ -109,14 +130,31 @@ export default function Navbar() {
                 <nav className="hidden md:flex items-center gap-1 p-1 rounded-full bg-zinc-100/70 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/60">
                     {navItems.map((item) => {
                         const isActive = activeSection === item.id;
+                        
+                        if (item.id === 'support') {
+                            return (
+                                <Link
+                                    key={item.id}
+                                    href="/support"
+                                    className={`text-xs font-semibold px-3.5 py-1.5 rounded-full transition-all duration-200 cursor-pointer ${
+                                        isActive
+                                            ? 'bg-white dark:bg-zinc-800 text-[#0AB600] border border-zinc-200/80 dark:border-zinc-700/80 shadow-xs'
+                                            : 'text-zinc-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-zinc-800/50'
+                                    }`}
+                                >
+                                    {item.name}
+                                </Link>
+                            );
+                        }
+
                         return (
                             <a
                                 key={item.id}
-                                href={item.href}
-                                onClick={(e) => handleNavClick(e, item.id)}
-                                className={`text-xs font-semibold px-3.5 py-1.5 rounded-full transition-all duration-200 ${
+                                href={item.href || '#'}
+                                onClick={(e) => handleNavClick(e, item)}
+                                className={`text-xs font-semibold px-3.5 py-1.5 rounded-full transition-all duration-200 cursor-pointer ${
                                     isActive
-                                        ? 'bg-white dark:bg-zinc-800 text-[#0D5A34] dark:text-emerald-400 border border-zinc-200/80 dark:border-zinc-700/80 shadow-xs'
+                                        ? 'bg-white dark:bg-zinc-800 text-[#0AB600] border border-zinc-200/80 dark:border-zinc-700/80 shadow-xs'
                                         : 'text-zinc-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-zinc-800/50'
                                 }`}
                             >
@@ -149,7 +187,7 @@ export default function Navbar() {
                         onClick={toggleTheme}
                         aria-label="Toggle theme mode"
                         title={theme === 'dark' ? 'Beralih ke Light Mode' : 'Beralih ke Dark Mode'}
-                        className="p-1.5 rounded-lg bg-transparent flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-[#0D5A34] dark:hover:text-emerald-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                        className="p-1.5 rounded-lg bg-transparent flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-[#0AB600] dark:hover:text-[#0AB600] hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                     >
                         {theme === 'dark' ? (
                             <Sun className="w-4 h-4 text-amber-400" />
@@ -162,7 +200,7 @@ export default function Navbar() {
                     {user ? (
                         <Link
                             href="/dashboard"
-                            className="inline-flex items-center gap-1.5 bg-[#0D5A34] hover:bg-[#094226] text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-full border border-[#0D5A34] transition-all duration-150 cursor-pointer shadow-xs shadow-emerald-950/10"
+                            className="inline-flex items-center gap-1.5 bg-[#0AB600] hover:bg-[#089600] text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-full border border-[#0AB600] transition-all duration-150 cursor-pointer shadow-xs shadow-black/20"
                         >
                             <LayoutDashboard className="w-3.5 h-3.5" />
                             <span>Dashboard</span>
@@ -170,7 +208,7 @@ export default function Navbar() {
                     ) : (
                         <Link
                             href="/login"
-                            className="inline-flex items-center gap-1.5 bg-[#0D5A34] hover:bg-[#094226] text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-full border border-[#0D5A34] transition-all duration-150 cursor-pointer shadow-xs shadow-emerald-950/10"
+                            className="inline-flex items-center gap-1.5 bg-[#0AB600] hover:bg-[#089600] text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-full border border-[#0AB600] transition-all duration-150 cursor-pointer shadow-xs shadow-black/20"
                         >
                             <LogIn className="w-3.5 h-3.5" />
                             <span>{t.nav?.login || 'Login'}</span>

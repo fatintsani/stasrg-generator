@@ -13,11 +13,15 @@ import {
     SettingsSkeleton,
     ProjectDetailSkeleton,
     UsersSkeleton,
+    AnalyticsSkeleton,
 } from '../Components/Common/Skeleton';
 
 function getSkeletonForRoute(path = '') {
     const cleanPath = (path || '').toLowerCase();
+    if (cleanPath.includes('/analytics')) return <AnalyticsSkeleton />;
     if (cleanPath.includes('/activity-logs')) return <ActivityLogsSkeleton />;
+    if (cleanPath.includes('/support-tickets')) return <ProjectsIndexSkeleton />;
+    if (cleanPath.includes('/media-library')) return <ProjectsIndexSkeleton />;
     if (cleanPath.includes('/projects/create') || cleanPath.includes('/edit')) return <ProjectFormSkeleton />;
     if (cleanPath.includes('/projects/') && !cleanPath.endsWith('/projects')) return <ProjectDetailSkeleton />;
     if (cleanPath.includes('/projects')) return <ProjectsIndexSkeleton />;
@@ -29,14 +33,17 @@ function getSkeletonForRoute(path = '') {
 export default function AdminLayout({
     children,
     title = 'Admin Dashboard',
-    currentPath = '/dashboard',
+    currentPath: propCurrentPath,
     onOpenNewProject,
 }) {
+    const { url, props } = usePage() || { url: '', props: {} };
+    const detectedPath = url ? url.split('?')[0] : '';
+    const activePath = propCurrentPath || detectedPath || '/dashboard';
+
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [isNavigating, setIsNavigating] = useState(false);
-    const [targetPath, setTargetPath] = useState(currentPath);
-    const { props } = usePage() || { props: {} };
+    const [targetPath, setTargetPath] = useState(activePath);
     const { showSuccess, showError } = useAlert();
 
     useEffect(() => {
@@ -82,7 +89,7 @@ export default function AdminLayout({
                 setIsCollapsed={setIsCollapsed}
                 isMobileOpen={isMobileOpen}
                 setIsMobileOpen={setIsMobileOpen}
-                currentPath={currentPath}
+                currentPath={activePath}
             />
 
             {/* Main Area */}
@@ -107,7 +114,7 @@ export default function AdminLayout({
                 <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
                     {isNavigating ? (
                         <div className="animate-in fade-in duration-200">
-                            {getSkeletonForRoute(targetPath || currentPath)}
+                            {getSkeletonForRoute(targetPath || activePath)}
                         </div>
                     ) : (
                         <div className="animate-in fade-in duration-200">

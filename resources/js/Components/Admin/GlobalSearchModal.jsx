@@ -172,9 +172,9 @@ export default function GlobalSearchModal({ isOpen, onClose }) {
             >
                 {/* Search Input Bar */}
                 <div className="relative flex items-center px-4 py-3.5 border-b border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/40">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 mr-3 shrink-0">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-[#0AB600]/10 text-[#0AB600] mr-3 shrink-0">
                         {isLoading ? (
-                            <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+                            <Loader2 className="w-4 h-4 animate-spin text-[#0AB600]" />
                         ) : (
                             <Search className="w-4 h-4" />
                         )}
@@ -217,7 +217,7 @@ export default function GlobalSearchModal({ isOpen, onClose }) {
                         <div>
                             <div className="px-2 py-1 flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
                                 <span className="flex items-center gap-1.5">
-                                    <FolderKanban className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                    <FolderKanban className="w-3.5 h-3.5 text-[#0AB600]" />
                                     Proyek Riset & Deliverable ({results.projects.length})
                                 </span>
                             </div>
@@ -231,7 +231,7 @@ export default function GlobalSearchModal({ isOpen, onClose }) {
                                             onClick={() => handleSelectItem({ ...project, _type: 'project' })}
                                             className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-all ${
                                                 isSelected
-                                                    ? 'bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 shadow-xs'
+                                                    ? 'bg-[#0AB600]/10 border border-[#0AB600]/30 shadow-xs'
                                                     : 'hover:bg-zinc-100/80 dark:hover:bg-zinc-800/50 border border-transparent'
                                             }`}
                                         >
@@ -243,7 +243,7 @@ export default function GlobalSearchModal({ isOpen, onClose }) {
                                                         className="w-9 h-9 rounded-lg object-cover border border-zinc-200 dark:border-zinc-700 shrink-0"
                                                     />
                                                 ) : (
-                                                    <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-extrabold flex items-center justify-center shrink-0">
+                                                    <div className="w-9 h-9 rounded-lg bg-[#0AB600]/10 text-[#0AB600] font-extrabold flex items-center justify-center shrink-0">
                                                         {project.name.charAt(0).toUpperCase()}
                                                     </div>
                                                 )}
@@ -254,7 +254,7 @@ export default function GlobalSearchModal({ isOpen, onClose }) {
                                                         </span>
                                                         <span className={`text-[10px] px-1.5 py-0.2 rounded-md font-extrabold ${
                                                             project.status === 'published'
-                                                                ? 'bg-emerald-100 dark:bg-emerald-900/80 text-emerald-800 dark:text-emerald-300'
+                                                                ? 'bg-[#0AB600]/10 text-[#0AB600]'
                                                                 : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
                                                         }`}>
                                                             {project.status === 'published' ? 'Published' : 'Draft'}
@@ -278,7 +278,7 @@ export default function GlobalSearchModal({ isOpen, onClose }) {
                                                 >
                                                     Edit Form
                                                 </button>
-                                                <ChevronRight className={`w-4 h-4 ${isSelected ? 'text-emerald-600' : 'text-zinc-400'}`} />
+                                                <ChevronRight className={`w-4 h-4 ${isSelected ? 'text-[#0AB600]' : 'text-zinc-400'}`} />
                                             </div>
                                         </div>
                                     );
@@ -304,13 +304,13 @@ export default function GlobalSearchModal({ isOpen, onClose }) {
                                             onClick={() => handleSelectItem({ ...nav, _type: 'nav' })}
                                             className={`flex items-center gap-2.5 p-2.5 rounded-xl cursor-pointer transition-all ${
                                                 isSelected
-                                                    ? 'bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 shadow-xs'
+                                                    ? 'bg-[#0AB600]/10 border border-[#0AB600]/30 shadow-xs'
                                                     : 'hover:bg-zinc-100/80 dark:hover:bg-zinc-800/50 border border-transparent'
                                             }`}
                                         >
                                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                                                 isSelected
-                                                    ? 'bg-[#0D5A34] text-white'
+                                                    ? 'bg-[#0AB600] text-white'
                                                     : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300'
                                             }`}>
                                                 <Icon className="w-4 h-4" />
@@ -423,10 +423,12 @@ export default function GlobalSearchModal({ isOpen, onClose }) {
 
                     {/* Empty Search State */}
                     {query && flatItems.length === 0 && !isLoading && (
-                        <div className="py-10 text-center flex flex-col items-center justify-center">
-                            <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 mb-2">
-                                <Search className="w-5 h-5" />
-                            </div>
+                        <div className="py-8 text-center flex flex-col items-center justify-center">
+                            <img
+                                src="/assets/img/icon/notfound.png"
+                                alt="Tidak Ditemukan"
+                                className="w-20 sm:w-24 h-auto object-contain mx-auto mb-2 drop-shadow-xs"
+                            />
                             <p className="text-xs font-bold text-slate-900 dark:text-white">
                                 Tidak ada hasil untuk "{query}"
                             </p>
@@ -457,7 +459,7 @@ export default function GlobalSearchModal({ isOpen, onClose }) {
                         </span>
                     </div>
 
-                    <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">
+                    <span className="text-[10px] text-[#0AB600] font-semibold">
                         STAS-RG Global Spotlight
                     </span>
                 </div>

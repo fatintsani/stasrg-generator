@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\SystemSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -198,5 +199,43 @@ class SettingsControllerTest extends TestCase
         $response = $this->actingAs($user)->post('/settings/maintenance/optimize');
         $response->assertRedirect();
         $response->assertSessionHas('success');
+    }
+
+    public function test_user_can_update_app_font(): void
+    {
+        $user = User::factory()->create([
+            'status' => User::STATUS_APPROVED,
+            'role' => 'admin',
+        ]);
+
+        $response = $this->actingAs($user)->post('/settings/font', [
+            'app_font' => 'poppins',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $this->assertEquals('poppins', SystemSetting::get('app_font'));
+
+        // Test updating back to default
+        $response2 = $this->actingAs($user)->post('/settings/font', [
+            'app_font' => 'plus-jakarta-sans',
+        ]);
+
+        $response2->assertRedirect();
+        $this->assertEquals('plus-jakarta-sans', SystemSetting::get('app_font'));
+    }
+
+    public function test_user_cannot_update_app_font_with_invalid_value(): void
+    {
+        $user = User::factory()->create([
+            'status' => User::STATUS_APPROVED,
+            'role' => 'admin',
+        ]);
+
+        $response = $this->actingAs($user)->post('/settings/font', [
+            'app_font' => 'comic-sans-ms-invalid',
+        ]);
+
+        $response->assertSessionHasErrors('app_font');
     }
 }

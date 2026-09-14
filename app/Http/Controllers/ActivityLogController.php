@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\Project;
 use App\Services\ActivityLogger;
+use App\Services\AnalyticsTracker;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -50,6 +51,20 @@ class ActivityLogController extends Controller
             $query->whereDate('created_at', '<=', $request->input('date_to'));
         }
 
+        // Sorting
+        $sort = $request->input('sort', 'created_at');
+        $direction = strtolower($request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        if ($sort === 'user') {
+            $query->leftJoin('users', 'activity_logs.user_id', '=', 'users.id')
+                ->select('activity_logs.*')
+                ->orderBy('users.name', $direction);
+        } elseif (in_array($sort, ['created_at', 'action', 'log_type', 'description', 'ip_address', 'id'])) {
+            $query->orderBy('activity_logs.'.$sort, $direction);
+        } else {
+            $query->latest('activity_logs.id');
+        }
+
         $logs = $query->paginate(20)->withQueryString();
 
         // Format logs data for frontend
@@ -71,7 +86,7 @@ class ActivityLogController extends Controller
                     'avatar_url' => $log->user->avatar_url,
                     'role' => $log->user->role,
                 ] : null,
-                'created_at' => $log->created_at->format('d M Y, H:i:s'),
+                'created_at' => $log->created_at->translatedFormat('d M Y, H:i:s'),
                 'created_at_relative' => $log->created_at->diffForHumans(),
             ];
         });
@@ -95,6 +110,8 @@ class ActivityLogController extends Controller
                 'search' => $request->input('search', ''),
                 'date_from' => $request->input('date_from', ''),
                 'date_to' => $request->input('date_to', ''),
+                'sort' => $sort,
+                'direction' => $direction,
             ],
         ]);
     }
@@ -208,6 +225,14 @@ class ActivityLogController extends Controller
                 'action_type' => $validated['action_type'] ?? 'direct_download',
             ],
             request: $request
+        );
+
+        // Record in Analytics & Insights repository
+        AnalyticsTracker::trackExport(
+            project: $project,
+            format: $validated['format'],
+            request: $request,
+            metadata: ['project_name' => $projectName]
         );
 
         return response()->json([

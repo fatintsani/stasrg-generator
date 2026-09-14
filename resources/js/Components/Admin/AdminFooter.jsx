@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
 import { useApp } from '../../Context/AppContext';
+import { Headphones } from 'lucide-react';
 
 export default function AdminFooter() {
     const { t } = useApp();
@@ -13,8 +14,8 @@ export default function AdminFooter() {
                     <span>{t.admin?.footer?.copyright || '© 2026 CoE STAS-RG Telkom University.'}</span>
                 </div>
 
-                {/* Right: Legal Links */}
-                <div className="flex items-center gap-3">
+                {/* Center / Right: Contact Support & Legal Links */}
+                <div className="flex flex-wrap items-center justify-center gap-3.5">
                     <Link href="/privacy" className="hover:text-slate-900 dark:hover:text-white transition-colors">
                         Privasi
                     </Link>

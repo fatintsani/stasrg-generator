@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, FileText, CheckCircle2, ShieldCheck, Database, Layers } from 'lucide-react';
+import { ArrowRight, FileText } from 'lucide-react';
 import { useApp } from '../Context/AppContext';
 
 export default function HeroSection({ stats = {} }) {
@@ -49,7 +49,7 @@ export default function HeroSection({ stats = {} }) {
     return (
         <section id="overview" className="scroll-mt-20 relative pt-20 pb-20 sm:pt-28 sm:pb-28 px-4 sm:px-6 lg:px-8 border-b border-zinc-200/60 dark:border-zinc-800/60 bg-gradient-to-b from-white via-[#FAFAFA] to-[#F4F6F8] dark:from-[#090D16] dark:via-[#090D16] dark:to-[#0D121F] transition-colors">
             {/* Ambient Background Glow Effect (Subtle SaaS light) */}
-            <div className="absolute top-12 left-1/2 -translate-x-1/2 w-3/4 max-w-4xl h-64 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-3xl pointer-events-none -z-0" />
+            <div className="absolute top-12 left-1/2 -translate-x-1/2 w-3/4 max-w-4xl h-64 bg-[#0AB600]/5 dark:bg-[#0AB600]/10 rounded-full blur-3xl pointer-events-none -z-0" />
 
             <div className="max-w-4xl mx-auto text-center relative z-10">
                 {/* Internal Platform Badge */}
@@ -57,9 +57,9 @@ export default function HeroSection({ stats = {} }) {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4 }}
-                    className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/80 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold tracking-wide mb-8"
+                    className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0AB600]/10 dark:bg-[#0AB600]/15 border border-[#0AB600]/25 dark:border-[#0AB600]/30 text-[#0AB600] text-xs font-semibold tracking-wide mb-8"
                 >
-                    <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-emerald-400 shrink-0"></span>
+                    <span className="w-2 h-2 rounded-full bg-[#0AB600] shrink-0"></span>
                     <span>{t.hero.badge}</span>
                 </motion.div>
 
@@ -79,7 +79,7 @@ export default function HeroSection({ stats = {} }) {
                                 animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                                 exit={{ opacity: 0, y: -22, filter: 'blur(6px)' }}
                                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                                className="text-[#0D5A34] dark:text-emerald-400"
+                                className="text-[#0AB600]"
                             >
                                 {words[currentWordIndex]}
                             </motion.span>
@@ -106,14 +106,14 @@ export default function HeroSection({ stats = {} }) {
                 >
                     <a
                         href="#how-it-works"
-                        className="inline-flex items-center justify-center gap-2 bg-[#0D5A34] hover:bg-[#094226] text-white text-sm sm:text-base font-semibold px-7 py-3 rounded-full border border-[#0D5A34] transition-all duration-200 cursor-pointer"
+                        className="inline-flex items-center justify-center gap-2 bg-[#0AB600] hover:bg-[#089600] text-white text-sm sm:text-base font-semibold px-7 py-3 rounded-full border border-[#0AB600] transition-all duration-200 cursor-pointer shadow-md shadow-[#0AB600]/20"
                     >
                         <span>{t.hero.getStarted}</span>
                         <ArrowRight className="w-4 h-4" />
                     </a>
 
                     <a
-                        href="#about"
+                        href="/documentation"
                         className="inline-flex items-center justify-center gap-2 bg-white dark:bg-zinc-800/80 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-200 text-sm sm:text-base font-medium px-6 py-3 rounded-full border border-zinc-200 dark:border-zinc-700 transition-all duration-200 cursor-pointer"
                     >
                         <FileText className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
@@ -141,8 +141,8 @@ export default function HeroSection({ stats = {} }) {
                             </span>
                         </div>
 
-                        <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-full border border-emerald-200/60 dark:border-emerald-800/60">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 animate-pulse"></span>
+                        <div className="flex items-center gap-2 text-xs font-semibold text-[#0AB600] bg-[#0AB600]/10 dark:bg-[#0AB600]/20 px-2.5 py-1 rounded-full border border-[#0AB600]/30 dark:border-[#0AB600]/40">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#0AB600] animate-pulse"></span>
                             <span>{t.hero.terminal.sync}</span>
                         </div>
                     </div>
@@ -153,10 +153,15 @@ export default function HeroSection({ stats = {} }) {
                         <motion.div 
                             whileHover={{ y: -3 }}
                             transition={{ duration: 0.2 }}
-                            className="p-5 rounded-2xl bg-zinc-50/70 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-700/60 hover:border-emerald-500/40 dark:hover:border-emerald-500/40 transition-all cursor-default"
+                            className="p-5 rounded-2xl bg-zinc-50/70 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-700/60 hover:border-[#0AB600]/40 dark:hover:border-[#0AB600]/40 transition-all cursor-default"
                         >
-                            <div className="w-8 h-8 rounded-xl bg-emerald-100/60 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-700 dark:text-emerald-400 mb-3">
-                                <Layers className="w-4 h-4" />
+                            <div className="w-12 h-12 flex items-center justify-start mb-3">
+                                <img
+                                    src="/assets/img/icon/overview/registri.png"
+                                    alt={t.hero.terminal.metric1Title}
+                                    className="w-full h-full object-contain"
+                                    loading="lazy"
+                                />
                             </div>
                             <span className="block text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-semibold mb-1">
                                 {t.hero.terminal.metric1Title}
@@ -173,15 +178,20 @@ export default function HeroSection({ stats = {} }) {
                         <motion.div 
                             whileHover={{ y: -3 }}
                             transition={{ duration: 0.2 }}
-                            className="p-5 rounded-2xl bg-zinc-50/70 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-700/60 hover:border-emerald-500/40 dark:hover:border-emerald-500/40 transition-all cursor-default"
+                            className="p-5 rounded-2xl bg-zinc-50/70 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-700/60 hover:border-[#0AB600]/40 dark:hover:border-[#0AB600]/40 transition-all cursor-default"
                         >
-                            <div className="w-8 h-8 rounded-xl bg-emerald-100/60 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-700 dark:text-emerald-400 mb-3">
-                                <CheckCircle2 className="w-4 h-4" />
+                            <div className="w-12 h-12 flex items-center justify-start mb-3">
+                                <img
+                                    src="/assets/img/icon/overview/verifikasi.png"
+                                    alt={t.hero.terminal.metric2Title}
+                                    className="w-full h-full object-contain"
+                                    loading="lazy"
+                                />
                             </div>
                             <span className="block text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-semibold mb-1">
                                 {t.hero.terminal.metric2Title}
                             </span>
-                            <div className="text-2xl sm:text-3xl font-extrabold text-emerald-700 dark:text-emerald-400 mb-1">
+                            <div className="text-2xl sm:text-3xl font-extrabold text-[#0AB600] mb-1">
                                 {metric2Value}
                             </div>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
@@ -193,10 +203,15 @@ export default function HeroSection({ stats = {} }) {
                         <motion.div 
                             whileHover={{ y: -3 }}
                             transition={{ duration: 0.2 }}
-                            className="p-5 rounded-2xl bg-zinc-50/70 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-700/60 hover:border-emerald-500/40 dark:hover:border-emerald-500/40 transition-all cursor-default"
+                            className="p-5 rounded-2xl bg-zinc-50/70 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-700/60 hover:border-[#0AB600]/40 dark:hover:border-[#0AB600]/40 transition-all cursor-default"
                         >
-                            <div className="w-8 h-8 rounded-xl bg-emerald-100/60 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-700 dark:text-emerald-400 mb-3">
-                                <ShieldCheck className="w-4 h-4" />
+                            <div className="w-12 h-12 flex items-center justify-start mb-3">
+                                <img
+                                    src="/assets/img/icon/overview/akses.png"
+                                    alt={t.hero.terminal.metric3Title}
+                                    className="w-full h-full object-contain"
+                                    loading="lazy"
+                                />
                             </div>
                             <span className="block text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-semibold mb-1">
                                 {t.hero.terminal.metric3Title}

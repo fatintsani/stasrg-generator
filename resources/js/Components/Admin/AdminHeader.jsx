@@ -108,6 +108,7 @@ export default function AdminHeader({
                         onClick={onToggleSidebar}
                         className="p-2 rounded-xl text-zinc-500 hover:text-slate-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
                         title={isSidebarCollapsed ? 'Perluas Sidebar' : 'Perkecil Sidebar'}
+                        data-tooltip-pos="bottom"
                         aria-label="Toggle sidebar"
                     >
                         <PanelLeft className="w-5 h-5 hidden md:block" />
@@ -122,7 +123,7 @@ export default function AdminHeader({
                             className="w-full flex items-center justify-between pl-3.5 pr-3 py-2 rounded-full bg-zinc-100/90 dark:bg-zinc-900/90 hover:bg-zinc-200/70 dark:hover:bg-zinc-800/80 border border-zinc-200/80 dark:border-zinc-800/80 text-xs text-left transition-all cursor-pointer group shadow-2xs"
                         >
                             <div className="flex items-center gap-2.5 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300">
-                                <Search className="w-4 h-4 text-zinc-400 group-hover:text-[#0D5A34] dark:group-hover:text-emerald-400 transition-colors" />
+                                <Search className="w-4 h-4 text-zinc-400 group-hover:text-[#0AB600] dark:group-hover:text-[#0AB600] transition-colors" />
                                 <span className="truncate">
                                     {t.admin?.header?.searchPlaceholder || 'Cari proyek, deliverable, atau template dokumen...'}
                                 </span>
@@ -139,6 +140,8 @@ export default function AdminHeader({
                         onClick={() => setIsSearchOpen(true)}
                         className="p-2 rounded-xl text-zinc-500 hover:text-slate-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors sm:hidden cursor-pointer"
                         title="Cari Proyek & Navigasi"
+                        data-tooltip-pos="bottom"
+                        data-tooltip-shortcut="Ctrl+K"
                     >
                         <Search className="w-5 h-5" />
                     </button>
@@ -152,6 +155,7 @@ export default function AdminHeader({
                         onClick={toggleLanguage}
                         aria-label="Toggle language"
                         title={language === 'id' ? 'Bahasa Indonesia (Klik untuk Switch ke English)' : 'English (Click to switch to Indonesian)'}
+                        data-tooltip-pos="bottom"
                         className="p-2 rounded-xl bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                     >
                         {language === 'id' ? <IndonesiaFlag className="w-5 h-3.5" /> : <EnglishFlag className="w-5 h-3.5" />}
@@ -162,7 +166,8 @@ export default function AdminHeader({
                         type="button"
                         onClick={toggleTheme}
                         aria-label="Toggle theme mode"
-                        title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                        title={theme === 'dark' ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
+                        data-tooltip-pos="bottom"
                         className="p-2 rounded-xl text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                     >
                         {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
@@ -179,10 +184,10 @@ export default function AdminHeader({
                                 <img
                                     src={user.avatar_url || (user.avatar?.startsWith('http') ? user.avatar : `/storage/${user.avatar}`)}
                                     alt={user.name || 'User'}
-                                    className="w-7 h-7 rounded-full object-cover border border-emerald-300 dark:border-emerald-800"
+                                    className="w-7 h-7 rounded-full object-cover border border-[#0AB600]/30"
                                 />
                             ) : (
-                                <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-950 border border-emerald-300 dark:border-emerald-800 flex items-center justify-center text-[#0D5A34] dark:text-emerald-300 font-bold text-xs">
+                                <div className="w-7 h-7 rounded-full bg-[#0AB600]/10 border border-[#0AB600]/30 flex items-center justify-center text-[#0AB600] font-bold text-xs">
                                     {user.name ? user.name.charAt(0).toUpperCase() : 'A'}
                                 </div>
                             )}
@@ -201,10 +206,10 @@ export default function AdminHeader({
                                             <img
                                                 src={user.avatar_url || (user.avatar?.startsWith('http') ? user.avatar : `/storage/${user.avatar}`)}
                                                 alt={user.name || 'User'}
-                                                className="w-8 h-8 rounded-full object-cover border border-emerald-200 dark:border-emerald-800 shrink-0"
+                                                className="w-8 h-8 rounded-full object-cover border border-[#0AB600]/30 shrink-0"
                                             />
                                         ) : (
-                                            <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950 text-[#0D5A34] dark:text-emerald-300 font-bold text-xs flex items-center justify-center shrink-0">
+                                            <div className="w-8 h-8 rounded-full bg-[#0AB600]/10 border border-[#0AB600]/30 text-[#0AB600] font-bold text-xs flex items-center justify-center shrink-0">
                                                 {user.name ? user.name.charAt(0).toUpperCase() : 'A'}
                                             </div>
                                         )}
@@ -217,8 +222,8 @@ export default function AdminHeader({
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[10px] font-semibold text-emerald-800 dark:text-emerald-300">
-                                        <Shield className="w-3 h-3 text-emerald-600" />
+                                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#0AB600]/10 border border-[#0AB600]/30 text-[10px] font-semibold text-[#0AB600]">
+                                        <Shield className="w-3 h-3 text-[#0AB600]" />
                                         <span>{t.admin?.header?.roleBadge || 'Administrator'}</span>
                                     </div>
                                 </div>

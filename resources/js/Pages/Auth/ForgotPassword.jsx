@@ -154,8 +154,8 @@ function ForgotPasswordFormContent() {
 
                 {/* Global Success Banner */}
                 {successMessage && step === 'otp' && (
-                    <div className="mb-5 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                    <div className="mb-5 p-3 rounded-xl bg-[#0AB600]/10 border border-[#0AB600]/30 text-xs font-semibold text-[#0AB600] flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 shrink-0 text-[#0AB600]" />
                         <span>{successMessage}</span>
                     </div>
                 )}
@@ -177,7 +177,7 @@ function ForgotPasswordFormContent() {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder={t.auth?.forgot?.emailPlaceholder}
-                                    className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0D5A34] dark:focus:border-emerald-500 transition-colors"
+                                    className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0AB600] dark:focus:border-[#0AB600] transition-colors"
                                 />
                             </div>
                         </div>
@@ -186,7 +186,7 @@ function ForgotPasswordFormContent() {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-[#0D5A34] hover:bg-[#094226] disabled:opacity-70 text-white text-xs sm:text-sm font-semibold border border-[#0D5A34] transition-all duration-200 cursor-pointer pt-2"
+                            className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-[#0AB600] hover:bg-[#089600] disabled:opacity-70 text-white text-xs sm:text-sm font-semibold border border-[#0AB600] transition-all duration-200 cursor-pointer pt-2"
                         >
                             <Send className="w-4 h-4" />
                             <span>{isSubmitting ? t.auth?.forgot?.submitting : t.auth?.forgot?.submitButton}</span>
@@ -207,7 +207,7 @@ function ForgotPasswordFormContent() {
                     /* Step 2: Input 6-Digit OTP */
                     <form onSubmit={handleVerifyOtp} className="space-y-4">
                         <div className="text-center mb-2">
-                            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50/70 dark:bg-emerald-950/50 py-1.5 px-3 rounded-lg inline-block font-mono">
+                            <span className="text-xs font-semibold text-[#0AB600] bg-[#0AB600]/10 py-1.5 px-3 rounded-lg inline-block font-mono">
                                 {email}
                             </span>
                         </div>
@@ -225,7 +225,7 @@ function ForgotPasswordFormContent() {
                                     value={otp}
                                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                                     placeholder="------"
-                                    className="w-full py-3 text-center text-2xl font-extrabold tracking-[8px] font-mono rounded-xl bg-zinc-50/70 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 text-[#0D5A34] dark:text-emerald-400 focus:outline-none focus:border-[#0D5A34] dark:focus:border-emerald-500 transition-colors"
+                                    className="w-full py-3 text-center text-2xl font-extrabold tracking-[8px] font-mono rounded-xl bg-zinc-50/70 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 text-[#0AB600] focus:outline-none focus:border-[#0AB600] dark:focus:border-[#0AB600] transition-colors"
                                 />
                             </div>
                         </div>
@@ -234,7 +234,7 @@ function ForgotPasswordFormContent() {
                         <button
                             type="submit"
                             disabled={isSubmitting || otp.length !== 6}
-                            className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-[#0D5A34] hover:bg-[#094226] disabled:opacity-50 text-white text-xs sm:text-sm font-semibold border border-[#0D5A34] transition-all duration-200 cursor-pointer pt-2"
+                            className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-[#0AB600] hover:bg-[#089600] disabled:opacity-50 text-white text-xs sm:text-sm font-semibold border border-[#0AB600] transition-all duration-200 cursor-pointer pt-2"
                         >
                             <ShieldCheck className="w-4 h-4" />
                             <span>{isSubmitting ? t.auth?.forgot?.otpVerifying : t.auth?.forgot?.otpVerifyButton}</span>
@@ -249,7 +249,7 @@ function ForgotPasswordFormContent() {
                                         type="button"
                                         onClick={handleResendOtp}
                                         disabled={isSubmitting}
-                                        className="font-bold text-[#0D5A34] dark:text-emerald-400 hover:underline cursor-pointer inline-flex items-center gap-1"
+                                        className="font-bold text-[#0AB600] hover:underline cursor-pointer inline-flex items-center gap-1"
                                     >
                                         <RefreshCw className="w-3 h-3" />
                                         <span>{t.auth?.forgot?.resendButton}</span>

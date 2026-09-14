@@ -76,6 +76,18 @@ export const DOCUMENT_FORMATS = {
         supportsPresets: false,
         bestFor: 'Story Instagram, Status WhatsApp pengelola lab, dan flyer seluler',
     },
+    brochure_trifold: {
+        id: 'brochure_trifold',
+        name: 'Brosur A4 Lipat 3',
+        tagline: '29.7 × 21 cm',
+        description: 'Format brosur cetak A4 landscape lipat 3 (trifold). Terbagi dalam 3 kotak panel berukuran 9.9 × 21 cm: Kotak 1 (Kiri), Kotak 2 (Tengah), dan Kotak 3 (Kanan / Cover).',
+        aspectRatio: '1.414:1',
+        canvasWidth: 1123,
+        canvasHeight: 794,
+        padding: '24px 20px 20px 20px',
+        supportsPresets: false,
+        bestFor: 'Brosur pameran lipat 3, leaflet profil riset 3 kolom, dan katalog inovasi',
+    },
 };
 
 export const COLOR_THEMES = {
@@ -83,20 +95,20 @@ export const COLOR_THEMES = {
         id: 'stas_official',
         name: 'CoE STAS-RG Official',
         tagline: 'Forest Green Resmi',
-        primary: '#0D5A34',
+        primary: '#0AB600',
         primaryDark: '#083820',
         primaryLight: '#15803d',
         accent: '#10b981',
-        badgeBg: '#0D5A34',
+        badgeBg: '#0AB600',
         badgeText: '#ffffff',
-        headerText: '#0D5A34',
-        border: '#0D5A34',
+        headerText: '#0AB600',
+        border: '#0AB600',
         bgAccent: '#ecfdf5',
         cardBorder: '#d1fae5',
         darkCanvasBg: '#07150e',
         darkCardBg: '#0e241b',
-        previewRing: 'ring-[#0D5A34]',
-        swatchClass: 'from-[#0D5A34] to-[#15803d]',
+        previewRing: 'ring-[#0AB600]',
+        swatchClass: 'from-[#0AB600] to-[#15803d]',
     },
     ocean_tech: {
         id: 'ocean_tech',
@@ -229,8 +241,8 @@ export const LAYOUT_PRESETS = {
         tagline: 'Proporsi Seimbang',
         description: 'Proporsi seimbang antara foto produk dan poin spesifikasi.',
         bestFor: 'Proyek kombinasi hardware & software terintegrasi',
-        badgeColor: 'bg-emerald-50 text-[#0D5A34] dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
-        activeRing: 'ring-[#0D5A34] border-[#0D5A34] bg-emerald-50/40 dark:bg-emerald-950/20',
+        badgeColor: 'bg-[#0AB600]/10 text-[#0AB600] dark:bg-[#0AB600]/10 dark:text-[#0AB600] border-[#0AB600]/30',
+        activeRing: 'ring-[#0AB600] border-[#0AB600] bg-[#0AB600]/10',
         styles: {
             imageHeight: 205,
             imageContainerPadding: '0px',
@@ -325,6 +337,49 @@ export const LAYOUT_PRESETS = {
     },
 };
 
+export const DESIGN_STYLES = {
+    classic_standard: {
+        id: 'classic_standard',
+        name: 'CoE Classic Standard',
+        tagline: 'Struktur Resmi & Terbukti',
+        description: 'Hierarki tata letak resmi CoE STAS-RG klasik dengan proporsi seimbang, badge solid, dan garis pembatas bersih.',
+        badgeColor: 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200',
+        bestFor: 'Publikasi resmi lab, berkas arsip riset, dan laporan standar',
+    },
+    modern_split: {
+        id: 'modern_split',
+        name: 'Modern Split Hero',
+        tagline: 'Asimetris & Visual Dinamis',
+        description: 'Tata letak modern dengan header beraksen kuat, hero frame asimetris, dan kartu solusi dengan highlight gradien halus.',
+        badgeColor: 'bg-blue-50 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-200',
+        bestFor: 'Showcase prototipe hardware unggulan, expo teknologi, dan leaflet produk',
+    },
+    infographic_cards: {
+        id: 'infographic_cards',
+        name: 'Infographic Cards',
+        tagline: 'Modul Kartu Berbingkai & Eye-Catching',
+        description: 'Desain infografis berbasis kotak kartu rounded dengan highlight problem-solution berbentuk alur inovasi dan badge pill tegas.',
+        badgeColor: 'bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-200',
+        bestFor: 'Kolaborasi industri Kedaireka, pitch investor, dan pameran interaktif',
+    },
+    minimal_grid: {
+        id: 'minimal_grid',
+        name: 'Minimalist Swiss Grid',
+        tagline: 'Tipografi Tajam & Arsitektur Bersih',
+        description: 'Desain presisi tinggi dengan batas garis tipis elegan, ruang bernapas lapang, dan tipografi monokromatik kontras tinggi.',
+        badgeColor: 'bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200 border-zinc-300',
+        bestFor: 'Riset software, algoritma AI, deep tech, dan dokumentasi arsitektur sistem',
+    },
+    academic_brief: {
+        id: 'academic_brief',
+        name: 'Academic Paper Brief',
+        tagline: 'Format Simposium & Prosiding Ilmiah',
+        description: 'Format formal 2-kolom seimbang terinspirasi format prosiding IEEE dan jurnal ilmiah internasional.',
+        badgeColor: 'bg-purple-50 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border-purple-200',
+        bestFor: 'Publikasi konferensi ilmiah, simposium riset, dan laporan akademis',
+    },
+};
+
 export function getDocumentFormat(formatId) {
     return DOCUMENT_FORMATS[formatId] || DOCUMENT_FORMATS.a4_flyer;
 }
@@ -340,3 +395,121 @@ export function getPrintMode(modeId) {
 export function getLayoutPreset(presetId) {
     return LAYOUT_PRESETS[presetId] || LAYOUT_PRESETS.balanced;
 }
+
+export function getDesignStyle(styleId) {
+    return DESIGN_STYLES[styleId] || DESIGN_STYLES.classic_standard;
+}
+
+export const AVAILABLE_BLOCK_TYPES = [
+    {
+        type: 'header',
+        name: 'Header & Judul',
+        description: 'Judul riset, subtitle, badge kategori, dan logo mitra',
+        icon: 'LayoutTemplate',
+        defaultColSpan: 12,
+        allowedColSpans: [12],
+        hasVariants: false,
+    },
+    {
+        type: 'media',
+        name: 'Foto Utama / Prototipe',
+        description: 'Visual gambar alat riset, poster, atau diagram sistem',
+        icon: 'Image',
+        defaultColSpan: 12,
+        allowedColSpans: [6, 12],
+        hasVariants: true,
+        variants: [
+            { id: 'compact', name: 'Ringkas (160px)' },
+            { id: 'standard', name: 'Standar (220px)' },
+            { id: 'large', name: 'Besar (290px)' },
+        ],
+    },
+    {
+        type: 'description',
+        name: 'Deskripsi Singkat',
+        description: 'Paragraf ringkasan inovasi dan keunggulan teknologi',
+        icon: 'AlignLeft',
+        defaultColSpan: 12,
+        allowedColSpans: [6, 12],
+        hasVariants: true,
+        variants: [
+            { id: 'clean', name: 'Teks Bersih' },
+            { id: 'card', name: 'Kotak Card' },
+        ],
+    },
+    {
+        type: 'benefits',
+        name: 'Manfaat & Dampak',
+        description: 'Daftar poin manfaat dan efisiensi penerapan teknologi',
+        icon: 'Sparkles',
+        defaultColSpan: 6,
+        allowedColSpans: [4, 6, 12],
+        hasVariants: true,
+        variants: [
+            { id: 'cards', name: 'Kartu Berbingkai' },
+            { id: 'list', name: 'Daftar Bullet Bersih' },
+        ],
+    },
+    {
+        type: 'specifications',
+        name: 'Spesifikasi Teknis',
+        description: 'Sensor, mikrokontroler, algoritma, dan parameter sistem',
+        icon: 'Cpu',
+        defaultColSpan: 6,
+        allowedColSpans: [4, 6, 12],
+        hasVariants: true,
+        variants: [
+            { id: 'box', name: 'Kotak Spesifikasi' },
+            { id: 'chips', name: 'Tag / Chips Modern' },
+        ],
+    },
+    {
+        type: 'problem_solution',
+        name: 'Problem & Solution',
+        description: 'Tantangan industri / lapangan dan solusi terapan yang ditawarkan',
+        icon: 'CheckCircle2',
+        defaultColSpan: 12,
+        allowedColSpans: [6, 12],
+        hasVariants: true,
+        variants: [
+            { id: 'merged_card', name: '1 Card Terpadu' },
+            { id: 'split_cards', name: '2 Kolom Terpisah' },
+        ],
+    },
+    {
+        type: 'footer_qr',
+        name: 'Footer, Kontak & QR Code',
+        description: 'QR scan info detail, media sosial (@stas.rg, youtube), dan link website',
+        icon: 'QrCode',
+        defaultColSpan: 12,
+        allowedColSpans: [12],
+        hasVariants: true,
+        variants: [
+            { id: 'full', name: 'Lengkap (QR + Sosmed)' },
+            { id: 'compact', name: 'Ringkas (QR Saja)' },
+        ],
+    },
+];
+
+export function getDefaultLayoutSchema(docFormat = 'a4_flyer', designStyle = 'classic_standard') {
+    const format = getDocumentFormat(docFormat);
+    return {
+        canvas: {
+            format: docFormat,
+            width: format.canvasWidth || 794,
+            height: format.canvasHeight || 1123,
+            padding: format.padding || '48px 40px',
+            orientation: format.aspectRatio === '16:9' || format.aspectRatio === '1.414:1' ? 'landscape' : 'portrait',
+        },
+        blocks: [
+            { id: 'block_header', type: 'header', visible: true, colSpan: 12 },
+            { id: 'block_media', type: 'media', visible: true, colSpan: 12, variant: 'standard' },
+            { id: 'block_description', type: 'description', visible: true, colSpan: 12, variant: 'clean' },
+            { id: 'block_benefits', type: 'benefits', visible: true, colSpan: 6, variant: 'cards' },
+            { id: 'block_specifications', type: 'specifications', visible: true, colSpan: 6, variant: 'box' },
+            { id: 'block_problem_solution', type: 'problem_solution', visible: true, colSpan: 12, variant: 'merged_card' },
+            { id: 'block_footer_qr', type: 'footer_qr', visible: true, colSpan: 12, variant: 'full' },
+        ],
+    };
+}
+

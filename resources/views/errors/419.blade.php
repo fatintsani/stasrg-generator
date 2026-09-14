@@ -4,12 +4,7 @@
 @section('title', 'Sesi Halaman Kedaluwarsa')
 
 @section('content')
-    <div class="status-badge badge-419">
-        <span class="badge-dot"></span>
-        HTTP 419 • Page Expired
-    </div>
-
-    <div class="error-code">419</div>
+    <img src="{{ asset('assets/img/icon/sesikedaluwarsa.png') }}" alt="Sesi Halaman Kedaluwarsa" style="width: 120px; height: auto; margin: 0 auto 16px; display: block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.04));">
     <h1 class="error-title">Sesi Halaman Telah Kedaluwarsa</h1>
     
     <p class="error-description">

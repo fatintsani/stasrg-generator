@@ -230,6 +230,14 @@ export function printFlyer(target, documentTitle = 'Flyer STAS-RG') {
         .map((node) => node.outerHTML)
         .join('\n');
 
+    // Detect if canvas is landscape (e.g. Brochure Trifold 29.7x21cm or Pitch Poster 16:9)
+    const elWidth = element.offsetWidth || (element.style.width ? parseInt(element.style.width) : 794);
+    const elHeight = element.offsetHeight || (element.style.height ? parseInt(element.style.height) : 1123);
+    const isLandscape = elWidth > elHeight;
+    const pageSize = isLandscape ? 'A4 landscape' : 'A4 portrait';
+    const pageWidth = isLandscape ? '297mm' : '210mm';
+    const pageHeight = isLandscape ? '210mm' : '297mm';
+
     frameDoc.open();
     frameDoc.write(`
         <!DOCTYPE html>
@@ -243,7 +251,7 @@ export function printFlyer(target, documentTitle = 'Flyer STAS-RG') {
                 ${styles}
                 <style>
                     @page {
-                        size: A4 portrait;
+                        size: ${pageSize};
                         margin: 0;
                     }
                     * {
@@ -255,15 +263,15 @@ export function printFlyer(target, documentTitle = 'Flyer STAS-RG') {
                         margin: 0 !important;
                         padding: 0 !important;
                         background: #ffffff !important;
-                        width: 210mm;
-                        height: 297mm;
+                        width: ${pageWidth};
+                        height: ${pageHeight};
                         overflow: hidden;
                     }
                     .print-container {
-                        width: 210mm !important;
-                        height: 297mm !important;
-                        max-width: 210mm !important;
-                        max-height: 297mm !important;
+                        width: ${pageWidth} !important;
+                        height: ${pageHeight} !important;
+                        max-width: ${pageWidth} !important;
+                        max-height: ${pageHeight} !important;
                         margin: 0 auto !important;
                         padding: 0 !important;
                         background: #ffffff !important;

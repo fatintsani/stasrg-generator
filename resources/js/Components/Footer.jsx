@@ -41,7 +41,7 @@ function InstagramIcon({ className = "w-4 h-4" }) {
 }
 
 export default function Footer() {
-    const { t } = useApp();
+    const { t, openSupportModal } = useApp();
 
     const socialLinks = [
         {
@@ -76,6 +76,7 @@ export default function Footer() {
         { name: t.nav.about, href: '/#about' },
         { name: t.nav.principles, href: '/#principles' },
         { name: t.nav.howItWorks, href: '/#how-it-works' },
+        { name: t.nav?.support || 'Bantuan', href: '/support' },
         { name: t.nav.login, href: '/login' },
     ];
 
@@ -101,7 +102,7 @@ export default function Footer() {
                             <img 
                                 src="/assets/img/telu.png" 
                                 alt="Telkom University Logo" 
-                                className="h-9 w-auto object-contain" 
+                                className="h-9 w-auto object-contain dark:brightness-0 dark:invert" 
                             />
                         </div>
 
@@ -137,7 +138,7 @@ export default function Footer() {
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             aria-label={item.name}
-                                            className="w-9 h-9 rounded-xl bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200/80 dark:border-zinc-700/80 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-[#0D5A34] dark:hover:text-emerald-400 hover:border-emerald-400 dark:hover:border-emerald-600 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/40 transition-all"
+                                            className="w-9 h-9 rounded-xl bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200/80 dark:border-zinc-700/80 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-[#0AB600] dark:hover:text-[#0AB600] hover:border-[#0AB600]/40 dark:hover:border-[#0AB600]/40 hover:bg-[#0AB600]/10 dark:hover:bg-[#0AB600]/15 transition-all"
                                         >
                                             <Icon className="w-4 h-4" />
                                         </a>
@@ -150,19 +151,29 @@ export default function Footer() {
                     {/* Column 2: Navigation (Span 3) */}
                     <div className="lg:col-span-3 space-y-4">
                         <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
-                            <Compass className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+                            <Compass className="w-4 h-4 text-[#0AB600]" />
                             <span>{t.footer.navTitle}</span>
                         </div>
                         <ul className="space-y-2.5 text-xs sm:text-sm">
                             {simpleNavLinks.map((link, idx) => (
                                 <li key={idx}>
-                                    <a
-                                        href={link.href}
-                                        className="text-zinc-600 dark:text-zinc-400 hover:text-[#0D5A34] dark:hover:text-emerald-400 transition-colors flex items-center gap-2 font-medium"
-                                    >
-                                        <span className="text-zinc-400 dark:text-zinc-600">›</span>
-                                        <span>{link.name}</span>
-                                    </a>
+                                    {link.href.startsWith('/') && !link.href.startsWith('/#') ? (
+                                        <Link
+                                            href={link.href}
+                                            className="text-zinc-600 dark:text-zinc-400 hover:text-[#0AB600] dark:hover:text-[#0AB600] transition-colors flex items-center gap-2 font-medium"
+                                        >
+                                            <span className="text-zinc-400 dark:text-zinc-600">›</span>
+                                            <span>{link.name}</span>
+                                        </Link>
+                                    ) : (
+                                        <a
+                                            href={link.href}
+                                            className="text-zinc-600 dark:text-zinc-400 hover:text-[#0AB600] dark:hover:text-[#0AB600] transition-colors flex items-center gap-2 font-medium"
+                                        >
+                                            <span className="text-zinc-400 dark:text-zinc-600">›</span>
+                                            <span>{link.name}</span>
+                                        </a>
+                                    )}
                                 </li>
                             ))}
                         </ul>
@@ -171,14 +182,14 @@ export default function Footer() {
                     {/* Column 3: Lab Location & Contact (Span 4) */}
                     <div className="lg:col-span-4 space-y-4">
                         <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
-                            <Building2 className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+                            <Building2 className="w-4 h-4 text-[#0AB600]" />
                             <span>{t.footer.locationTitle}</span>
                         </div>
 
                         {/* Location Details Card */}
                         <div className="p-4 rounded-2xl bg-zinc-50/70 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800/80 space-y-3">
                             <div className="flex items-start gap-3">
-                                <MapPin className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
+                                <MapPin className="w-4 h-4 text-[#0AB600] shrink-0 mt-0.5" />
                                 <div className="space-y-0.5">
                                     <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
                                         {t.footer.labName}
@@ -197,10 +208,10 @@ export default function Footer() {
                                 href="https://maps.google.com/?q=Telkom+University+Bandung"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white dark:bg-zinc-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:text-[#0D5A34] dark:hover:text-emerald-400 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors"
+                                className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white dark:bg-zinc-800 hover:bg-[#0AB600]/10 dark:hover:bg-[#0AB600]/15 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:text-[#0AB600] dark:hover:text-[#0AB600] border border-zinc-200 dark:border-zinc-700 hover:border-[#0AB600]/40 dark:hover:border-[#0AB600]/40 transition-colors"
                             >
                                 <span className="flex items-center gap-1.5">
-                                    <MapPin className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
+                                    <MapPin className="w-3.5 h-3.5 text-[#0AB600]" />
                                     <span>{t.footer.openMaps}</span>
                                 </span>
                                 <ExternalLink className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500" />
@@ -210,11 +221,11 @@ export default function Footer() {
                         {/* Quick Contact Rows */}
                         <div className="space-y-2 pt-1 text-xs sm:text-sm">
                             <div className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
-                                <Mail className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
+                                <Mail className="w-4 h-4 text-[#0AB600] shrink-0" />
                                 <span className="font-mono text-xs">stas.research@telkomuniversity.ac.id</span>
                             </div>
                             <div className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
-                                <Phone className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
+                                <Phone className="w-4 h-4 text-[#0AB600] shrink-0" />
                                 <span className="font-mono text-xs">+62 22 7566456</span>
                             </div>
                         </div>
@@ -229,15 +240,15 @@ export default function Footer() {
                     </div>
 
                     <div className="flex items-center gap-4 flex-wrap text-xs">
-                        <span className="inline-flex items-center gap-1.5 text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800 px-2.5 py-0.5 rounded-full font-medium">
-                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
+                        <span className="inline-flex items-center gap-1.5 text-[#0AB600] bg-[#0AB600]/10 dark:bg-[#0AB600]/20 border border-[#0AB600]/30 px-2.5 py-0.5 rounded-full font-medium">
+                            <ShieldCheck className="w-3.5 h-3.5 text-[#0AB600]" />
                             <span>{t.footer.sso}</span>
                         </span>
-                        <Link href="/privacy" className="hover:text-[#0D5A34] dark:hover:text-emerald-400 transition-colors">
+                        <Link href="/privacy" className="hover:text-[#0AB600] dark:hover:text-[#0AB600] transition-colors">
                             {t.footer.privacy}
                         </Link>
                         <span className="text-zinc-300 dark:text-zinc-700">•</span>
-                        <Link href="/terms" className="hover:text-[#0D5A34] dark:hover:text-emerald-400 transition-colors">
+                        <Link href="/terms" className="hover:text-[#0AB600] dark:hover:text-[#0AB600] transition-colors">
                             {t.footer.terms}
                         </Link>
                     </div>

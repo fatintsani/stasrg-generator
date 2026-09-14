@@ -18,10 +18,10 @@
 
     <!-- Prominent OTP Box -->
     <div class="status-box status-box-otp">
-        <div style="font-size: 11px; font-weight: 700; color: #0D5A34; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px;">
+        <div style="font-size: 11px; font-weight: 700; color: #0AB600; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px;">
             KODE OTP VERIFIKASI (BERLAKU 15 MENIT)
         </div>
-        <div style="font-family: 'JetBrains Mono', Consolas, Monaco, monospace; font-size: 36px; font-weight: 800; color: #0D5A34; letter-spacing: 8px;">
+        <div style="font-family: 'JetBrains Mono', Consolas, Monaco, monospace; font-size: 36px; font-weight: 800; color: #0AB600; letter-spacing: 8px;">
             {{ $otpCode }}
         </div>
     </div>

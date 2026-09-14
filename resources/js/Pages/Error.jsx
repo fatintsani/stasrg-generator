@@ -93,14 +93,29 @@ export default function ErrorPage({ status = 404, message }) {
 
     const config = errorConfigs[status] || errorConfigs[500];
     const displayDescription = message || config.description;
+    const errorImage = status === 400
+        ? '/assets/img/icon/tidakvalid.png'
+        : status === 401
+        ? '/assets/img/icon/autentikasi.png'
+        : status === 403
+        ? '/assets/img/icon/aksesditolak.png'
+        : status === 419
+        ? '/assets/img/icon/sesikedaluwarsa.png'
+        : status === 429
+        ? '/assets/img/icon/terlalubanyakpermintaan.png'
+        : status === 500
+        ? '/assets/img/icon/kesalahanserver.png'
+        : status === 503
+        ? '/assets/img/icon/pemeliharaan.png'
+        : '/assets/img/icon/notfound.png';
 
     return (
-        <div className="min-h-screen bg-[#FAFBFD] dark:bg-[#090D16] text-slate-900 dark:text-white flex flex-col justify-between items-center p-4 sm:p-6 relative overflow-x-hidden selection:bg-emerald-100 selection:text-emerald-900">
+        <div className="min-h-screen bg-[#FAFBFD] dark:bg-[#090D16] text-slate-900 dark:text-white flex flex-col justify-between items-center p-4 sm:p-6 relative overflow-x-hidden selection:bg-[#0AB600]/20 selection:text-[#0AB600]">
             <Head title={`${config.code} — ${config.title} | STASIKATOR`} />
 
             {/* Ambient Background Glows */}
-            <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-3/4 max-w-2xl h-72 bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-20 right-5 w-80 h-80 bg-[#0D5A34]/10 dark:bg-[#0D5A34]/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-3/4 max-w-2xl h-72 bg-[#0AB600]/10 dark:bg-[#0AB600]/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-20 right-5 w-80 h-80 bg-[#0AB600]/10 dark:bg-[#0AB600]/5 rounded-full blur-3xl pointer-events-none" />
 
             {/* Header Brand */}
             <Link
@@ -125,17 +140,16 @@ export default function ErrorPage({ status = 404, message }) {
 
             {/* Center Error Box */}
             <div className="relative z-10 w-full max-w-lg my-auto bg-white dark:bg-[#121824] border border-zinc-200/80 dark:border-zinc-800/80 rounded-3xl p-6 sm:p-10 text-center shadow-xs">
-                {/* Status Dot Badge */}
-                <div className="inline-flex items-center justify-center mb-5">
-                    <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border tracking-wider uppercase ${config.badgeClass}`}>
-                        <span className={`w-2 h-2 rounded-full ${config.dotClass}`} />
-                        <span>{config.badge}</span>
-                    </span>
-                </div>
-
-                {/* Big Numeric Code */}
-                <div className="text-6xl sm:text-7xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-3">
-                    {config.code}
+                {/* Illustration & Big Numeric Code */}
+                <div className="flex flex-col items-center justify-center mb-3">
+                    <img
+                        src={errorImage}
+                        alt="Illustration"
+                        className="w-28 sm:w-32 h-auto object-contain mx-auto mb-3 drop-shadow-xs"
+                    />
+                    <div className="text-5xl sm:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                        {config.code}
+                    </div>
                 </div>
 
                 {/* Title */}
@@ -154,7 +168,7 @@ export default function ErrorPage({ status = 404, message }) {
                         <button
                             type="button"
                             onClick={config.primaryAction.onClick}
-                            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#0D5A34] hover:bg-[#094226] text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+                            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#0AB600] hover:bg-[#089600] text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
                         >
                             <config.primaryAction.icon className="w-4 h-4" />
                             <span>{config.primaryAction.label}</span>
@@ -162,7 +176,7 @@ export default function ErrorPage({ status = 404, message }) {
                     ) : (
                         <Link
                             href={config.primaryAction.href}
-                            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#0D5A34] hover:bg-[#094226] text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+                            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#0AB600] hover:bg-[#089600] text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
                         >
                             <config.primaryAction.icon className="w-4 h-4" />
                             <span>{config.primaryAction.label}</span>
@@ -205,10 +219,17 @@ export default function ErrorPage({ status = 404, message }) {
                     © {new Date().getFullYear()} <strong>CoE STAS-RG</strong> • Fakultas Ilmu Terapan Telkom University.
                 </p>
                 <p className="text-[11px] text-zinc-400 dark:text-zinc-500">
-                    Butuh bantuan? Hubungi{' '}
+                    Butuh bantuan? Kunjungi{' '}
+                    <a
+                        href="/support"
+                        className="text-[#0AB600] font-semibold hover:underline"
+                    >
+                        Pusat Bantuan & Kontak Support
+                    </a>{' '}
+                    atau email{' '}
                     <a
                         href="mailto:stas.research@telkomuniversity.ac.id"
-                        className="text-[#0D5A34] dark:text-emerald-400 font-semibold hover:underline"
+                        className="text-[#0AB600] font-semibold hover:underline"
                     >
                         stas.research@telkomuniversity.ac.id
                     </a>

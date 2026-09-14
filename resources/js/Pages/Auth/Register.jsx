@@ -65,9 +65,9 @@ function RegisterFormContent() {
                 className="w-full p-7 sm:p-9 rounded-3xl bg-white dark:bg-[#18181B] border border-zinc-200/80 dark:border-zinc-800/80 transition-colors shadow-sm"
             >
                 {/* Notice Alert about Admin Approval Flow */}
-                <div className="mb-6 p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 flex items-start gap-2.5">
-                    <Info className="w-4 h-4 text-[#0D5A34] dark:text-emerald-400 shrink-0 mt-0.5" />
-                    <p className="text-[11px] text-emerald-900 dark:text-emerald-200 leading-relaxed">
+                <div className="mb-6 p-3.5 rounded-2xl bg-[#0AB600]/10 border border-[#0AB600]/30 flex items-start gap-2.5">
+                    <Info className="w-4 h-4 text-[#0AB600] shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-slate-900 dark:text-[#0AB600] leading-relaxed">
                         <strong>Informasi:</strong> Pendaftaran terbuka untuk semua email (Gmail, Yahoo, dll). Setelah mendaftar, akun akan berstatus <em>Pending</em> hingga disetujui oleh Administrator.
                     </p>
                 </div>
@@ -113,7 +113,7 @@ function RegisterFormContent() {
                                 placeholder="cth. Budi Santoso"
                                 className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/80 border ${
                                     errors.name ? 'border-rose-400 dark:border-rose-600' : 'border-zinc-200 dark:border-zinc-800'
-                                } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0D5A34] dark:focus:border-emerald-500 transition-colors`}
+                                } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0AB600] dark:focus:border-[#0AB600] transition-colors`}
                             />
                         </div>
                         {errors.name && (
@@ -140,7 +140,7 @@ function RegisterFormContent() {
                                 placeholder="cth. budi_santoso"
                                 className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/80 border ${
                                     errors.username ? 'border-rose-400 dark:border-rose-600' : 'border-zinc-200 dark:border-zinc-800'
-                                } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0D5A34] dark:focus:border-emerald-500 transition-colors`}
+                                } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0AB600] dark:focus:border-[#0AB600] transition-colors`}
                             />
                         </div>
                         {errors.username && (
@@ -168,7 +168,7 @@ function RegisterFormContent() {
                                 placeholder="nama@gmail.com atau email Anda"
                                 className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/80 border ${
                                     errors.email ? 'border-rose-400 dark:border-rose-600' : 'border-zinc-200 dark:border-zinc-800'
-                                } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0D5A34] dark:focus:border-emerald-500 transition-colors`}
+                                } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0AB600] dark:focus:border-[#0AB600] transition-colors`}
                             />
                         </div>
                         {errors.email && (
@@ -196,7 +196,7 @@ function RegisterFormContent() {
                                 placeholder="Minimal 8 karakter"
                                 className={`w-full pl-10 pr-10 py-2.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/80 border ${
                                     errors.password ? 'border-rose-400 dark:border-rose-600' : 'border-zinc-200 dark:border-zinc-800'
-                                } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0D5A34] dark:focus:border-emerald-500 transition-colors`}
+                                } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0AB600] dark:focus:border-[#0AB600] transition-colors`}
                             />
                             <button
                                 type="button"
@@ -232,7 +232,7 @@ function RegisterFormContent() {
                                 placeholder="Ulangi kata sandi Anda"
                                 className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/80 border ${
                                     errors.password_confirmation ? 'border-rose-400 dark:border-rose-600' : 'border-zinc-200 dark:border-zinc-800'
-                                } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0D5A34] dark:focus:border-emerald-500 transition-colors`}
+                                } text-slate-900 dark:text-white text-xs sm:text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#0AB600] dark:focus:border-[#0AB600] transition-colors`}
                             />
                         </div>
                         {errors.password_confirmation && (
@@ -251,15 +251,15 @@ function RegisterFormContent() {
                                 required
                                 checked={data.agree}
                                 onChange={(e) => setData('agree', e.target.checked)}
-                                className="w-4 h-4 mt-0.5 rounded border-zinc-300 dark:border-zinc-700 text-[#0D5A34] focus:ring-0 accent-[#0D5A34] dark:accent-emerald-500 cursor-pointer shrink-0"
+                                className="w-4 h-4 mt-0.5 rounded border-zinc-300 dark:border-zinc-700 text-[#0AB600] focus:ring-0 accent-[#0AB600] dark:accent-[#0AB600] cursor-pointer shrink-0"
                             />
                             <span className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                                 Saya menyetujui{' '}
-                                <Link href="/privacy" className="text-[#0D5A34] dark:text-emerald-400 font-semibold hover:underline">
+                                <Link href="/privacy" className="text-[#0AB600] font-semibold hover:underline">
                                     Kebijakan Privasi
                                 </Link>{' '}
                                 dan{' '}
-                                <Link href="/terms" className="text-[#0D5A34] dark:text-emerald-400 font-semibold hover:underline">
+                                <Link href="/terms" className="text-[#0AB600] font-semibold hover:underline">
                                     Ketentuan Layanan
                                 </Link>
                             </span>
@@ -276,7 +276,7 @@ function RegisterFormContent() {
                     <button
                         type="submit"
                         disabled={processing}
-                        className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-[#0D5A34] hover:bg-[#094226] disabled:opacity-70 text-white text-xs sm:text-sm font-semibold border border-[#0D5A34] transition-all duration-200 cursor-pointer mt-2"
+                        className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-[#0AB600] hover:bg-[#089600] disabled:opacity-70 text-white text-xs sm:text-sm font-semibold border border-[#0AB600] transition-all duration-200 cursor-pointer mt-2"
                     >
                         <UserCheck className="w-4 h-4" />
                         <span>{processing ? 'Mendaftarkan Akun...' : 'Daftar Akun'}</span>
@@ -289,7 +289,7 @@ function RegisterFormContent() {
                         Sudah memiliki akun terdaftar?{' '}
                         <Link
                             href="/login"
-                            className="font-bold text-[#0D5A34] dark:text-emerald-400 hover:underline inline-flex items-center gap-0.5"
+                            className="font-bold text-[#0AB600] hover:underline inline-flex items-center gap-0.5"
                         >
                             <span>Masuk Sekarang</span>
                             <ArrowRight className="w-3.5 h-3.5" />

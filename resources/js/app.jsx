@@ -6,6 +6,7 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { AppProvider } from './Context/AppContext';
 import { AlertProvider } from './Context/AlertContext';
+import GlobalTooltipProvider from './Components/Common/GlobalTooltipProvider';
 
 const appName = import.meta.env.VITE_APP_NAME || 'STAS RG Projects';
 
@@ -17,13 +18,15 @@ createInertiaApp({
         root.render(
             <AppProvider>
                 <AlertProvider>
-                    <App {...props} />
+                    <GlobalTooltipProvider>
+                        <App {...props} />
+                    </GlobalTooltipProvider>
                 </AlertProvider>
             </AppProvider>
         );
     },
     progress: {
-        color: '#0D5A34',
+        color: '#0AB600',
         showSpinner: false,
     },
 });

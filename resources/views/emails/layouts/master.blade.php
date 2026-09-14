@@ -136,7 +136,7 @@
         .badge-success {
             background-color: #ECFDF5;
             border: 1px solid #A7F3D0;
-            color: #0D5A34 !important;
+            color: #0AB600 !important;
         }
         .badge-dot-success {
             background-color: #10B981;
@@ -240,7 +240,7 @@
 
         .btn-primary {
             display: inline-block;
-            background-color: #0D5A34;
+            background-color: #0AB600;
             color: #FFFFFF !important;
             font-size: 13px;
             font-weight: 700;
@@ -248,17 +248,17 @@
             padding: 12px 24px;
             border-radius: 12px;
             text-align: center;
-            box-shadow: 0 2px 6px rgba(13, 90, 52, 0.15);
+            box-shadow: 0 2px 6px rgba(10, 182, 0, 0.15);
         }
 
         .btn-primary:hover {
-            background-color: #094226 !important;
+            background-color: #089600 !important;
         }
 
         /* Callout */
         .info-callout {
             background-color: #F8FAFC;
-            border-left: 3px solid #0D5A34;
+            border-left: 3px solid #0AB600;
             border-radius: 0 10px 10px 0;
             padding: 12px 16px;
             margin: 20px 0 0 0;
@@ -277,7 +277,7 @@
         .social-link {
             display: inline-block;
             margin-right: 12px;
-            color: #0D5A34;
+            color: #0AB600;
             text-decoration: none;
             font-size: 12px;
             font-weight: 600;
@@ -349,7 +349,7 @@
                                     </td>
                                     <td align="right" style="vertical-align: middle;">
                                         <div style="font-size: 13px; font-weight: 800; color: #0F172A; letter-spacing: -0.3px;">
-                                            STAS RG <span style="font-weight: 600; color: #0D5A34;">Projects</span>
+                                            STAS RG <span style="font-weight: 600; color: #0AB600;">Projects</span>
                                         </div>
                                         <div style="font-size: 10px; color: #94A3B8; font-weight: 500;">
                                             CoE STAS-RG Platform
@@ -389,10 +389,10 @@
                                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                                             <tr>
                                                 <td align="left" style="font-size: 11px; color: #64748B;">
-                                                    <a href="{{ config('app.url') }}" class="social-link" style="color: #0D5A34;">Website</a> •
-                                                    <a href="https://instagram.com/stas.rg" class="social-link" style="color: #0D5A34;">Instagram</a> •
-                                                    <a href="https://telkomuniversity.ac.id" class="social-link" style="color: #0D5A34;">Tel-U</a> •
-                                                    <a href="mailto:stas.research@telkomuniversity.ac.id" class="social-link" style="color: #0D5A34;">Email Lab</a>
+                                                    <a href="{{ config('app.url') }}" class="social-link" style="color: #0AB600;">Website</a> •
+                                                    <a href="https://instagram.com/stas.rg" class="social-link" style="color: #0AB600;">Instagram</a> •
+                                                    <a href="https://telkomuniversity.ac.id" class="social-link" style="color: #0AB600;">Tel-U</a> •
+                                                    <a href="mailto:stas.research@telkomuniversity.ac.id" class="social-link" style="color: #0AB600;">Email Lab</a>
                                                 </td>
                                             </tr>
                                             <tr>

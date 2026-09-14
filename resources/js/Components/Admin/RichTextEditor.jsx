@@ -25,8 +25,8 @@ import {
 
 const TEXT_COLORS = [
     { label: 'Default', value: '#1f2937' },
-    { label: 'Dark Green (STAS)', value: '#0D5A34' },
-    { label: 'Emerald', value: '#059669' },
+    { label: 'Dark Green (STAS)', value: '#0AB600' },
+    { label: 'Emerald', value: '#089600' },
     { label: 'Blue', value: '#2563eb' },
     { label: 'Indigo', value: '#4f46e5' },
     { label: 'Purple', value: '#7c3aed' },
@@ -199,7 +199,7 @@ export default function RichTextEditor({
     return (
         <div className={`relative flex flex-col rounded-xl border transition-all ${
             isFocused 
-                ? 'border-[#0D5A34] ring-2 ring-emerald-500/10' 
+                ? 'border-[#0AB600] ring-2 ring-[#0AB600]/20' 
                 : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600'
         } bg-white dark:bg-zinc-900 overflow-hidden ${className}`}>
             
@@ -247,7 +247,7 @@ export default function RichTextEditor({
                                     key={size.label}
                                     type="button"
                                     onClick={() => handleApplyFontSize(size)}
-                                    className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:text-[#0D5A34] dark:hover:text-emerald-400 transition-colors cursor-pointer"
+                                    className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs hover:bg-[#0AB600]/10 dark:hover:bg-[#0AB600]/15 hover:text-[#0AB600] dark:hover:text-[#0AB600] transition-colors cursor-pointer"
                                 >
                                     {size.label}
                                 </button>
@@ -263,7 +263,7 @@ export default function RichTextEditor({
                         onClick={() => execCmd('bold')}
                         className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                             activeFormats.bold 
-                                ? 'bg-emerald-100 dark:bg-emerald-950 text-[#0D5A34] dark:text-emerald-400 font-bold' 
+                                ? 'bg-[#0AB600]/15 dark:bg-[#0AB600]/10 text-[#0AB600] font-bold' 
                                 : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                         }`}
                         title="Bold (Ctrl+B)"
@@ -275,7 +275,7 @@ export default function RichTextEditor({
                         onClick={() => execCmd('italic')}
                         className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                             activeFormats.italic 
-                                ? 'bg-emerald-100 dark:bg-emerald-950 text-[#0D5A34] dark:text-emerald-400' 
+                                ? 'bg-[#0AB600]/15 dark:bg-[#0AB600]/10 text-[#0AB600]' 
                                 : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                         }`}
                         title="Italic (Ctrl+I)"
@@ -287,7 +287,7 @@ export default function RichTextEditor({
                         onClick={() => execCmd('underline')}
                         className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                             activeFormats.underline 
-                                ? 'bg-emerald-100 dark:bg-emerald-950 text-[#0D5A34] dark:text-emerald-400' 
+                                ? 'bg-[#0AB600]/15 dark:bg-[#0AB600]/10 text-[#0AB600]' 
                                 : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                         }`}
                         title="Underline (Ctrl+U)"
@@ -299,7 +299,7 @@ export default function RichTextEditor({
                         onClick={() => execCmd('strikeThrough')}
                         className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                             activeFormats.strikeThrough 
-                                ? 'bg-emerald-100 dark:bg-emerald-950 text-[#0D5A34] dark:text-emerald-400' 
+                                ? 'bg-[#0AB600]/15 dark:bg-[#0AB600]/10 text-[#0AB600]' 
                                 : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                         }`}
                         title="Strikethrough"
@@ -319,7 +319,7 @@ export default function RichTextEditor({
                             className="p-1.5 rounded-lg text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer flex items-center gap-0.5"
                             title="Warna Teks"
                         >
-                            <Palette className="w-3.5 h-3.5 text-emerald-600" />
+                            <Palette className="w-3.5 h-3.5 text-[#0AB600]" />
                             <ChevronDown className="w-2.5 h-2.5 text-zinc-400" />
                         </button>
 
@@ -395,7 +395,7 @@ export default function RichTextEditor({
                         onClick={() => execCmd('justifyLeft')}
                         className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                             activeFormats.justifyLeft 
-                                ? 'bg-emerald-100 dark:bg-emerald-950 text-[#0D5A34] dark:text-emerald-400' 
+                                ? 'bg-[#0AB600]/15 dark:bg-[#0AB600]/10 text-[#0AB600]' 
                                 : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                         }`}
                         title="Rata Kiri (Align Left)"
@@ -407,7 +407,7 @@ export default function RichTextEditor({
                         onClick={() => execCmd('justifyCenter')}
                         className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                             activeFormats.justifyCenter 
-                                ? 'bg-emerald-100 dark:bg-emerald-950 text-[#0D5A34] dark:text-emerald-400' 
+                                ? 'bg-[#0AB600]/15 dark:bg-[#0AB600]/10 text-[#0AB600]' 
                                 : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                         }`}
                         title="Rata Tengah (Align Center)"
@@ -419,7 +419,7 @@ export default function RichTextEditor({
                         onClick={() => execCmd('justifyRight')}
                         className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                             activeFormats.justifyRight 
-                                ? 'bg-emerald-100 dark:bg-emerald-950 text-[#0D5A34] dark:text-emerald-400' 
+                                ? 'bg-[#0AB600]/15 dark:bg-[#0AB600]/10 text-[#0AB600]' 
                                 : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                         }`}
                         title="Rata Kanan (Align Right)"
@@ -431,7 +431,7 @@ export default function RichTextEditor({
                         onClick={() => execCmd('justifyFull')}
                         className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                             activeFormats.justifyFull 
-                                ? 'bg-emerald-100 dark:bg-emerald-950 text-[#0D5A34] dark:text-emerald-400' 
+                                ? 'bg-[#0AB600]/15 dark:bg-[#0AB600]/10 text-[#0AB600]' 
                                 : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                         }`}
                         title="Rata Kanan Kiri (Justify)"
@@ -447,7 +447,7 @@ export default function RichTextEditor({
                         onClick={() => execCmd('insertUnorderedList')}
                         className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                             activeFormats.insertUnorderedList 
-                                ? 'bg-emerald-100 dark:bg-emerald-950 text-[#0D5A34] dark:text-emerald-400' 
+                                ? 'bg-[#0AB600]/15 dark:bg-[#0AB600]/10 text-[#0AB600]' 
                                 : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                         }`}
                         title="Bullet List"
@@ -459,7 +459,7 @@ export default function RichTextEditor({
                         onClick={() => execCmd('insertOrderedList')}
                         className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                             activeFormats.insertOrderedList 
-                                ? 'bg-emerald-100 dark:bg-emerald-950 text-[#0D5A34] dark:text-emerald-400' 
+                                ? 'bg-[#0AB600]/15 dark:bg-[#0AB600]/10 text-[#0AB600]' 
                                 : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                         }`}
                         title="Numbered List"
@@ -492,14 +492,14 @@ export default function RichTextEditor({
 
             {/* Link Popover */}
             {showLinkModal && (
-                <div className="p-2.5 bg-emerald-50 dark:bg-zinc-800 border-b border-emerald-200 dark:border-zinc-700 flex items-center gap-2 animate-in fade-in">
-                    <Link2 className="w-4 h-4 text-[#0D5A34] dark:text-emerald-400 shrink-0" />
+                <div className="p-2.5 bg-[#0AB600]/10 dark:bg-zinc-800 border-b border-[#0AB600]/30 dark:border-zinc-700 flex items-center gap-2 animate-in fade-in">
+                    <Link2 className="w-4 h-4 text-[#0AB600] shrink-0" />
                     <input
                         type="text"
                         value={linkUrl}
                         onChange={(e) => setLinkUrl(e.target.value)}
                         placeholder="https://contoh-link.com"
-                        className="flex-1 px-2.5 py-1 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-[#0D5A34]"
+                        className="flex-1 px-2.5 py-1 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-[#0AB600]"
                         autoFocus
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') {
@@ -513,7 +513,7 @@ export default function RichTextEditor({
                     <button
                         type="button"
                         onClick={handleSaveLink}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#0D5A34] text-white text-xs font-semibold hover:bg-[#094226] transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#0AB600] text-white text-xs font-semibold hover:bg-[#089600] transition-colors cursor-pointer"
                     >
                         <Check className="w-3 h-3" />
                         <span>Terapkan</span>

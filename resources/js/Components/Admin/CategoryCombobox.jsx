@@ -73,7 +73,7 @@ export default function CategoryCombobox({
                     className={`w-full pl-3 pr-16 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border rounded-xl text-slate-900 dark:text-white transition-all focus:outline-none ${
                         error
                             ? 'border-rose-500 focus:border-rose-600'
-                            : 'border-zinc-200 dark:border-zinc-700 focus:border-[#0D5A34]'
+                            : 'border-zinc-200 dark:border-zinc-700 focus:border-[#0AB600]'
                     }`}
                 />
 
@@ -113,9 +113,9 @@ export default function CategoryCombobox({
                     {query.trim() && !isExactMatch && (
                         <div
                             onClick={() => handleSelect(query.trim())}
-                            className="px-3 py-2 text-[#0D5A34] dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 cursor-pointer flex items-center gap-2 font-semibold border-b border-zinc-100 dark:border-zinc-800/60"
+                            className="px-3 py-2 text-[#0AB600] hover:bg-[#0AB600]/10 dark:hover:bg-[#0AB600]/15 cursor-pointer flex items-center gap-2 font-semibold border-b border-zinc-100 dark:border-zinc-800/60"
                         >
-                            <Plus className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
+                            <Plus className="w-3.5 h-3.5 shrink-0 text-[#0AB600]" />
                             <span className="truncate">
                                 Gunakan kategori baru: <strong>"{query.trim()}"</strong>
                             </span>
@@ -133,16 +133,16 @@ export default function CategoryCombobox({
                                     onClick={() => handleSelect(cat)}
                                     className={`px-3 py-2 cursor-pointer flex items-center justify-between transition-colors ${
                                         isSelected
-                                            ? 'bg-emerald-50/70 dark:bg-emerald-950/40 text-[#0D5A34] dark:text-emerald-300 font-bold'
+                                            ? 'bg-[#0AB600]/10 text-[#0AB600] font-bold'
                                             : 'hover:bg-zinc-100 dark:hover:bg-zinc-800/60 text-slate-700 dark:text-zinc-300 font-medium'
                                     }`}
                                 >
                                     <div className="flex items-center gap-2 min-w-0">
-                                        <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-emerald-600 dark:bg-emerald-400' : 'bg-zinc-300 dark:bg-zinc-600'}`} />
+                                        <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-[#0AB600]' : 'bg-zinc-300 dark:bg-zinc-600'}`} />
                                         <span className="truncate">{cat}</span>
                                     </div>
                                     {isSelected && (
-                                        <Check className="w-3.5 h-3.5 text-[#0D5A34] dark:text-emerald-400 shrink-0" />
+                                        <Check className="w-3.5 h-3.5 text-[#0AB600] shrink-0" />
                                     )}
                                 </div>
                             );

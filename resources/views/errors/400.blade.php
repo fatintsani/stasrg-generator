@@ -4,12 +4,7 @@
 @section('title', 'Permintaan Tidak Valid')
 
 @section('content')
-    <div class="status-badge badge-400">
-        <span class="badge-dot"></span>
-        HTTP 400 • Bad Request
-    </div>
-
-    <div class="error-code">400</div>
+    <img src="{{ asset('assets/img/icon/tidakvalid.png') }}" alt="Permintaan Tidak Valid" style="width: 120px; height: auto; margin: 0 auto 16px; display: block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.04));">
     <h1 class="error-title">Permintaan Tidak Valid</h1>
     
     <p class="error-description">

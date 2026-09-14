@@ -79,7 +79,30 @@ class SettingsController extends Controller
             'projectStats' => $projectStats,
             'aiSettings' => $aiSettings,
             'systemInfo' => $systemInfo,
+            'appFont' => SystemSetting::get('app_font', 'plus-jakarta-sans'),
         ]);
+    }
+
+    /**
+     * Update application default UI typography font family.
+     */
+    public function updateAppFont(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'app_font' => ['required', 'string', 'in:plus-jakarta-sans,poppins,outfit'],
+        ]);
+
+        SystemSetting::set('app_font', $validated['app_font']);
+
+        ActivityLogger::logSystem(
+            action: 'settings.font_updated',
+            description: "Memperbarui preferensi font default antarmuka sistem menjadi \"{$validated['app_font']}\"",
+            properties: ['font' => $validated['app_font']],
+            user: $request->user(),
+            request: $request
+        );
+
+        return back()->with('success', 'Font default antarmuka berhasil diperbarui!')->with('message', 'Font default antarmuka berhasil diperbarui!');
     }
 
     /**

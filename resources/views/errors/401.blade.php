@@ -4,12 +4,7 @@
 @section('title', 'Autentikasi Diperlukan')
 
 @section('content')
-    <div class="status-badge badge-401">
-        <span class="badge-dot"></span>
-        HTTP 401 • Unauthorized
-    </div>
-
-    <div class="error-code">401</div>
+    <img src="{{ asset('assets/img/icon/autentikasi.png') }}" alt="Autentikasi Diperlukan" style="width: 120px; height: auto; margin: 0 auto 16px; display: block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.04));">
     <h1 class="error-title">Autentikasi Diperlukan</h1>
     
     <p class="error-description">

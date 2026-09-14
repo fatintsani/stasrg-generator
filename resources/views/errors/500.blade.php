@@ -4,12 +4,7 @@
 @section('title', 'Terjadi Kesalahan Server')
 
 @section('content')
-    <div class="status-badge badge-500">
-        <span class="badge-dot"></span>
-        HTTP 500 • Internal Server Error
-    </div>
-
-    <div class="error-code">500</div>
+    <img src="{{ asset('assets/img/icon/kesalahanserver.png') }}" alt="Terjadi Kesalahan pada Server" style="width: 120px; height: auto; margin: 0 auto 16px; display: block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.04));">
     <h1 class="error-title">Terjadi Kesalahan pada Server</h1>
     
     <p class="error-description">
@@ -27,6 +22,6 @@
     </div>
 
     <div class="info-pill">
-        Jika masalah berlanjut, hubungi tim dukungan di stas.research@telkomuniversity.ac.id
+        Jika masalah berlanjut, hubungi <a href="{{ url('/support') }}" style="color: inherit; font-weight: 700; text-decoration: underline;">Pusat Bantuan & Kontak Support</a> atau email stas.research@telkomuniversity.ac.id
     </div>
 @endsection

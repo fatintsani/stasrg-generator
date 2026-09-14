@@ -1,18 +1,18 @@
 import React from 'react';
-import { getPlainTextLength } from '../../Utils/textLimits';
-import { getLayoutPreset } from '../../Utils/layoutPresets';
-import { AlertCircle, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { getPlainTextLength, getFormatLimits } from '../../Utils/textLimits';
+import { AlertCircle, AlertTriangle } from 'lucide-react';
 
 export default function TextLimitMeter({
     value = '',
     limitKey,
     preset = 'balanced',
+    docFormat = 'a4_flyer',
     customMax = null,
     className = '',
     showProgressBar = true,
 }) {
-    const presetConfig = getLayoutPreset(preset);
-    const config = presetConfig.limits[limitKey] || {
+    const limits = getFormatLimits(docFormat, preset);
+    const config = limits[limitKey] || {
         max: customMax || 300,
         warn: (customMax || 300) * 0.85,
         label: 'Karakter',
@@ -24,7 +24,7 @@ export default function TextLimitMeter({
     const isOver = length > max;
     const isWarning = length >= config.warn && !isOver;
 
-    let barColor = 'bg-emerald-500';
+    let barColor = 'bg-[#0AB600]';
     let textColor = 'text-zinc-400 dark:text-zinc-500';
     let icon = null;
 

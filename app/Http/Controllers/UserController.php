@@ -21,14 +21,14 @@ use Inertia\Response;
 class UserController extends Controller
 {
     /**
-     * Display listing of all users and approval requests.
+     * Display listing of all users and approval requests with search, filter, and sorting.
      */
     public function index(Request $request): Response
     {
-        $query = User::latest();
+        $query = User::query();
 
         if ($request->filled('search')) {
-            $search = $request->input('search');
+            $search = trim($request->input('search'));
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
@@ -38,6 +38,20 @@ class UserController extends Controller
 
         if ($request->filled('status') && $request->input('status') !== 'all') {
             $query->where('status', $request->input('status'));
+        }
+
+        if ($request->filled('role') && $request->input('role') !== 'all') {
+            $query->where('role', $request->input('role'));
+        }
+
+        $sort = $request->input('sort', 'created_at');
+        $direction = strtolower($request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        $allowedSorts = ['name', 'email', 'username', 'role', 'status', 'created_at', 'approved_at'];
+        if (in_array($sort, $allowedSorts, true)) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->latest('created_at');
         }
 
         $users = $query->paginate(15)->withQueryString();
@@ -56,6 +70,9 @@ class UserController extends Controller
             'filters' => [
                 'search' => $request->input('search', ''),
                 'status' => $request->input('status', 'all'),
+                'role' => $request->input('role', 'all'),
+                'sort' => $sort,
+                'direction' => $direction,
             ],
         ]);
     }

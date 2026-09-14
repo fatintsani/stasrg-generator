@@ -4,12 +4,7 @@
 @section('title', 'Layanan Sedang Pemeliharaan')
 
 @section('content')
-    <div class="status-badge badge-503">
-        <span class="badge-dot"></span>
-        HTTP 503 • Service Unavailable
-    </div>
-
-    <div class="error-code">503</div>
+    <img src="{{ asset('assets/img/icon/pemeliharaan.png') }}" alt="Layanan Sedang dalam Pemeliharaan" style="width: 120px; height: auto; margin: 0 auto 16px; display: block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.04));">
     <h1 class="error-title">Layanan Sedang dalam Pemeliharaan</h1>
     
     <p class="error-description">

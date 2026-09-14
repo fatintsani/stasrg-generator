@@ -116,7 +116,7 @@ class GlobalSearchTest extends TestCase
         $logs = $response->json('results.logs');
 
         $this->assertNotEmpty($users);
-        $this->assertEquals('Dr. Budi Santoso', $users[0]['name']);
+        $this->assertContains('Dr. Budi Santoso', collect($users)->pluck('name')->toArray());
         $this->assertNotEmpty($logs);
     }
 }

@@ -44,7 +44,7 @@
             transform: translateX(-50%);
             width: 650px;
             height: 350px;
-            background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(13, 90, 52, 0.03) 60%, transparent 100%);
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(10, 182, 0, 0.03) 60%, transparent 100%);
             border-radius: 9999px;
             pointer-events: none;
             z-index: 0;
@@ -56,7 +56,7 @@
             right: 5%;
             width: 400px;
             height: 300px;
-            background: radial-gradient(circle, rgba(13, 90, 52, 0.05) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(10, 182, 0, 0.05) 0%, transparent 70%);
             border-radius: 9999px;
             pointer-events: none;
             z-index: 0;
@@ -218,14 +218,14 @@
         }
 
         .btn-primary {
-            background-color: #0D5A34;
+            background-color: #0AB600;
             color: #FFFFFF;
-            border-color: #0D5A34;
+            border-color: #0AB600;
         }
 
         .btn-primary:hover {
-            background-color: #094226;
-            border-color: #094226;
+            background-color: #089600;
+            border-color: #089600;
             color: #FFFFFF;
         }
 
@@ -267,7 +267,7 @@
         }
 
         .error-footer a {
-            color: #0D5A34;
+            color: #0AB600;
             text-decoration: none;
             font-weight: 600;
         }
@@ -296,7 +296,7 @@
     <!-- Footer Attribution -->
     <footer class="error-footer">
         © {{ date('Y') }} <strong>CoE STAS-RG</strong> • Fakultas Ilmu Terapan Telkom University.<br>
-        <span style="font-size: 11px;">Butuh bantuan? Hubungi <a href="mailto:stas.research@telkomuniversity.ac.id">stas.research@telkomuniversity.ac.id</a></span>
+        <span style="font-size: 11px;">Butuh bantuan? Kunjungi <a href="{{ url('/support') }}" style="color: #0AB600; font-weight: 700; text-decoration: underline;">Pusat Bantuan & Kontak Support</a> atau email <a href="mailto:stas.research@telkomuniversity.ac.id">stas.research@telkomuniversity.ac.id</a></span>
     </footer>
 </body>
 </html>

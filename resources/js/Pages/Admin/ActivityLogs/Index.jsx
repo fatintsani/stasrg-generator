@@ -24,7 +24,10 @@ import {
     CheckCircle2,
     AlertCircle,
     Info,
-    RotateCcw
+    RotateCcw,
+    ArrowUpDown,
+    ArrowUp,
+    ArrowDown
 } from 'lucide-react';
 
 export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stats = {}, filters = {} }) {
@@ -37,6 +40,8 @@ export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stat
     const [typeFilter, setTypeFilter] = useState(filters.type || 'all');
     const [dateFrom, setDateFrom] = useState(filters.date_from || '');
     const [dateTo, setDateTo] = useState(filters.date_to || '');
+    const [sort, setSort] = useState(filters.sort || 'created_at');
+    const [direction, setDirection] = useState(filters.direction || 'desc');
 
     // Metadata Detail Modal
     const [selectedLog, setSelectedLog] = useState(null);
@@ -45,14 +50,18 @@ export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stat
     const [isPruning, setIsPruning] = useState(false);
     const [pruneDays, setPruneDays] = useState(60);
 
-    const applyFilters = (newType = typeFilter, newSearch = search, newDateFrom = dateFrom, newDateTo = dateTo) => {
+    const isFilterActive = typeFilter !== 'all' || search !== '' || dateFrom !== '' || dateTo !== '' || sort !== 'created_at' || direction !== 'desc';
+
+    const applyFilters = (newType = typeFilter, newSearch = search, newDateFrom = dateFrom, newDateTo = dateTo, newSort = sort, newDirection = direction) => {
         router.get(
             '/activity-logs',
             {
-                type: newType,
-                search: newSearch,
-                date_from: newDateFrom,
-                date_to: newDateTo,
+                type: newType !== 'all' ? newType : undefined,
+                search: newSearch || undefined,
+                date_from: newDateFrom || undefined,
+                date_to: newDateTo || undefined,
+                sort: newSort,
+                direction: newDirection,
             },
             {
                 preserveState: true,
@@ -63,12 +72,43 @@ export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stat
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
-        applyFilters(typeFilter, search, dateFrom, dateTo);
+        applyFilters(typeFilter, search, dateFrom, dateTo, sort, direction);
+    };
+
+    const handleClearSearch = () => {
+        setSearch('');
+        applyFilters(typeFilter, '', dateFrom, dateTo, sort, direction);
     };
 
     const handleTypeChange = (type) => {
         setTypeFilter(type);
-        applyFilters(type, search, dateFrom, dateTo);
+        applyFilters(type, search, dateFrom, dateTo, sort, direction);
+    };
+
+    const handleSortChange = (e) => {
+        const val = e.target.value;
+        const [newSort, newDir] = val.split('-');
+        setSort(newSort);
+        setDirection(newDir);
+        applyFilters(typeFilter, search, dateFrom, dateTo, newSort, newDir);
+    };
+
+    const handleSortColumn = (column) => {
+        const newDirection = sort === column && direction === 'asc' ? 'desc' : 'asc';
+        setSort(column);
+        setDirection(newDirection);
+        applyFilters(typeFilter, search, dateFrom, dateTo, column, newDirection);
+    };
+
+    const renderSortIcon = (column) => {
+        if (sort !== column) {
+            return <ArrowUpDown className="w-3.5 h-3.5 text-zinc-400 opacity-60" />;
+        }
+        return direction === 'asc' ? (
+            <ArrowUp className="w-3.5 h-3.5 text-[#0AB600]" />
+        ) : (
+            <ArrowDown className="w-3.5 h-3.5 text-[#0AB600]" />
+        );
     };
 
     const handleResetFilters = () => {
@@ -76,6 +116,8 @@ export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stat
         setTypeFilter('all');
         setDateFrom('');
         setDateTo('');
+        setSort('created_at');
+        setDirection('desc');
         router.get('/activity-logs', {}, { preserveState: true, replace: true });
     };
 
@@ -117,8 +159,8 @@ export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stat
                 return {
                     label: 'Project Change',
                     icon: FolderKanban,
-                    bg: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/80',
-                    dot: 'bg-emerald-500',
+                    bg: 'bg-[#0AB600]/10 text-[#0AB600] border-[#0AB600]/30 dark:bg-[#0AB600]/10 dark:text-[#0AB600] dark:border-[#0AB600]/30',
+                    dot: 'bg-[#0AB600]',
                 };
             case 'user':
                 return {
@@ -169,10 +211,15 @@ export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stat
                 {/* Header Title & Actions */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                            {a.title || 'Activity & Audit Logs'}
-                        </h1>
-                        <p className="mt-1 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-2xl">
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className="p-2 rounded-xl bg-[#0AB600]/10 border border-[#0AB600]/30 text-[#0AB600] shrink-0">
+                                <Activity className="w-5 h-5" />
+                            </div>
+                            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+                                {a.title || 'Activity & Audit Logs'}
+                            </h1>
+                        </div>
+                        <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-2xl">
                             {a.subtitle || 'Pemantauan real-time riwayat perubahan proyek, log autentikasi keamanan, audit persetujuan user, dan histori ekspor deliverable.'}
                         </p>
                     </div>
@@ -185,7 +232,7 @@ export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stat
                             download
                             className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-200 bg-white dark:bg-zinc-800/90 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 shadow-sm transition-all cursor-pointer"
                         >
-                            <DownloadCloud className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            <DownloadCloud className="w-4 h-4 text-[#0AB600]" />
                             <span>{a.actions?.exportCsv || 'Ekspor CSV'}</span>
                         </a>
 
@@ -215,7 +262,7 @@ export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stat
                         <div className="mt-2 text-2xl font-black text-slate-900 dark:text-white">
                             {Number(stats.total || 0).toLocaleString()}
                         </div>
-                        <div className="mt-1 flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                        <div className="mt-1 flex items-center gap-1 text-[11px] text-[#0AB600] font-medium">
                             <span>+{stats.today || 0} hari ini</span>
                         </div>
                     </div>
@@ -242,11 +289,11 @@ export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stat
                             <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
                                 {a.stats?.projectLogs || 'Perubahan Proyek'}
                             </span>
-                            <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                            <div className="w-8 h-8 rounded-xl bg-[#0AB600]/10 flex items-center justify-center text-[#0AB600]">
                                 <FolderKanban className="w-4 h-4" />
                             </div>
                         </div>
-                        <div className="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                        <div className="mt-2 text-2xl font-black text-[#0AB600]">
                             {Number(stats.project || 0).toLocaleString()}
                         </div>
                         <div className="mt-1 text-[11px] text-zinc-400 dark:text-zinc-500">
@@ -286,16 +333,16 @@ export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stat
                                     onClick={() => handleTypeChange(tab.id)}
                                     className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
                                         isActive
-                                            ? 'bg-emerald-50 dark:bg-emerald-950/60 text-[#0D5A34] dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shadow-sm'
+                                            ? 'bg-[#0AB600]/10 text-[#0AB600] border border-[#0AB600]/30 shadow-sm'
                                             : 'text-zinc-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60'
                                     }`}
                                 >
-                                    <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400'}`} />
+                                    <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#0AB600]' : 'text-zinc-400'}`} />
                                     <span>{tab.label}</span>
                                     {tab.count !== undefined && (
                                         <span className={`px-1.5 py-0.5 text-[10px] rounded-md font-extrabold ${
                                             isActive
-                                                ? 'bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200'
+                                                ? 'bg-[#0AB600]/15 dark:bg-[#0AB600]/15 text-[#0AB600]'
                                                 : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400'
                                         }`}>
                                             {tab.count}
@@ -309,22 +356,48 @@ export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stat
                     {/* Search & Date Filter Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
                         {/* Search Input */}
-                        <form onSubmit={handleSearchSubmit} className="md:col-span-6 relative">
+                        <form onSubmit={handleSearchSubmit} className="md:col-span-4 relative">
                             <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                             <input
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder={a.filters?.searchPlaceholder || 'Cari deskripsi, user, email, aksi, atau IP...'}
-                                className="w-full pl-9 pr-20 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                className="w-full pl-9 pr-20 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#0AB600]/20 focus:border-[#0AB600]"
                             />
+                            {search && (
+                                <button
+                                    type="button"
+                                    onClick={handleClearSearch}
+                                    className="absolute right-12 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-0.5"
+                                >
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            )}
                             <button
                                 type="submit"
-                                className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-[#0D5A34] hover:bg-[#0B4A2B] text-white shadow-xs transition-colors cursor-pointer"
+                                className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-[#0AB600] hover:bg-[#0B4A2B] text-white shadow-xs transition-colors cursor-pointer"
                             >
                                 Cari
                             </button>
                         </form>
+
+                        {/* Sort Selector Dropdown */}
+                        <div className="md:col-span-3 relative">
+                            <select
+                                value={`${sort}-${direction}`}
+                                onChange={handleSortChange}
+                                className="w-full px-3 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0AB600]/20 focus:border-[#0AB600] cursor-pointer"
+                            >
+                                <option value="created_at-desc">Waktu: Terbaru</option>
+                                <option value="created_at-asc">Waktu: Terlama</option>
+                                <option value="action-asc">Aksi (A - Z)</option>
+                                <option value="action-desc">Aksi (Z - A)</option>
+                                <option value="log_type-asc">Kategori (A - Z)</option>
+                                <option value="user-asc">User (A - Z)</option>
+                                <option value="ip_address-asc">IP Address (A - Z)</option>
+                            </select>
+                        </div>
 
                         {/* Date From */}
                         <div className="md:col-span-2 relative">
@@ -333,9 +406,9 @@ export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stat
                                 value={dateFrom}
                                 onChange={(e) => {
                                     setDateFrom(e.target.value);
-                                    applyFilters(typeFilter, search, e.target.value, dateTo);
+                                    applyFilters(typeFilter, search, e.target.value, dateTo, sort, direction);
                                 }}
-                                className="w-full px-3 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                className="w-full px-3 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0AB600]/20 focus:border-[#0AB600]"
                                 title={a.filters?.dateFrom || 'Dari Tanggal'}
                             />
                         </div>
@@ -347,24 +420,50 @@ export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stat
                                 value={dateTo}
                                 onChange={(e) => {
                                     setDateTo(e.target.value);
-                                    applyFilters(typeFilter, search, dateFrom, e.target.value);
+                                    applyFilters(typeFilter, search, dateFrom, e.target.value, sort, direction);
                                 }}
-                                className="w-full px-3 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                                className="w-full px-3 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0AB600]/20 focus:border-[#0AB600]"
                                 title={a.filters?.dateTo || 'Sampai Tanggal'}
                             />
                         </div>
 
                         {/* Reset Filter Button */}
-                        <div className="md:col-span-2 flex justify-end">
-                            <button
-                                type="button"
-                                onClick={handleResetFilters}
-                                className="w-full md:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-zinc-600 dark:text-zinc-400 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
-                            >
-                                <RotateCcw className="w-3.5 h-3.5" />
-                                <span>{a.filters?.reset || 'Reset'}</span>
-                            </button>
+                        <div className="md:col-span-1 flex justify-end">
+                            {isFilterActive ? (
+                                <button
+                                    type="button"
+                                    onClick={handleResetFilters}
+                                    title="Reset Semua Filter"
+                                    className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-colors cursor-pointer"
+                                >
+                                    <RotateCcw className="w-3.5 h-3.5" />
+                                    <span>Reset</span>
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={handleResetFilters}
+                                    className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-zinc-400 bg-zinc-100 dark:bg-zinc-800/50 cursor-not-allowed opacity-60"
+                                    disabled
+                                >
+                                    <RotateCcw className="w-3.5 h-3.5" />
+                                    <span>Reset</span>
+                                </button>
+                            )}
                         </div>
+                    </div>
+
+                    {/* Result Counter & Active Filter Badge */}
+                    <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div className="text-zinc-500 dark:text-zinc-400">
+                            Menampilkan <span className="font-semibold text-slate-900 dark:text-white">{logs.from || 0}</span> - <span className="font-semibold text-slate-900 dark:text-white">{logs.to || 0}</span> dari <span className="font-semibold text-slate-900 dark:text-white">{logs.total || 0}</span> catatan log
+                        </div>
+                        {isFilterActive && (
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0AB600]/10 text-[#0AB600] text-[11px] font-semibold border border-[#0AB600]/30">
+                                <Filter className="w-3 h-3 text-[#0AB600]" />
+                                <span>Filter & Urutan Aktif</span>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -374,11 +473,56 @@ export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stat
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="border-b border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/70 dark:bg-zinc-900/50 text-[11px] font-extrabold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                                    <th className="py-3.5 px-4">{a.table?.timestamp || 'Waktu & Tanggal'}</th>
-                                    <th className="py-3.5 px-4">{a.table?.user || 'Pengguna'}</th>
-                                    <th className="py-3.5 px-4">{a.table?.category || 'Kategori'}</th>
-                                    <th className="py-3.5 px-4">{a.table?.action || 'Aksi & Deskripsi'}</th>
-                                    <th className="py-3.5 px-4">{a.table?.ipDevice || 'IP & Perangkat'}</th>
+                                    <th className="py-3.5 px-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSortColumn('created_at')}
+                                            className="inline-flex items-center gap-1.5 hover:text-[#0AB600] dark:hover:text-[#0AB600] transition cursor-pointer"
+                                        >
+                                            <span>{a.table?.timestamp || 'Waktu & Tanggal'}</span>
+                                            {renderSortIcon('created_at')}
+                                        </button>
+                                    </th>
+                                    <th className="py-3.5 px-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSortColumn('user')}
+                                            className="inline-flex items-center gap-1.5 hover:text-[#0AB600] dark:hover:text-[#0AB600] transition cursor-pointer"
+                                        >
+                                            <span>{a.table?.user || 'Pengguna'}</span>
+                                            {renderSortIcon('user')}
+                                        </button>
+                                    </th>
+                                    <th className="py-3.5 px-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSortColumn('log_type')}
+                                            className="inline-flex items-center gap-1.5 hover:text-[#0AB600] dark:hover:text-[#0AB600] transition cursor-pointer"
+                                        >
+                                            <span>{a.table?.category || 'Kategori'}</span>
+                                            {renderSortIcon('log_type')}
+                                        </button>
+                                    </th>
+                                    <th className="py-3.5 px-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSortColumn('action')}
+                                            className="inline-flex items-center gap-1.5 hover:text-[#0AB600] dark:hover:text-[#0AB600] transition cursor-pointer"
+                                        >
+                                            <span>{a.table?.action || 'Aksi & Deskripsi'}</span>
+                                            {renderSortIcon('action')}
+                                        </button>
+                                    </th>
+                                    <th className="py-3.5 px-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSortColumn('ip_address')}
+                                            className="inline-flex items-center gap-1.5 hover:text-[#0AB600] dark:hover:text-[#0AB600] transition cursor-pointer"
+                                        >
+                                            <span>{a.table?.ipDevice || 'IP & Perangkat'}</span>
+                                            {renderSortIcon('ip_address')}
+                                        </button>
+                                    </th>
                                     <th className="py-3.5 px-4 text-right">{a.table?.details || 'Metadata'}</th>
                                 </tr>
                             </thead>
@@ -416,7 +560,7 @@ export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stat
                                                                     className="w-7 h-7 rounded-full object-cover border border-zinc-200 dark:border-zinc-700 shrink-0"
                                                                 />
                                                             ) : (
-                                                                <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-[#0D5A34] dark:text-emerald-300 font-bold text-xs flex items-center justify-center shrink-0">
+                                                                <div className="w-7 h-7 rounded-full bg-[#0AB600]/15 dark:bg-[#0AB600]/10 text-[#0AB600] font-bold text-xs flex items-center justify-center shrink-0">
                                                                     {log.user.name ? log.user.name.charAt(0).toUpperCase() : 'U'}
                                                                 </div>
                                                             )}
@@ -488,7 +632,7 @@ export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stat
                                                             onClick={() => setSelectedLog(log)}
                                                             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
                                                         >
-                                                            <FileText className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                                                            <FileText className="w-3 h-3 text-[#0AB600]" />
                                                             <span>Detail</span>
                                                         </button>
                                                     ) : (
@@ -502,9 +646,11 @@ export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stat
                                     <tr>
                                         <td colSpan={6} className="py-12 text-center">
                                             <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
-                                                <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 mb-3">
-                                                    <Activity className="w-6 h-6" />
-                                                </div>
+                                                <img
+                                                    src="/assets/img/icon/notfound.png"
+                                                    alt="Tidak Ada Log"
+                                                    className="w-24 sm:w-28 h-auto object-contain mx-auto mb-3 drop-shadow-xs"
+                                                />
                                                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                                                     {a.table?.emptyTitle || 'Tidak Ada Log Ditemukan'}
                                                 </h3>
@@ -535,7 +681,7 @@ export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stat
                                         dangerouslySetInnerHTML={{ __html: link.label }}
                                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                                             link.active
-                                                ? 'bg-[#0D5A34] text-white'
+                                                ? 'bg-[#0AB600] text-white'
                                                 : link.url
                                                 ? 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                                                 : 'text-zinc-300 dark:text-zinc-600 cursor-not-allowed'
@@ -555,7 +701,7 @@ export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stat
                         {/* Modal Header */}
                         <div className="px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
                             <div className="flex items-center gap-2.5">
-                                <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-[#0D5A34] dark:text-emerald-300 flex items-center justify-center">
+                                <div className="w-8 h-8 rounded-xl bg-[#0AB600]/15 dark:bg-[#0AB600]/10 text-[#0AB600] flex items-center justify-center">
                                     <FileText className="w-4 h-4" />
                                 </div>
                                 <div>
@@ -613,7 +759,7 @@ export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stat
                                 <span className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block mb-1.5">
                                     Payload JSON Properties
                                 </span>
-                                <pre className="p-3.5 rounded-xl bg-zinc-900 dark:bg-black text-emerald-400 font-mono text-[11px] leading-relaxed overflow-x-auto border border-zinc-800 max-h-56">
+                                <pre className="p-3.5 rounded-xl bg-zinc-900 dark:bg-black text-[#0AB600] font-mono text-[11px] leading-relaxed overflow-x-auto border border-zinc-800 max-h-56">
                                     {JSON.stringify(selectedLog.properties, null, 2)}
                                 </pre>
                             </div>
@@ -636,7 +782,7 @@ export default function ActivityLogsIndex({ logs = { data: [], links: [] }, stat
                             <button
                                 type="button"
                                 onClick={() => setSelectedLog(null)}
-                                className="px-4 py-2 rounded-xl text-xs font-bold bg-[#0D5A34] hover:bg-[#0B4A2B] text-white shadow-xs transition-colors cursor-pointer"
+                                className="px-4 py-2 rounded-xl text-xs font-bold bg-[#0AB600] hover:bg-[#0B4A2B] text-white shadow-xs transition-colors cursor-pointer"
                             >
                                 {a.table?.closeModal || 'Tutup'}
                             </button>

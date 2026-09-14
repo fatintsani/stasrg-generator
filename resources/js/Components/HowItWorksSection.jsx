@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FileCode, CheckCheck, FolderArchive, ArrowRight, ListOrdered } from 'lucide-react';
+import { FileCode, CheckCheck, FolderArchive, ListOrdered } from 'lucide-react';
 import { useApp } from '../Context/AppContext';
 
 export default function HowItWorksSection() {
@@ -11,6 +11,7 @@ export default function HowItWorksSection() {
             step: t.howItWorks.step1Badge,
             title: t.howItWorks.step1Title,
             description: t.howItWorks.step1Desc,
+            image: '/assets/img/icon/cara_kerja/BuatProyek.png',
             metaIcon: FileCode,
             metaText: t.howItWorks.step1Meta,
         },
@@ -18,6 +19,7 @@ export default function HowItWorksSection() {
             step: t.howItWorks.step2Badge,
             title: t.howItWorks.step2Title,
             description: t.howItWorks.step2Desc,
+            image: '/assets/img/icon/cara_kerja/IsiInformasiProyek.png',
             metaIcon: CheckCheck,
             metaText: t.howItWorks.step2Meta,
         },
@@ -25,6 +27,7 @@ export default function HowItWorksSection() {
             step: t.howItWorks.step3Badge,
             title: t.howItWorks.step3Title,
             description: t.howItWorks.step3Desc,
+            image: '/assets/img/icon/cara_kerja/GenerateKelola.png',
             metaIcon: FolderArchive,
             metaText: t.howItWorks.step3Meta,
         },
@@ -35,7 +38,7 @@ export default function HowItWorksSection() {
             <div className="max-w-6xl mx-auto">
                 {/* Section Header */}
                 <div className="text-center max-w-2xl mx-auto mb-16">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/70 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold uppercase tracking-wider mb-4">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0AB600]/10 dark:bg-[#0AB600]/15 border border-[#0AB600]/25 dark:border-[#0AB600]/30 text-[#0AB600] text-xs font-semibold uppercase tracking-wider mb-4">
                         <ListOrdered className="w-3 h-3" />
                         <span>{t.howItWorks.tag}</span>
                     </span>
@@ -59,26 +62,37 @@ export default function HowItWorksSection() {
                                 whileHover={{ y: -4 }}
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.3, delay: index * 0.05 }}
-                                className="group p-8 rounded-3xl bg-zinc-50/70 dark:bg-zinc-900/60 border border-zinc-200/80 dark:border-zinc-800/80 hover:border-emerald-300/80 dark:hover:border-emerald-700/80 flex flex-col justify-between transition-all cursor-default"
+                                className="group p-6 sm:p-7 rounded-3xl bg-zinc-50/70 dark:bg-zinc-900/60 border border-zinc-200/80 dark:border-zinc-800/80 hover:border-[#0AB600]/40 dark:hover:border-[#0AB600]/40 flex flex-col justify-between transition-all cursor-default overflow-hidden shadow-xs hover:shadow-sm"
                             >
                                 <div>
-                                    {/* Number Badge */}
-                                    <div className="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-emerald-100/70 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 text-sm font-extrabold group-hover:bg-[#0D5A34] group-hover:text-white dark:group-hover:bg-emerald-600 dark:group-hover:text-white transition-all mb-6">
-                                        {item.step}
+                                    {/* Illustration Container with Step Badge */}
+                                    <div className="relative w-full h-48 sm:h-52 rounded-2xl bg-gradient-to-b from-white to-[#0AB600]/5 dark:from-zinc-800/60 dark:to-[#0AB600]/10 border border-zinc-200/60 dark:border-zinc-800/60 p-4 mb-6 flex items-center justify-center overflow-hidden">
+                                        {/* Step Number Badge */}
+                                        <div className="absolute top-3 left-3 inline-flex items-center justify-center w-8 h-8 rounded-xl bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xs text-[#0AB600] border border-[#0AB600]/30 dark:border-[#0AB600]/40 text-xs font-extrabold shadow-2xs group-hover:bg-[#0AB600] group-hover:text-white dark:group-hover:bg-[#0AB600] dark:group-hover:text-white transition-all z-10">
+                                            {item.step}
+                                        </div>
+
+                                        {/* Step Illustration Image */}
+                                        <img
+                                            src={item.image}
+                                            alt={item.title}
+                                            className="max-h-full max-w-full object-contain drop-shadow-xs transition-transform duration-300 group-hover:scale-105"
+                                            loading="lazy"
+                                        />
                                     </div>
 
                                     {/* Title & Description */}
-                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-emerald-900 dark:group-hover:text-emerald-300 transition-colors">
+                                    <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-2.5 group-hover:text-[#0AB600] transition-colors">
                                         {item.title}
                                     </h3>
-                                    <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                                    <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
                                         {item.description}
                                     </p>
                                 </div>
 
                                 {/* Bottom Metadata */}
-                                <div className="mt-8 pt-5 border-t border-zinc-200/60 dark:border-zinc-800/60 flex items-center gap-2 text-zinc-500 dark:text-zinc-400 text-xs font-medium group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
-                                    <MetaIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                <div className="mt-6 pt-4 border-t border-zinc-200/60 dark:border-zinc-800/60 flex items-center gap-2 text-zinc-500 dark:text-zinc-400 text-xs font-medium group-hover:text-[#0AB600] transition-colors">
+                                    <MetaIcon className="w-4 h-4 text-[#0AB600] shrink-0" />
                                     <span>{item.metaText}</span>
                                 </div>
                             </motion.div>

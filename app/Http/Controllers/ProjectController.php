@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Mail\ProjectNotificationMail;
 use App\Models\Project;
+use App\Models\ProjectTemplate;
 use App\Services\ActivityLogger;
 use App\Services\AiAssistantService;
+use App\Services\AnalyticsTracker;
 use App\Services\HtmlSanitizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -21,18 +23,19 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 class ProjectController extends Controller
 {
     /**
-     * Display listing of all projects.
+     * Display listing of all projects with search, status/category filters, and sorting.
      */
     public function index(Request $request): Response
     {
-        $query = $request->user()->projects()->latest();
+        $query = $request->user()->projects();
 
         if ($request->filled('search')) {
-            $search = $request->input('search');
+            $search = trim($request->input('search'));
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('title', 'like', "%{$search}%")
-                    ->orWhere('category', 'like', "%{$search}%");
+                    ->orWhere('category', 'like', "%{$search}%")
+                    ->orWhere('subtitle', 'like', "%{$search}%");
             });
         }
 
@@ -40,13 +43,37 @@ class ProjectController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        $projects = $query->paginate(12)->withQueryString();
+        if ($request->filled('category') && $request->input('category') !== 'all') {
+            $query->where('category', $request->input('category'));
+        }
+
+        $sort = $request->input('sort', 'updated_at');
+        $direction = strtolower($request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        $allowedSorts = ['name', 'title', 'category', 'status', 'created_at', 'updated_at'];
+        if (in_array($sort, $allowedSorts, true)) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->latest('updated_at');
+        }
+
+        $perPage = (int) $request->input('per_page', 12);
+        if ($perPage < 1 || $perPage > 100) {
+            $perPage = 12;
+        }
+
+        $projects = $query->paginate($perPage)->withQueryString();
 
         return Inertia::render('Admin/Projects/Index', [
             'projects' => $projects,
+            'categories' => $this->getAvailableCategories(),
             'filters' => [
                 'search' => $request->input('search', ''),
                 'status' => $request->input('status', 'all'),
+                'category' => $request->input('category', 'all'),
+                'sort' => $sort,
+                'direction' => $direction,
+                'per_page' => $perPage,
             ],
         ]);
     }
@@ -54,11 +81,49 @@ class ProjectController extends Controller
     /**
      * Show form for creating a new project.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
+        $templateData = null;
+        $appliedTemplate = null;
+
+        if ($request->filled('template')) {
+            $templateIdentifier = $request->input('template');
+            $appliedTemplate = ProjectTemplate::where('slug', $templateIdentifier)
+                ->orWhere('id', $templateIdentifier)
+                ->first();
+
+            if ($appliedTemplate) {
+                $appliedTemplate->incrementUsage();
+                $defaultData = $appliedTemplate->default_data ?? [];
+                $templateData = [
+                    'name' => "Proyek Baru ({$appliedTemplate->name})",
+                    'category' => $appliedTemplate->category,
+                    'title' => $defaultData['title'] ?? '',
+                    'subtitle' => $defaultData['subtitle'] ?? '',
+                    'description' => $defaultData['description'] ?? '',
+                    'benefits' => $defaultData['benefits'] ?? [],
+                    'specifications' => $defaultData['specifications'] ?? [],
+                    'problem_solution' => $defaultData['problem_solution'] ?? [],
+                    'footer_website' => $defaultData['footer_website'] ?? 'www.stas-rg.com',
+                    'footer_instagram' => $defaultData['footer_instagram'] ?? '@stas.rg',
+                    'footer_youtube' => $defaultData['footer_youtube'] ?? '@stas_rg',
+                    'social_links' => $defaultData['social_links'] ?? [],
+                    'design_style' => $appliedTemplate->design_style ?? 'classic_standard',
+                    'doc_format' => $appliedTemplate->doc_format ?? 'a4_flyer',
+                    'layout_preset' => $appliedTemplate->layout_preset ?? 'balanced',
+                    'color_theme' => $appliedTemplate->color_theme ?? 'stas_official',
+                    'print_mode' => $appliedTemplate->print_mode ?? 'light',
+                    'boilerplate_type' => $appliedTemplate->boilerplate_type ?? 'stas_default',
+                    'layout_schema' => $appliedTemplate->layout_schema ?? null,
+                    'status' => 'draft',
+                ];
+            }
+        }
+
         return Inertia::render('Admin/Projects/Form', [
-            'project' => null,
+            'project' => $templateData,
             'categories' => $this->getAvailableCategories(),
+            'appliedTemplate' => $appliedTemplate,
         ]);
     }
 
@@ -82,13 +147,16 @@ class ProjectController extends Controller
             'footer_instagram' => ['nullable', 'string', 'max:255'],
             'footer_youtube' => ['nullable', 'string', 'max:255'],
             'social_links' => ['nullable', 'array'],
-            'partner_logo' => ['nullable', 'file', 'mimes:jpeg,png,jpg,svg,webp', 'max:5120'],
+            'partner_logo' => ['nullable'],
+            'partner_logos' => ['nullable'],
             'footer_logo' => ['nullable', 'file', 'mimes:jpeg,png,jpg,svg,webp', 'max:5120'],
             'layout_preset' => ['nullable', 'string', 'in:balanced,visual_heavy,text_heavy'],
-            'doc_format' => ['nullable', 'string', 'in:a4_flyer,roll_banner,factsheet_2col,pitch_poster,social_feed,social_story'],
+            'design_style' => ['nullable', 'string', 'in:classic_standard,modern_split,infographic_cards,minimal_grid,academic_brief'],
+            'doc_format' => ['nullable', 'string', 'in:a4_flyer,brochure_trifold,roll_banner,factsheet_2col,pitch_poster,social_feed,social_story'],
             'color_theme' => ['nullable', 'string', 'in:stas_official,ocean_tech,crimson_innovation,slate_monochrome'],
             'print_mode' => ['nullable', 'string', 'in:light,dark'],
             'boilerplate_type' => ['nullable', 'string', 'max:255'],
+            'layout_schema' => ['nullable', 'array'],
             'status' => ['nullable', 'in:draft,published'],
         ]);
 
@@ -98,11 +166,9 @@ class ProjectController extends Controller
             unset($validated['main_image']);
         }
 
-        if ($request->hasFile('partner_logo')) {
-            $validated['partner_logo'] = $request->file('partner_logo')->store('projects/logos', 'public');
-        } else {
-            unset($validated['partner_logo']);
-        }
+        $processedLogos = $this->processPartnerLogos($request);
+        $validated['partner_logos'] = $processedLogos;
+        $validated['partner_logo'] = $processedLogos[0] ?? null;
 
         if ($request->hasFile('footer_logo')) {
             $validated['footer_logo'] = $request->file('footer_logo')->store('projects/logos', 'public');
@@ -121,6 +187,101 @@ class ProjectController extends Controller
 
         $validated['status'] = $validated['status'] ?? 'draft';
         $validated = $this->sanitizeProjectData($validated);
+
+        // Handle A4 Trifold Brochure with 3 Independent Projects per Kotak
+        if (($validated['doc_format'] ?? '') === 'brochure_trifold' && ! empty($validated['problem_solution']['panels']) && is_array($validated['problem_solution']['panels'])) {
+            $panels = $validated['problem_solution']['panels'];
+            $createdProjects = [];
+            $trifoldGroupId = uniqid('trifold_');
+
+            foreach ($panels as $idx => $p) {
+                $pTitle = ! empty($p['title']) ? trim($p['title']) : ($idx === 0 ? ($validated['title'] ?? 'Inovasi Riset Kotak 1') : 'Inovasi Kotak '.($idx + 1));
+                $pName = $pTitle;
+                $pSubtitle = $p['subtitle'] ?? '';
+                $pCategory = ! empty($p['category']) ? trim($p['category']) : ($idx === 0 ? ($validated['category'] ?? 'Smart Agriculture') : 'CoE STAS-RG');
+                $pDesc = $p['description'] ?? '';
+                $pProblem = $p['problem'] ?? '';
+                $pSolution = $p['solution'] ?? '';
+                $pBenefits = $p['benefits'] ?? '';
+                $pSpecs = $p['specifications'] ?? ($p['specs'] ?? '');
+                $pProjectUrl = $p['project_url'] ?? '';
+                $pImage = null;
+
+                if ($idx === 0 && isset($validated['main_image'])) {
+                    $pImage = $validated['main_image'];
+                } elseif (! empty($p['image_url'])) {
+                    if (str_starts_with($p['image_url'], 'data:image/')) {
+                        $pImage = $this->storeBase64Image($p['image_url']);
+                    } elseif (! str_starts_with($p['image_url'], 'http') && ! str_starts_with($p['image_url'], 'blob:')) {
+                        $pImage = str_replace('/storage/', '', $p['image_url']);
+                    }
+                }
+
+                $panelProjectData = [
+                    'name' => $pName,
+                    'title' => $pTitle,
+                    'subtitle' => $pSubtitle,
+                    'category' => $pCategory,
+                    'description' => $pDesc,
+                    'main_image' => $pImage,
+                    'partner_logo' => $validated['partner_logo'] ?? null,
+                    'partner_logos' => $validated['partner_logos'] ?? null,
+                    'footer_logo' => $validated['footer_logo'] ?? null,
+                    'benefits' => ['content' => $pBenefits],
+                    'specifications' => ['content' => $pSpecs],
+                    'problem_solution' => [
+                        'problem' => $pProblem,
+                        'solution' => $pSolution,
+                        'trifold_group' => $trifoldGroupId,
+                        'panel_index' => $idx,
+                        'panels' => $panels,
+                    ],
+                    'project_url' => $pProjectUrl,
+                    'footer_website' => $validated['footer_website'] ?? 'www.stas-rg.com',
+                    'footer_instagram' => $validated['footer_instagram'] ?? '@stas.rg',
+                    'footer_youtube' => $validated['footer_youtube'] ?? '@stas_rg',
+                    'social_links' => $validated['social_links'] ?? [],
+                    'layout_preset' => $validated['layout_preset'] ?? 'balanced',
+                    'design_style' => $validated['design_style'] ?? 'classic_standard',
+                    'doc_format' => 'brochure_trifold',
+                    'color_theme' => $validated['color_theme'] ?? 'stas_official',
+                    'print_mode' => $validated['print_mode'] ?? 'light',
+                    'boilerplate_type' => $validated['boilerplate_type'] ?? null,
+                    'status' => $validated['status'] ?? 'published',
+                ];
+
+                if (! empty($pProjectUrl)) {
+                    $url = $pProjectUrl;
+                    if (! preg_match('#^https?://#i', $url)) {
+                        $url = 'https://'.$url;
+                    }
+                    $panelProjectData['qr_code_path'] = $this->generateQrCode($url);
+                }
+
+                $panelProjectData = $this->sanitizeProjectData($panelProjectData);
+                $newProj = $request->user()->projects()->create($panelProjectData);
+                $createdProjects[] = $newProj;
+            }
+
+            $primaryProject = $createdProjects[0] ?? null;
+
+            ActivityLogger::logProject(
+                action: 'project.created',
+                description: "Membuat 3 proyek riset dari brosur lipat 3 (\"{$primaryProject->name}\")",
+                project: $primaryProject,
+                properties: [
+                    'name' => $primaryProject->name,
+                    'doc_format' => 'brochure_trifold',
+                    'total_panels' => count($createdProjects),
+                ],
+                user: $request->user(),
+                request: $request
+            );
+
+            return redirect()
+                ->route('projects.show', $primaryProject)
+                ->with('success', '3 Data Project Inovasi Brosur Lipat (Kotak 1, 2, dan 3) berhasil disimpan!');
+        }
 
         $project = $request->user()->projects()->create($validated);
 
@@ -203,12 +364,14 @@ class ProjectController extends Controller
             'footer_youtube' => ['nullable', 'string', 'max:255'],
             'social_links' => ['nullable', 'array'],
             'partner_logo' => ['nullable'],
+            'partner_logos' => ['nullable'],
             'footer_logo' => ['nullable'],
             'layout_preset' => ['nullable', 'string', 'in:balanced,visual_heavy,text_heavy'],
-            'doc_format' => ['nullable', 'string', 'in:a4_flyer,roll_banner,factsheet_2col,pitch_poster,social_feed,social_story'],
+            'doc_format' => ['nullable', 'string', 'in:a4_flyer,brochure_trifold,roll_banner,factsheet_2col,pitch_poster,social_feed,social_story'],
             'color_theme' => ['nullable', 'string', 'in:stas_official,ocean_tech,crimson_innovation,slate_monochrome'],
             'print_mode' => ['nullable', 'string', 'in:light,dark'],
             'boilerplate_type' => ['nullable', 'string', 'max:255'],
+            'layout_schema' => ['nullable', 'array'],
             'status' => ['nullable', 'in:draft,published'],
         ]);
 
@@ -226,21 +389,14 @@ class ProjectController extends Controller
             unset($validated['main_image']);
         }
 
-        if ($request->hasFile('partner_logo')) {
-            $request->validate([
-                'partner_logo' => ['file', 'mimes:jpeg,png,jpg,svg,webp', 'max:5120'],
-            ]);
-            if ($project->partner_logo) {
-                Storage::disk('public')->delete($project->partner_logo);
-            }
-            $validated['partner_logo'] = $request->file('partner_logo')->store('projects/logos', 'public');
-        } elseif ($request->boolean('remove_partner_logo')) {
-            if ($project->partner_logo) {
-                Storage::disk('public')->delete($project->partner_logo);
-            }
+        $existingLogos = $project->partner_logos ?: ($project->partner_logo ? [$project->partner_logo] : []);
+        if ($request->boolean('remove_partner_logo')) {
+            $validated['partner_logos'] = [];
             $validated['partner_logo'] = null;
         } else {
-            unset($validated['partner_logo']);
+            $processedLogos = $this->processPartnerLogos($request, $existingLogos);
+            $validated['partner_logos'] = $processedLogos;
+            $validated['partner_logo'] = $processedLogos[0] ?? null;
         }
 
         if ($request->hasFile('footer_logo')) {
@@ -269,10 +425,162 @@ class ProjectController extends Controller
             $validated['qr_code_path'] = null;
         }
 
-        $validated = $this->sanitizeProjectData($validated);
-
         $oldStatus = $project->status;
         $newStatus = $validated['status'] ?? $project->status;
+
+        // Handle A4 Trifold Brochure with 3 Independent Projects per Kotak
+        if (($validated['doc_format'] ?? '') === 'brochure_trifold' && ! empty($validated['problem_solution']['panels']) && is_array($validated['problem_solution']['panels'])) {
+            $panels = $validated['problem_solution']['panels'];
+            $trifoldGroupId = $project->problem_solution['trifold_group'] ?? uniqid('trifold_');
+
+            // 1. Update Kotak 1 (Primary Project)
+            $p0 = $panels[0] ?? [];
+            $validated['name'] = ! empty($p0['title']) ? trim($p0['title']) : $validated['name'];
+            $validated['title'] = ! empty($p0['title']) ? trim($p0['title']) : $validated['title'];
+            $validated['subtitle'] = $p0['subtitle'] ?? ($validated['subtitle'] ?? '');
+            $validated['category'] = ! empty($p0['category']) ? $p0['category'] : ($validated['category'] ?? 'Smart Agriculture');
+            $validated['description'] = $p0['description'] ?? ($validated['description'] ?? '');
+            $validated['benefits'] = ['content' => $p0['benefits'] ?? ($validated['benefits']['content'] ?? '')];
+            $validated['specifications'] = ['content' => $p0['specifications'] ?? ($p0['specs'] ?? ($validated['specifications']['content'] ?? ''))];
+            $validated['problem_solution'] = [
+                'problem' => $p0['problem'] ?? '',
+                'solution' => $p0['solution'] ?? '',
+                'trifold_group' => $trifoldGroupId,
+                'panel_index' => 0,
+                'panels' => $panels,
+            ];
+
+            if (! empty($p0['project_url'])) {
+                $validated['project_url'] = $p0['project_url'];
+                if ($p0['project_url'] !== $project->project_url) {
+                    if ($project->qr_code_path) {
+                        Storage::disk('public')->delete($project->qr_code_path);
+                    }
+                    $urlToEncode = ! preg_match('#^https?://#i', $p0['project_url']) ? 'https://'.$p0['project_url'] : $p0['project_url'];
+                    $validated['qr_code_path'] = $this->generateQrCode($urlToEncode);
+                }
+            }
+
+            if (! empty($p0['image_url']) && ! $request->hasFile('main_image')) {
+                if (str_starts_with($p0['image_url'], 'data:image/')) {
+                    $storedImg = $this->storeBase64Image($p0['image_url']);
+                    if ($storedImg) {
+                        if ($project->main_image) {
+                            Storage::disk('public')->delete($project->main_image);
+                        }
+                        $validated['main_image'] = $storedImg;
+                    }
+                }
+            }
+
+            $validated = $this->sanitizeProjectData($validated);
+            $project->update($validated);
+
+            // 2. Synchronize Companion Projects for Kotak 2 (panel 1) & Kotak 3 (panel 2)
+            $existingCompanions = $request->user()->projects()
+                ->where('id', '!=', $project->id)
+                ->whereJsonContains('problem_solution->trifold_group', $trifoldGroupId)
+                ->get();
+
+            foreach ([1, 2] as $idx) {
+                if (! isset($panels[$idx])) {
+                    continue;
+                }
+
+                $p = $panels[$idx];
+                $pTitle = ! empty($p['title']) ? trim($p['title']) : 'Inovasi Kotak '.($idx + 1);
+                $pName = $pTitle;
+                $pSubtitle = $p['subtitle'] ?? '';
+                $pCategory = ! empty($p['category']) ? trim($p['category']) : ($companion ? $companion->category : 'CoE STAS-RG');
+                $pDesc = $p['description'] ?? '';
+                $pProblem = $p['problem'] ?? '';
+                $pSolution = $p['solution'] ?? '';
+                $pBenefits = $p['benefits'] ?? '';
+                $pSpecs = $p['specifications'] ?? ($p['specs'] ?? '');
+                $pProjectUrl = $p['project_url'] ?? '';
+
+                $companion = $existingCompanions->first(function ($item) use ($idx) {
+                    return ($item->problem_solution['panel_index'] ?? null) == $idx;
+                });
+
+                $pImage = $companion ? $companion->main_image : null;
+                if (! empty($p['image_url'])) {
+                    if (str_starts_with($p['image_url'], 'data:image/')) {
+                        $storedImg = $this->storeBase64Image($p['image_url']);
+                        if ($storedImg) {
+                            if ($companion && $companion->main_image) {
+                                Storage::disk('public')->delete($companion->main_image);
+                            }
+                            $pImage = $storedImg;
+                        }
+                    } elseif (! str_starts_with($p['image_url'], 'http') && ! str_starts_with($p['image_url'], 'blob:')) {
+                        $pImage = str_replace('/storage/', '', $p['image_url']);
+                    }
+                }
+
+                $companionData = [
+                    'name' => $pName,
+                    'title' => $pTitle,
+                    'subtitle' => $pSubtitle,
+                    'category' => $pCategory,
+                    'description' => $pDesc,
+                    'main_image' => $pImage,
+                    'partner_logo' => $project->partner_logo,
+                    'partner_logos' => $project->partner_logos,
+                    'footer_logo' => $project->footer_logo,
+                    'benefits' => ['content' => $pBenefits],
+                    'specifications' => ['content' => $pSpecs],
+                    'problem_solution' => [
+                        'problem' => $pProblem,
+                        'solution' => $pSolution,
+                        'trifold_group' => $trifoldGroupId,
+                        'panel_index' => $idx,
+                        'panels' => $panels,
+                    ],
+                    'project_url' => $pProjectUrl,
+                    'footer_website' => $validated['footer_website'] ?? $project->footer_website,
+                    'footer_instagram' => $validated['footer_instagram'] ?? $project->footer_instagram,
+                    'footer_youtube' => $validated['footer_youtube'] ?? $project->footer_youtube,
+                    'social_links' => $validated['social_links'] ?? $project->social_links,
+                    'layout_preset' => $validated['layout_preset'] ?? $project->layout_preset,
+                    'design_style' => $validated['design_style'] ?? $project->design_style,
+                    'doc_format' => 'brochure_trifold',
+                    'color_theme' => $validated['color_theme'] ?? $project->color_theme,
+                    'print_mode' => $validated['print_mode'] ?? $project->print_mode,
+                    'boilerplate_type' => $validated['boilerplate_type'] ?? $project->boilerplate_type,
+                    'status' => $validated['status'] ?? $project->status,
+                ];
+
+                if (! empty($pProjectUrl)) {
+                    $url = $pProjectUrl;
+                    if (! preg_match('#^https?://#i', $url)) {
+                        $url = 'https://'.$url;
+                    }
+                    if (! $companion || $companion->project_url !== $pProjectUrl) {
+                        if ($companion && $companion->qr_code_path) {
+                            Storage::disk('public')->delete($companion->qr_code_path);
+                        }
+                        $companionData['qr_code_path'] = $this->generateQrCode($url);
+                    }
+                } elseif ($companion && $companion->qr_code_path) {
+                    Storage::disk('public')->delete($companion->qr_code_path);
+                    $companionData['qr_code_path'] = null;
+                }
+
+                $companionData = $this->sanitizeProjectData($companionData);
+
+                if ($companion) {
+                    $companion->update($companionData);
+                } else {
+                    $request->user()->projects()->create($companionData);
+                }
+            }
+
+            return redirect()
+                ->route('projects.show', $project)
+                ->with('success', '3 Data Project Inovasi Brosur Lipat (Kotak 1, 2, dan 3) berhasil diperbarui!');
+        }
+
         $project->update($validated);
 
         try {
@@ -336,6 +644,28 @@ class ProjectController extends Controller
             }
             if (isset($validated['problem_solution']['solution'])) {
                 $validated['problem_solution']['solution'] = HtmlSanitizer::clean($validated['problem_solution']['solution']);
+            }
+            if (isset($validated['problem_solution']['panels']) && is_array($validated['problem_solution']['panels'])) {
+                foreach ($validated['problem_solution']['panels'] as $idx => $panel) {
+                    if (isset($panel['description'])) {
+                        $validated['problem_solution']['panels'][$idx]['description'] = HtmlSanitizer::clean($panel['description']);
+                    }
+                    if (isset($panel['problem'])) {
+                        $validated['problem_solution']['panels'][$idx]['problem'] = HtmlSanitizer::clean($panel['problem']);
+                    }
+                    if (isset($panel['solution'])) {
+                        $validated['problem_solution']['panels'][$idx]['solution'] = HtmlSanitizer::clean($panel['solution']);
+                    }
+                    if (isset($panel['benefits'])) {
+                        $validated['problem_solution']['panels'][$idx]['benefits'] = HtmlSanitizer::clean($panel['benefits']);
+                    }
+                    if (isset($panel['specifications'])) {
+                        $validated['problem_solution']['panels'][$idx]['specifications'] = HtmlSanitizer::clean($panel['specifications']);
+                    }
+                    if (isset($panel['specs'])) {
+                        $validated['problem_solution']['panels'][$idx]['specs'] = HtmlSanitizer::clean($panel['specs']);
+                    }
+                }
             }
         }
 
@@ -560,6 +890,9 @@ class ProjectController extends Controller
     {
         abort_unless($project->status === 'published', 404);
 
+        // Track showcase view analytics
+        AnalyticsTracker::trackShowcaseView($project, request());
+
         $relatedProjects = Project::where('status', 'published')
             ->where('id', '!=', $project->id)
             ->latest()
@@ -590,6 +923,9 @@ class ProjectController extends Controller
                 'description' => $project->description,
                 'main_image' => $project->main_image ? asset('storage/'.$project->main_image) : null,
                 'partner_logo' => $project->partner_logo ? asset('storage/'.$project->partner_logo) : null,
+                'partner_logos' => ! empty($project->partner_logos) && is_array($project->partner_logos)
+                    ? array_map(fn ($p) => str_starts_with($p, 'http') ? $p : asset('storage/'.$p), $project->partner_logos)
+                    : ($project->partner_logo ? [asset('storage/'.$project->partner_logo)] : []),
                 'benefits' => $project->benefits,
                 'specifications' => $project->specifications,
                 'problem_solution' => $project->problem_solution,
@@ -601,8 +937,8 @@ class ProjectController extends Controller
                 'social_links' => $project->social_links,
                 'layout_preset' => $project->layout_preset ?? 'balanced',
                 'status' => $project->status,
-                'created_at' => $project->created_at->format('d M Y'),
-                'updated_at' => $project->updated_at->format('d M Y'),
+                'created_at' => $project->created_at->translatedFormat('d M Y'),
+                'updated_at' => $project->updated_at->translatedFormat('d M Y'),
             ],
             'relatedProjects' => $relatedProjects,
         ]);
@@ -626,10 +962,176 @@ class ProjectController extends Controller
             ->size(200)
             ->errorCorrection('H')
             ->margin(1)
-            ->color(13, 90, 52)
+            ->color(10, 182, 0)
             ->generate($url, $fullPath);
 
         return $filename;
+    }
+
+    /**
+     * Store base64 data image URL to storage disk or return null.
+     */
+    private function storeBase64Image(?string $dataUrl): ?string
+    {
+        if (empty($dataUrl) || ! str_starts_with($dataUrl, 'data:image/')) {
+            return null;
+        }
+
+        if (preg_match('/^data:image\/(\w+);base64,/', $dataUrl, $matches)) {
+            $ext = strtolower($matches[1]);
+            if ($ext === 'jpeg') {
+                $ext = 'jpg';
+            }
+            if ($ext === 'svg+xml') {
+                $ext = 'svg';
+            }
+
+            $data = substr($dataUrl, strpos($dataUrl, ',') + 1);
+            $decoded = base64_decode($data);
+
+            if ($decoded !== false) {
+                $filename = 'projects/images/'.uniqid('img_').'.'.$ext;
+                $fullPath = storage_path('app/public/'.$filename);
+                $directory = dirname($fullPath);
+                if (! is_dir($directory)) {
+                    mkdir($directory, 0755, true);
+                }
+                file_put_contents($fullPath, $decoded);
+
+                return $filename;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Process and store an array of partner logos (files, base64 strings, or asset storage paths).
+     *
+     * @param  list<string>  $existingLogos
+     * @return list<string>
+     */
+    private function processPartnerLogos(Request $request, array $existingLogos = []): array
+    {
+        $logos = [];
+
+        // 1. If uploaded files in partner_logos array:
+        if ($request->hasFile('partner_logos')) {
+            $files = $request->file('partner_logos');
+            if (is_array($files)) {
+                foreach ($files as $file) {
+                    if ($file && $file->isValid()) {
+                        $logos[] = $file->store('projects/logos', 'public');
+                    }
+                }
+            } elseif ($files && $files->isValid()) {
+                $logos[] = $files->store('projects/logos', 'public');
+            }
+        }
+
+        // 2. If single file partner_logo was uploaded:
+        if ($request->hasFile('partner_logo')) {
+            $logos[] = $request->file('partner_logo')->store('projects/logos', 'public');
+        }
+
+        // 3. If array of string/data URLs is sent in request input 'partner_logos':
+        $rawLogos = $request->input('partner_logos');
+        if (is_array($rawLogos)) {
+            foreach ($rawLogos as $item) {
+                if (empty($item) || ! is_string($item)) {
+                    continue;
+                }
+                if (str_starts_with($item, 'data:image/')) {
+                    $stored = $this->storeBase64Logo($item);
+                    if ($stored) {
+                        $logos[] = $stored;
+                    }
+                } elseif (str_starts_with($item, '/storage/')) {
+                    $logos[] = str_replace('/storage/', '', $item);
+                } elseif (! str_starts_with($item, 'http') && ! str_starts_with($item, 'blob:')) {
+                    $logos[] = $item;
+                }
+            }
+        } elseif (is_string($rawLogos) && ! empty($rawLogos)) {
+            $decoded = json_decode($rawLogos, true);
+            if (is_array($decoded)) {
+                foreach ($decoded as $item) {
+                    if (empty($item) || ! is_string($item)) {
+                        continue;
+                    }
+                    if (str_starts_with($item, 'data:image/')) {
+                        $stored = $this->storeBase64Logo($item);
+                        if ($stored) {
+                            $logos[] = $stored;
+                        }
+                    } elseif (str_starts_with($item, '/storage/')) {
+                        $logos[] = str_replace('/storage/', '', $item);
+                    } elseif (! str_starts_with($item, 'http') && ! str_starts_with($item, 'blob:')) {
+                        $logos[] = $item;
+                    }
+                }
+            }
+        }
+
+        // 4. Single partner_logo string input
+        $singleRaw = $request->input('partner_logo');
+        if (is_string($singleRaw) && ! empty($singleRaw) && ! in_array($singleRaw, $logos, true)) {
+            if (str_starts_with($singleRaw, 'data:image/')) {
+                $stored = $this->storeBase64Logo($singleRaw);
+                if ($stored) {
+                    $logos[] = $stored;
+                }
+            } elseif (str_starts_with($singleRaw, '/storage/')) {
+                $logos[] = str_replace('/storage/', '', $singleRaw);
+            } elseif (! str_starts_with($singleRaw, 'http') && ! str_starts_with($singleRaw, 'blob:')) {
+                $logos[] = $singleRaw;
+            }
+        }
+
+        // If no new logos were processed and remove_partner_logo wasn't requested, retain existing
+        if (empty($logos) && ! $request->boolean('remove_partner_logo') && ! empty($existingLogos)) {
+            $logos = $existingLogos;
+        }
+
+        // Deduplicate and filter non-empty
+        return array_values(array_unique(array_filter($logos)));
+    }
+
+    /**
+     * Store base64 data image URL specifically for logo into projects/logos
+     */
+    private function storeBase64Logo(?string $dataUrl): ?string
+    {
+        if (empty($dataUrl) || ! str_starts_with($dataUrl, 'data:image/')) {
+            return null;
+        }
+
+        if (preg_match('/^data:image\/(\w+);base64,/', $dataUrl, $matches)) {
+            $ext = strtolower($matches[1]);
+            if ($ext === 'jpeg') {
+                $ext = 'jpg';
+            }
+            if ($ext === 'svg+xml') {
+                $ext = 'svg';
+            }
+
+            $data = substr($dataUrl, strpos($dataUrl, ',') + 1);
+            $decoded = base64_decode($data);
+
+            if ($decoded !== false) {
+                $filename = 'projects/logos/'.uniqid('logo_').'.'.$ext;
+                $fullPath = storage_path('app/public/'.$filename);
+                $directory = dirname($fullPath);
+                if (! is_dir($directory)) {
+                    mkdir($directory, 0755, true);
+                }
+                file_put_contents($fullPath, $decoded);
+
+                return $filename;
+            }
+        }
+
+        return null;
     }
 
     /**

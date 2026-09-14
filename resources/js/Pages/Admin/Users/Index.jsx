@@ -22,7 +22,12 @@ import {
     Eye,
     EyeOff,
     Loader2,
-    KeyRound
+    KeyRound,
+    ArrowUpDown,
+    ArrowUp,
+    ArrowDown,
+    RotateCcw,
+    Filter,
 } from 'lucide-react';
 
 export default function UsersIndex({ users, stats, filters = {} }) {
@@ -35,6 +40,9 @@ export default function UsersIndex({ users, stats, filters = {} }) {
 
     const [search, setSearch] = useState(filters.search || '');
     const [statusFilter, setStatusFilter] = useState(filters.status || 'all');
+    const [roleFilter, setRoleFilter] = useState(filters.role || 'all');
+    const [sortField, setSortField] = useState(filters.sort || 'created_at');
+    const [sortDirection, setSortDirection] = useState(filters.direction || 'desc');
     const [rejectingUser, setRejectingUser] = useState(null);
     const [rejectReason, setRejectReason] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,15 +60,80 @@ export default function UsersIndex({ users, stats, filters = {} }) {
     const [showCreatePassword, setShowCreatePassword] = useState(false);
     const [isSavingUser, setIsSavingUser] = useState(false);
 
+    const applyFilters = (overrides = {}) => {
+        const nextSearch = overrides.search !== undefined ? overrides.search : search;
+        const nextStatus = overrides.status !== undefined ? overrides.status : statusFilter;
+        const nextRole = overrides.role !== undefined ? overrides.role : roleFilter;
+        const nextSort = overrides.sort !== undefined ? overrides.sort : sortField;
+        const nextDirection = overrides.direction !== undefined ? overrides.direction : sortDirection;
+
+        const params = {};
+        if (nextSearch) params.search = nextSearch;
+        if (nextStatus && nextStatus !== 'all') params.status = nextStatus;
+        if (nextRole && nextRole !== 'all') params.role = nextRole;
+        if (nextSort && (nextSort !== 'created_at' || nextDirection !== 'desc')) {
+            params.sort = nextSort;
+            params.direction = nextDirection;
+        }
+
+        router.get('/users', params, { preserveState: true, replace: true });
+    };
+
     const handleSearchSubmit = (e) => {
-        e.preventDefault();
-        router.get('/users', { search, status: statusFilter }, { preserveState: true, replace: true });
+        if (e) e.preventDefault();
+        applyFilters({ search });
+    };
+
+    const handleClearSearch = () => {
+        setSearch('');
+        applyFilters({ search: '' });
     };
 
     const handleStatusChange = (status) => {
         setStatusFilter(status);
-        router.get('/users', { search, status }, { preserveState: true, replace: true });
+        applyFilters({ status });
     };
+
+    const handleRoleChange = (role) => {
+        setRoleFilter(role);
+        applyFilters({ role });
+    };
+
+    const handleSortColumn = (field) => {
+        let nextDir = 'asc';
+        if (sortField === field) {
+            nextDir = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            nextDir = field === 'created_at' || field === 'approved_at' ? 'desc' : 'asc';
+        }
+        setSortField(field);
+        setSortDirection(nextDir);
+        applyFilters({ sort: field, direction: nextDir });
+    };
+
+    const handleQuickSortSelect = (val) => {
+        const [field, dir] = val.split(':');
+        setSortField(field);
+        setSortDirection(dir);
+        applyFilters({ sort: field, direction: dir });
+    };
+
+    const handleResetFilters = () => {
+        setSearch('');
+        setStatusFilter('all');
+        setRoleFilter('all');
+        setSortField('created_at');
+        setSortDirection('desc');
+        router.get('/users', {}, { preserveState: true, replace: true });
+    };
+
+    const isFilterActive = Boolean(
+        search ||
+        statusFilter !== 'all' ||
+        roleFilter !== 'all' ||
+        sortField !== 'created_at' ||
+        sortDirection !== 'desc'
+    );
 
     const handleApprove = async (user) => {
         const title = u.approveTitle || 'Setujui Akun Pengguna?';
@@ -194,7 +267,7 @@ export default function UsersIndex({ users, stats, filters = {} }) {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <span className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-[#0D5A34] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                            <span className="p-1.5 rounded-lg bg-[#0AB600]/10 text-[#0AB600] border border-[#0AB600]/30">
                                 <Users className="w-5 h-5" />
                             </span>
                             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
@@ -218,7 +291,7 @@ export default function UsersIndex({ users, stats, filters = {} }) {
                         <button
                             type="button"
                             onClick={() => setIsCreatingUser(true)}
-                            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0D5A34] hover:bg-[#094226] text-white text-xs sm:text-sm font-semibold shadow-xs transition-all cursor-pointer"
+                            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0AB600] hover:bg-[#089600] text-white text-xs sm:text-sm font-semibold shadow-xs transition-all cursor-pointer"
                         >
                             <UserPlus className="w-4 h-4" />
                             <span>{u.btnAddUser || '+ Tambah User Baru'}</span>
@@ -249,11 +322,11 @@ export default function UsersIndex({ users, stats, filters = {} }) {
                     </div>
 
                     {/* Approved */}
-                    <div className="p-4 rounded-2xl bg-white dark:bg-[#121824] border border-emerald-200/80 dark:border-emerald-900/60">
-                        <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block mb-1">
+                    <div className="p-4 rounded-2xl bg-white dark:bg-[#121824] border border-[#0AB600]/30">
+                        <span className="text-[11px] font-semibold text-[#0AB600] uppercase tracking-wider block mb-1">
                             {u.statApproved || 'Approved Admin'}
                         </span>
-                        <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400">
+                        <span className="text-2xl font-black text-[#0AB600]">
                             {stats.approved}
                         </span>
                     </div>
@@ -269,43 +342,115 @@ export default function UsersIndex({ users, stats, filters = {} }) {
                     </div>
                 </div>
 
-                {/* Filters & Search Toolbar */}
-                <div className="bg-white dark:bg-[#121824] rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3">
-                    {/* Status Tabs */}
-                    <div className="flex items-center gap-1.5 w-full md:w-auto bg-zinc-100 dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200/60 dark:border-zinc-800/60 overflow-x-auto">
-                        {[
-                            { key: 'all', label: (u.tabAll || 'Semua ({count})').replace('{count}', stats.total) },
-                            { key: 'pending', label: (u.tabPending || 'Pending ({count})').replace('{count}', stats.pending) },
-                            { key: 'approved', label: (u.tabApproved || 'Approved ({count})').replace('{count}', stats.approved) },
-                            { key: 'rejected', label: (u.tabRejected || 'Ditolak ({count})').replace('{count}', stats.rejected) },
-                            { key: 'inactive', label: (u.tabInactive || 'Nonaktif ({count})').replace('{count}', stats.inactive) },
-                        ].map((tab) => (
-                            <button
-                                key={tab.key}
-                                type="button"
-                                onClick={() => handleStatusChange(tab.key)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                                    statusFilter === tab.key
-                                        ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs'
-                                        : 'text-zinc-500 hover:text-slate-900 dark:hover:text-zinc-300'
-                                    }`}
+                {/* Filters & Search Toolbar (1 Jajar) */}
+                <div className="bg-white dark:bg-[#121824] rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 p-4 shadow-sm space-y-3">
+                    <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 overflow-x-auto pb-0.5">
+                        {/* Status Tabs */}
+                        <div className="flex items-center gap-1.5 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200/60 dark:border-zinc-800/60 shrink-0">
+                            {[
+                                { key: 'all', label: (u.tabAll || 'Semua ({count})').replace('{count}', stats.total) },
+                                { key: 'pending', label: (u.tabPending || 'Pending ({count})').replace('{count}', stats.pending) },
+                                { key: 'approved', label: (u.tabApproved || 'Approved ({count})').replace('{count}', stats.approved) },
+                                { key: 'rejected', label: (u.tabRejected || 'Ditolak ({count})').replace('{count}', stats.rejected) },
+                                { key: 'inactive', label: (u.tabInactive || 'Nonaktif ({count})').replace('{count}', stats.inactive) },
+                            ].map((tab) => (
+                                <button
+                                    key={tab.key}
+                                    type="button"
+                                    onClick={() => handleStatusChange(tab.key)}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                                        statusFilter === tab.key
+                                            ? 'bg-white dark:bg-zinc-800 text-[#0AB600] font-bold shadow-xs'
+                                            : 'text-zinc-500 hover:text-slate-900 dark:hover:text-zinc-300'
+                                        }`}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Controls: Role Filter, Sort Dropdown & Search in 1 Row */}
+                        <div className="flex items-center gap-2 shrink-0">
+                            {/* Role Filter */}
+                            <select
+                                value={roleFilter}
+                                onChange={(e) => handleRoleChange(e.target.value)}
+                                className="px-2.5 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-800 dark:text-zinc-200 focus:outline-none focus:border-[#0AB600] cursor-pointer shrink-0"
                             >
-                                {tab.label}
-                            </button>
-                        ))}
+                                <option value="all">Semua Role</option>
+                                <option value="admin">Admin</option>
+                                <option value="user">User</option>
+                            </select>
+
+                            {/* Sort Dropdown */}
+                            <select
+                                value={`${sortField}:${sortDirection}`}
+                                onChange={(e) => handleQuickSortSelect(e.target.value)}
+                                className="px-2.5 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-800 dark:text-zinc-200 focus:outline-none focus:border-[#0AB600] cursor-pointer shrink-0"
+                            >
+                                <option value="created_at:desc">Terbaru Terdaftar</option>
+                                <option value="created_at:asc">Terlama Terdaftar</option>
+                                <option value="name:asc">Nama (A &rarr; Z)</option>
+                                <option value="name:desc">Nama (Z &rarr; A)</option>
+                                <option value="email:asc">Email (A &rarr; Z)</option>
+                                <option value="status:asc">Status</option>
+                            </select>
+
+                            {/* Search Bar */}
+                            <form onSubmit={handleSearchSubmit} className="relative w-48 sm:w-60 shrink-0">
+                                <input
+                                    type="text"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder={u.searchPlaceholder || 'Cari nama, username, email...'}
+                                    className="w-full pl-9 pr-7 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-[#0AB600] transition-colors"
+                                />
+                                <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-2.5 pointer-events-none" />
+                                {search && (
+                                    <button
+                                        type="button"
+                                        onClick={handleClearSearch}
+                                        className="p-1 rounded-md text-zinc-400 hover:text-slate-900 dark:hover:text-white absolute right-1.5 top-2 transition-colors cursor-pointer"
+                                        title="Hapus pencarian"
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                )}
+                            </form>
+
+                            {/* Reset Button */}
+                            {isFilterActive && (
+                                <button
+                                    type="button"
+                                    onClick={handleResetFilters}
+                                    title="Reset Semua Filter"
+                                    className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-900 transition-colors cursor-pointer shrink-0"
+                                >
+                                    <RotateCcw className="w-3.5 h-3.5" />
+                                    <span>Reset</span>
+                                </button>
+                            )}
+                        </div>
                     </div>
 
-                    {/* Search Bar */}
-                    <form onSubmit={handleSearchSubmit} className="relative w-full md:w-72">
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder={u.searchPlaceholder || 'Cari nama, username, email...'}
-                            className="w-full pl-9 pr-4 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-[#0D5A34] transition-colors"
-                        />
-                        <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-2.5 pointer-events-none" />
-                    </form>
+                    {/* Active Counter & Filter Status */}
+                    <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800 text-[11px] text-zinc-500 dark:text-zinc-400">
+                        <div className="flex items-center gap-2">
+                            <span>
+                                Menampilkan <strong className="text-slate-900 dark:text-white">{users?.from || (userList.length > 0 ? 1 : 0)}</strong> - <strong className="text-slate-900 dark:text-white">{users?.to || userList.length}</strong> dari <strong className="text-[#0AB600]">{users?.total || userList.length}</strong> akun pengguna
+                            </span>
+                            {isFilterActive && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#0AB600]/10 text-[#0AB600] font-bold border border-[#0AB600]/30">
+                                    <Filter className="w-2.5 h-2.5" />
+                                    Filter Aktif
+                                </span>
+                            )}
+                        </div>
+
+                        <span className="text-zinc-400">
+                            Urutan: <strong className="text-slate-700 dark:text-zinc-300">{sortField === 'name' ? 'Nama' : sortField === 'email' ? 'Email' : sortField === 'status' ? 'Status' : sortField === 'role' ? 'Role' : 'Waktu Daftar'} ({sortDirection.toUpperCase()})</strong>
+                        </span>
+                    </div>
                 </div>
 
                 {/* Users Table */}
@@ -314,11 +459,106 @@ export default function UsersIndex({ users, stats, filters = {} }) {
                         <table className="w-full text-left text-xs text-slate-700 dark:text-zinc-300">
                             <thead className="bg-zinc-50/70 dark:bg-zinc-900/70 border-b border-zinc-200/80 dark:border-zinc-800/80 text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                                 <tr>
-                                    <th className="px-5 py-3.5">{u.thUser || 'User'}</th>
-                                    <th className="px-5 py-3.5">{u.thEmail || 'Email'}</th>
-                                    <th className="px-5 py-3.5">{u.thRole || 'Role'}</th>
-                                    <th className="px-5 py-3.5">{u.thStatus || 'Status Akun'}</th>
-                                    <th className="px-5 py-3.5 hidden md:table-cell">{u.thRegisteredAt || 'Waktu Daftar'}</th>
+                                    {/* Sortable: User */}
+                                    <th className="px-5 py-3.5">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSortColumn('name')}
+                                            className="inline-flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                                        >
+                                            <span>{u.thUser || 'User'}</span>
+                                            {sortField === 'name' ? (
+                                                sortDirection === 'asc' ? (
+                                                    <ArrowUp className="w-3.5 h-3.5 text-[#0AB600]" />
+                                                ) : (
+                                                    <ArrowDown className="w-3.5 h-3.5 text-[#0AB600]" />
+                                                )
+                                            ) : (
+                                                <ArrowUpDown className="w-3 h-3 text-zinc-400 opacity-60" />
+                                            )}
+                                        </button>
+                                    </th>
+
+                                    {/* Sortable: Email */}
+                                    <th className="px-5 py-3.5">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSortColumn('email')}
+                                            className="inline-flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                                        >
+                                            <span>{u.thEmail || 'Email'}</span>
+                                            {sortField === 'email' ? (
+                                                sortDirection === 'asc' ? (
+                                                    <ArrowUp className="w-3.5 h-3.5 text-[#0AB600]" />
+                                                ) : (
+                                                    <ArrowDown className="w-3.5 h-3.5 text-[#0AB600]" />
+                                                )
+                                            ) : (
+                                                <ArrowUpDown className="w-3 h-3 text-zinc-400 opacity-60" />
+                                            )}
+                                        </button>
+                                    </th>
+
+                                    {/* Sortable: Role */}
+                                    <th className="px-5 py-3.5">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSortColumn('role')}
+                                            className="inline-flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                                        >
+                                            <span>{u.thRole || 'Role'}</span>
+                                            {sortField === 'role' ? (
+                                                sortDirection === 'asc' ? (
+                                                    <ArrowUp className="w-3.5 h-3.5 text-[#0AB600]" />
+                                                ) : (
+                                                    <ArrowDown className="w-3.5 h-3.5 text-[#0AB600]" />
+                                                )
+                                            ) : (
+                                                <ArrowUpDown className="w-3 h-3 text-zinc-400 opacity-60" />
+                                            )}
+                                        </button>
+                                    </th>
+
+                                    {/* Sortable: Status Akun */}
+                                    <th className="px-5 py-3.5">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSortColumn('status')}
+                                            className="inline-flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                                        >
+                                            <span>{u.thStatus || 'Status Akun'}</span>
+                                            {sortField === 'status' ? (
+                                                sortDirection === 'asc' ? (
+                                                    <ArrowUp className="w-3.5 h-3.5 text-[#0AB600]" />
+                                                ) : (
+                                                    <ArrowDown className="w-3.5 h-3.5 text-[#0AB600]" />
+                                                )
+                                            ) : (
+                                                <ArrowUpDown className="w-3 h-3 text-zinc-400 opacity-60" />
+                                            )}
+                                        </button>
+                                    </th>
+
+                                    {/* Sortable: Waktu Daftar */}
+                                    <th className="px-5 py-3.5 hidden md:table-cell">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSortColumn('created_at')}
+                                            className="inline-flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                                        >
+                                            <span>{u.thRegisteredAt || 'Waktu Daftar'}</span>
+                                            {sortField === 'created_at' || sortField === 'approved_at' ? (
+                                                sortDirection === 'asc' ? (
+                                                    <ArrowUp className="w-3.5 h-3.5 text-[#0AB600]" />
+                                                ) : (
+                                                    <ArrowDown className="w-3.5 h-3.5 text-[#0AB600]" />
+                                                )
+                                            ) : (
+                                                <ArrowUpDown className="w-3 h-3 text-zinc-400 opacity-60" />
+                                            )}
+                                        </button>
+                                    </th>
+
                                     <th className="px-5 py-3.5 text-right">{u.thAction || 'Aksi Persetujuan'}</th>
                                 </tr>
                             </thead>
@@ -336,10 +576,10 @@ export default function UsersIndex({ users, stats, filters = {} }) {
                                                         <img
                                                              src={user.avatar_url || `/storage/${user.avatar}`}
                                                             alt={user.name || 'User'}
-                                                            className="w-9 h-9 rounded-xl object-cover border border-emerald-300 dark:border-emerald-800 shrink-0"
+                                                            className="w-9 h-9 rounded-xl object-cover border border-[#0AB600]/30 shrink-0"
                                                         />
                                                     ) : (
-                                                        <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950 border border-emerald-300 dark:border-emerald-800 flex items-center justify-center text-[#0D5A34] dark:text-emerald-300 font-bold text-xs shrink-0">
+                                                        <div className="w-9 h-9 rounded-xl bg-[#0AB600]/15 dark:bg-[#0AB600]/10 border border-[#0AB600]/30 flex items-center justify-center text-[#0AB600] font-bold text-xs shrink-0">
                                                             {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                                                         </div>
                                                     )}
@@ -369,7 +609,7 @@ export default function UsersIndex({ users, stats, filters = {} }) {
 
                                             {/* Role */}
                                             <td className="px-5 py-4 whitespace-nowrap">
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[#0D5A34] dark:text-emerald-400">
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#0AB600]/10 border border-[#0AB600]/30 text-[#0AB600]">
                                                     <Shield className="w-3 h-3" />
                                                     <span>{user.role === 'admin' ? (u.roleAdmin || 'Admin') : user.role}</span>
                                                 </span>
@@ -384,7 +624,7 @@ export default function UsersIndex({ users, stats, filters = {} }) {
                                                     </span>
                                                 )}
                                                 {user.status === 'approved' && (
-                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300">
+                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#0AB600]/10 border border-[#0AB600]/30 text-[#0AB600]">
                                                         <CheckCircle2 className="w-3 h-3" />
                                                         <span>{u.statusApproved || 'Aktif / Approved'}</span>
                                                     </span>
@@ -423,7 +663,7 @@ export default function UsersIndex({ users, stats, filters = {} }) {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => handleApprove(user)}
-                                                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#0D5A34] hover:bg-[#094226] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                                                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#0AB600] hover:bg-[#089600] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
                                                             >
                                                                 <CheckCircle2 className="w-3.5 h-3.5" />
                                                                 <span>{u.btnApprove || 'Approve'}</span>
@@ -454,7 +694,7 @@ export default function UsersIndex({ users, stats, filters = {} }) {
                                                         <button
                                                             type="button"
                                                             onClick={() => handleApprove(user)}
-                                                            className="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 text-[#0D5A34] dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 text-xs font-bold transition-all cursor-pointer"
+                                                            className="px-2.5 py-1.5 rounded-lg bg-[#0AB600]/10 hover:bg-[#0AB600]/15 dark:bg-[#0AB600]/10 text-[#0AB600] border border-[#0AB600]/30 text-xs font-bold transition-all cursor-pointer"
                                                         >
                                                             {u.btnReactivate || 'Aktifkan Kembali'}
                                                         </button>
@@ -476,8 +716,22 @@ export default function UsersIndex({ users, stats, filters = {} }) {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={6} className="px-5 py-10 text-center text-zinc-500 dark:text-zinc-400 text-xs">
-                                            {u.emptyUsers || 'Tidak ada user yang sesuai filter.'}
+                                        <td colSpan={6} className="px-5 py-12 text-center">
+                                            <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
+                                                <img
+                                                    src="/assets/img/icon/notfound.png"
+                                                    alt="Tidak Ada User"
+                                                    className="w-24 sm:w-28 h-auto object-contain mx-auto mb-3 drop-shadow-xs"
+                                                />
+                                                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                                                    {u.emptyUsers || 'Belum Ada User Ditemukan'}
+                                                </h3>
+                                                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                                                    {search || roleFilter !== 'all' || statusFilter !== 'all'
+                                                        ? 'Tidak ada akun user yang sesuai dengan filter pencarian yang diterapkan.'
+                                                        : 'Belum ada pengguna terdaftar pada sistem STAS-RG.'}
+                                                </p>
+                                            </div>
                                         </td>
                                     </tr>
                                 )}
@@ -496,7 +750,7 @@ export default function UsersIndex({ users, stats, filters = {} }) {
                                 dangerouslySetInnerHTML={{ __html: link.label }}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                                     link.active
-                                        ? 'bg-[#0D5A34] text-white'
+                                        ? 'bg-[#0AB600] text-white'
                                         : link.url
                                         ? 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50'
                                         : 'text-zinc-400 pointer-events-none'
@@ -516,7 +770,7 @@ export default function UsersIndex({ users, stats, filters = {} }) {
                         {/* Modal Header */}
                         <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
                             <div className="flex items-center gap-2.5">
-                                <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[#0D5A34] dark:text-emerald-400">
+                                <div className="p-2 rounded-xl bg-[#0AB600]/10 border border-[#0AB600]/30 text-[#0AB600]">
                                     <UserPlus className="w-5 h-5" />
                                 </div>
                                 <div>
@@ -551,7 +805,7 @@ export default function UsersIndex({ users, stats, filters = {} }) {
                                     onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
                                     placeholder={u.placeholderFullName || 'cth. Fatin Muflihuts Tsani'}
                                     required
-                                    className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-[#0D5A34]"
+                                    className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-[#0AB600]"
                                 />
                             </div>
 
@@ -567,7 +821,7 @@ export default function UsersIndex({ users, stats, filters = {} }) {
                                         value={createForm.username}
                                         onChange={(e) => setCreateForm({ ...createForm, username: e.target.value })}
                                         placeholder={u.placeholderUsername || 'cth. fatintsani'}
-                                        className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-[#0D5A34]"
+                                        className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-[#0AB600]"
                                     />
                                 </div>
 
@@ -581,7 +835,7 @@ export default function UsersIndex({ users, stats, filters = {} }) {
                                         onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
                                         placeholder={u.placeholderEmail || 'nama@telkomuniversity.ac.id'}
                                         required
-                                        className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-[#0D5A34]"
+                                        className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-[#0AB600]"
                                     />
                                 </div>
 
@@ -601,7 +855,7 @@ export default function UsersIndex({ users, stats, filters = {} }) {
                                         placeholder={u.placeholderPassword || 'Minimal 8 karakter'}
                                         required
                                         minLength={8}
-                                        className="w-full px-3 py-2 pr-10 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-[#0D5A34]"
+                                        className="w-full px-3 py-2 pr-10 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-[#0AB600]"
                                     />
                                     <button
                                         type="button"
@@ -623,7 +877,7 @@ export default function UsersIndex({ users, stats, filters = {} }) {
                                     <select
                                         value={createForm.role}
                                         onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
-                                        className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-[#0D5A34]"
+                                        className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-[#0AB600]"
                                     >
                                         <option value="admin">{u.optRoleAdmin || 'Administrator'}</option>
                                         <option value="researcher">{u.optRoleResearcher || 'Peneliti'}</option>
@@ -637,7 +891,7 @@ export default function UsersIndex({ users, stats, filters = {} }) {
                                     <select
                                         value={createForm.status}
                                         onChange={(e) => setCreateForm({ ...createForm, status: e.target.value })}
-                                        className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-[#0D5A34]"
+                                        className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-[#0AB600]"
                                     >
                                         <option value="approved">{u.optStatusApproved || 'Langsung Aktif (Approved)'}</option>
                                         <option value="pending">{u.optStatusPending || 'Menunggu Approval (Pending)'}</option>
@@ -660,7 +914,7 @@ export default function UsersIndex({ users, stats, filters = {} }) {
                                 <button
                                     type="submit"
                                     disabled={isSavingUser}
-                                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-[#0D5A34] hover:bg-[#094226] transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-[#0AB600] hover:bg-[#089600] transition-all shadow-xs cursor-pointer disabled:opacity-50"
                                 >
                                     {isSavingUser ? (
                                         <>
@@ -699,7 +953,7 @@ export default function UsersIndex({ users, stats, filters = {} }) {
                                 value={rejectReason}
                                 onChange={(e) => setRejectReason(e.target.value)}
                                 placeholder={u.rejectPlaceholder || 'Contoh: Informasi akun tidak valid atau tidak memenuhi syarat.'}
-                                className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-[#0D5A34]"
+                                className="w-full px-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-[#0AB600]"
                             />
                             <div className="flex items-center justify-end gap-2 pt-2">
                                 <button

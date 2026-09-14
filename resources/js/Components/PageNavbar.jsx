@@ -44,7 +44,7 @@ export default function PageNavbar({ backText }) {
                         href="/"
                         className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg text-zinc-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                     >
-                        <ArrowLeft className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        <ArrowLeft className="w-4 h-4 text-[#0AB600]" />
                         <span>{backText || (language === 'id' ? 'Kembali' : 'Back')}</span>
                     </Link>
 
@@ -89,7 +89,7 @@ export default function PageNavbar({ backText }) {
                         onClick={toggleTheme}
                         aria-label="Toggle theme mode"
                         title={theme === 'dark' ? 'Beralih ke Light Mode' : 'Beralih ke Dark Mode'}
-                        className="p-1.5 rounded-lg bg-transparent flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-[#0D5A34] dark:hover:text-emerald-400 transition-colors cursor-pointer"
+                        className="p-1.5 rounded-lg bg-transparent flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-[#0AB600] dark:hover:text-[#0AB600] transition-colors cursor-pointer"
                     >
                         {theme === 'dark' ? (
                             <Sun className="w-4 h-4 text-amber-400" />

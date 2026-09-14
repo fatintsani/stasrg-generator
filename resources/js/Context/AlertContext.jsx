@@ -32,17 +32,22 @@ export function AlertProvider({ children }) {
         return new Promise((resolve) => {
             resolverRef.current = resolve;
             callbacksRef.current = {
-                onConfirm: options?.onConfirm || null,
-                onCancel: options?.onCancel || null,
+                onConfirm: typeof options?.onConfirm === 'function' ? options.onConfirm : null,
+                onCancel: typeof options?.onCancel === 'function' ? options.onCancel : null,
             };
+
+            const rawConfirmText =
+                typeof options?.confirmText === 'string' ? options.confirmText : '';
+            const rawCancelText =
+                typeof options?.cancelText === 'string' ? options.cancelText : '';
 
             setModalState({
                 isOpen: true,
                 type: options?.type || 'info',
                 title: options?.title || '',
                 message: options?.message || '',
-                confirmText: options?.confirmText || '',
-                cancelText: options?.cancelText || '',
+                confirmText: rawConfirmText,
+                cancelText: rawCancelText,
                 variant: options?.variant || 'primary',
                 showCloseButton: options?.showCloseButton !== false,
                 closeOnBackdrop: options?.closeOnBackdrop !== false,
@@ -53,10 +58,16 @@ export function AlertProvider({ children }) {
     // Helper: Success
     const showSuccess = useCallback(
         (titleOrOptions, message, confirmText) => {
-            const options =
-                typeof titleOrOptions === 'object' && titleOrOptions !== null
-                    ? titleOrOptions
-                    : { title: titleOrOptions, message, confirmText };
+            let options = {};
+            if (typeof titleOrOptions === 'object' && titleOrOptions !== null) {
+                options = { ...titleOrOptions };
+            } else {
+                options = {
+                    title: titleOrOptions || '',
+                    message: message || '',
+                    confirmText: typeof confirmText === 'string' ? confirmText : 'Mengerti',
+                };
+            }
             return showAlert({ ...options, type: 'success' });
         },
         [showAlert]
@@ -65,10 +76,16 @@ export function AlertProvider({ children }) {
     // Helper: Error
     const showError = useCallback(
         (titleOrOptions, message, confirmText) => {
-            const options =
-                typeof titleOrOptions === 'object' && titleOrOptions !== null
-                    ? titleOrOptions
-                    : { title: titleOrOptions, message, confirmText };
+            let options = {};
+            if (typeof titleOrOptions === 'object' && titleOrOptions !== null) {
+                options = { ...titleOrOptions };
+            } else {
+                options = {
+                    title: titleOrOptions || '',
+                    message: message || '',
+                    confirmText: typeof confirmText === 'string' ? confirmText : 'Tutup',
+                };
+            }
             return showAlert({ ...options, type: 'error' });
         },
         [showAlert]
@@ -77,10 +94,16 @@ export function AlertProvider({ children }) {
     // Helper: Warning
     const showWarning = useCallback(
         (titleOrOptions, message, confirmText) => {
-            const options =
-                typeof titleOrOptions === 'object' && titleOrOptions !== null
-                    ? titleOrOptions
-                    : { title: titleOrOptions, message, confirmText };
+            let options = {};
+            if (typeof titleOrOptions === 'object' && titleOrOptions !== null) {
+                options = { ...titleOrOptions };
+            } else {
+                options = {
+                    title: titleOrOptions || '',
+                    message: message || '',
+                    confirmText: typeof confirmText === 'string' ? confirmText : 'Mengerti',
+                };
+            }
             return showAlert({ ...options, type: 'warning' });
         },
         [showAlert]
@@ -89,10 +112,16 @@ export function AlertProvider({ children }) {
     // Helper: Info
     const showInfo = useCallback(
         (titleOrOptions, message, confirmText) => {
-            const options =
-                typeof titleOrOptions === 'object' && titleOrOptions !== null
-                    ? titleOrOptions
-                    : { title: titleOrOptions, message, confirmText };
+            let options = {};
+            if (typeof titleOrOptions === 'object' && titleOrOptions !== null) {
+                options = { ...titleOrOptions };
+            } else {
+                options = {
+                    title: titleOrOptions || '',
+                    message: message || '',
+                    confirmText: typeof confirmText === 'string' ? confirmText : 'Mengerti',
+                };
+            }
             return showAlert({ ...options, type: 'info' });
         },
         [showAlert]
@@ -100,21 +129,58 @@ export function AlertProvider({ children }) {
 
     // Helper: Confirm (returns Promise<boolean>)
     const showConfirm = useCallback(
-        (titleOrOptions, message, confirmText, cancelText, variant = 'primary') => {
-            const options =
-                typeof titleOrOptions === 'object' && titleOrOptions !== null
-                    ? titleOrOptions
-                    : {
-                          title: titleOrOptions,
-                          message,
-                          confirmText: confirmText || 'Konfirmasi',
-                          cancelText: cancelText || 'Batal',
-                          variant,
-                      };
+        (titleOrOptions, message, confirmTextOrOnConfirm, cancelTextOrOnCancel, variant = 'primary') => {
+            let options = {};
+            if (typeof titleOrOptions === 'object' && titleOrOptions !== null) {
+                options = { ...titleOrOptions };
+            } else {
+                options.title = titleOrOptions || '';
+                options.message = message || '';
+
+                // Handle legacy callback pattern: showConfirm(title, message, onConfirm, onCancel, variant)
+                if (typeof confirmTextOrOnConfirm === 'function') {
+                    options.onConfirm = confirmTextOrOnConfirm;
+                    if (typeof cancelTextOrOnCancel === 'function') {
+                        options.onCancel = cancelTextOrOnCancel;
+                    } else if (typeof cancelTextOrOnCancel === 'string') {
+                        options.variant = cancelTextOrOnCancel;
+                    }
+                } else if (typeof confirmTextOrOnConfirm === 'string') {
+                    options.confirmText = confirmTextOrOnConfirm;
+                    if (typeof cancelTextOrOnCancel === 'string') {
+                        options.cancelText = cancelTextOrOnCancel;
+                    }
+                    if (variant) {
+                        options.variant = variant;
+                    }
+                }
+            }
+
+            // Auto-detect danger variant if delete / hapus / keluar action
+            const isDeleteAction =
+                options.isDanger ||
+                (typeof options.title === 'string' &&
+                    /hapus|delete|keluar|logout|terminate/i.test(options.title));
+
+            const resolvedVariant =
+                options.variant || (isDeleteAction ? 'danger' : 'primary');
+
+            const resolvedConfirmText =
+                typeof options.confirmText === 'string' && options.confirmText.trim()
+                    ? options.confirmText
+                    : (resolvedVariant === 'danger' ? 'Hapus' : 'Konfirmasi');
+
+            const resolvedCancelText =
+                typeof options.cancelText === 'string' && options.cancelText.trim()
+                    ? options.cancelText
+                    : 'Batal';
+
             return showAlert({
                 ...options,
                 type: 'confirm',
-                variant: options.variant || (options.isDanger ? 'danger' : 'primary'),
+                variant: resolvedVariant,
+                confirmText: resolvedConfirmText,
+                cancelText: resolvedCancelText,
             });
         },
         [showAlert]

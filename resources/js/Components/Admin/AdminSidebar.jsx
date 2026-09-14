@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -6,14 +6,20 @@ import {
     FolderKanban,
     List,
     FilePlus2,
+    BarChart3,
     Users,
     Activity,
+    FolderHeart,
+    LifeBuoy,
     Settings,
     LogOut,
     ChevronLeft,
     ChevronRight,
     ChevronDown,
     X,
+    LayoutTemplate,
+    Headphones,
+    ExternalLink,
 } from 'lucide-react';
 import { useApp } from '../../Context/AppContext';
 import { useAlert } from '../../Context/AlertContext';
@@ -23,15 +29,26 @@ export default function AdminSidebar({
     setIsCollapsed,
     isMobileOpen,
     setIsMobileOpen,
-    currentPath = '/dashboard',
+    currentPath: propCurrentPath,
 }) {
     const { t } = useApp();
     const { showConfirm } = useAlert();
-    const { props: pageProps } = usePage() || { props: {} };
+    const { url, props: pageProps } = usePage() || { url: '', props: {} };
     const user = pageProps?.auth?.user || { name: 'Administrator', email: 'admin@stasrg.internal', role: 'admin' };
+    
+    // Normalize url pathname without search query
+    const cleanUrl = url ? url.split('?')[0] : '';
+    const currentPath = (propCurrentPath || cleanUrl || '/dashboard').replace(/\/$/, '') || '/dashboard';
+
     const [isProjectsOpen, setIsProjectsOpen] = useState(
         currentPath.startsWith('/projects')
     );
+
+    useEffect(() => {
+        if (currentPath.startsWith('/projects')) {
+            setIsProjectsOpen(true);
+        }
+    }, [currentPath]);
 
     const navItems = [
         {
@@ -61,7 +78,35 @@ export default function AdminSidebar({
                     icon: FilePlus2,
                     active: currentPath === '/projects/create',
                 },
+                {
+                    id: 'projects-templates',
+                    name: 'Template Hub',
+                    href: '/templates',
+                    icon: LayoutTemplate,
+                    active: currentPath.startsWith('/templates'),
+                },
             ],
+        },
+        {
+            id: 'templates',
+            name: 'Template Hub',
+            href: '/templates',
+            icon: LayoutTemplate,
+            active: currentPath.startsWith('/templates'),
+        },
+        {
+            id: 'analytics',
+            name: 'Analytics & Insights',
+            href: '/analytics',
+            icon: BarChart3,
+            active: currentPath.startsWith('/analytics'),
+        },
+        {
+            id: 'media-library',
+            name: 'Asset Library',
+            href: '/media-library',
+            icon: FolderHeart,
+            active: currentPath.startsWith('/media-library'),
         },
         {
             id: 'users',
@@ -69,6 +114,13 @@ export default function AdminSidebar({
             href: '/users',
             icon: Users,
             active: currentPath.startsWith('/users'),
+        },
+        {
+            id: 'support-tickets',
+            name: 'Support Tickets',
+            href: '/support-tickets',
+            icon: LifeBuoy,
+            active: currentPath.startsWith('/support-tickets'),
         },
         {
             id: 'activity-logs',
@@ -106,18 +158,19 @@ export default function AdminSidebar({
                         type="button"
                         onClick={handleProjectsToggle}
                         title={isCollapsed ? item.name : undefined}
+                        data-tooltip-pos="right"
                         className={`w-full flex items-center ${isCollapsed ? 'justify-center px-2' : 'justify-between px-3'} py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer ${
                             item.active
-                                ? 'bg-emerald-50/80 dark:bg-emerald-950/50 text-[#0D5A34] dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/80'
+                                ? 'bg-[#0AB600]/10 text-[#0AB600] border border-[#0AB600]/30'
                                 : 'text-zinc-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-zinc-100/80 dark:hover:bg-zinc-800/60'
                         }`}
                     >
                         <div className="flex items-center gap-3 truncate">
-                            <Icon className={`w-4 h-4 shrink-0 ${item.active ? 'text-[#0D5A34] dark:text-emerald-400' : 'text-zinc-400 dark:text-zinc-500'}`} />
+                            <Icon className={`w-4 h-4 shrink-0 ${item.active ? 'text-[#0AB600]' : 'text-zinc-400 dark:text-zinc-500'}`} />
                             {!isCollapsed && <span className="truncate">{item.name}</span>}
                         </div>
                         {!isCollapsed && (
-                            <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${isProjectsOpen ? 'rotate-180' : ''} ${item.active ? 'text-[#0D5A34] dark:text-emerald-400' : 'text-zinc-400'}`} />
+                            <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${isProjectsOpen ? 'rotate-180' : ''} ${item.active ? 'text-[#0AB600]' : 'text-zinc-400'}`} />
                         )}
                     </button>
 
@@ -141,11 +194,11 @@ export default function AdminSidebar({
                                                     href={child.href}
                                                     className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150 cursor-pointer ${
                                                         child.active
-                                                            ? 'text-[#0D5A34] dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-950/30'
+                                                            ? 'text-[#0AB600] bg-[#0AB600]/10 font-semibold'
                                                             : 'text-zinc-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40'
                                                     }`}
                                                 >
-                                                    <ChildIcon className={`w-3.5 h-3.5 shrink-0 ${child.active ? 'text-[#0D5A34] dark:text-emerald-400' : 'text-zinc-400 dark:text-zinc-500'}`} />
+                                                    <ChildIcon className={`w-3.5 h-3.5 shrink-0 ${child.active ? 'text-[#0AB600]' : 'text-zinc-400 dark:text-zinc-500'}`} />
                                                     <span>{child.name}</span>
                                                 </Link>
                                             );
@@ -164,14 +217,15 @@ export default function AdminSidebar({
                 key={item.id}
                 href={item.href}
                 title={isCollapsed ? item.name : undefined}
+                data-tooltip-pos="right"
                 className={`flex items-center ${isCollapsed ? 'justify-center px-2' : 'justify-between px-3'} py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer ${
                     item.active
-                        ? 'bg-emerald-50/80 dark:bg-emerald-950/50 text-[#0D5A34] dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/80'
+                        ? 'bg-[#0AB600]/10 text-[#0AB600] border border-[#0AB600]/30'
                         : 'text-zinc-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-zinc-100/80 dark:hover:bg-zinc-800/60'
                 }`}
             >
                 <div className="flex items-center gap-3 truncate">
-                    <Icon className={`w-4 h-4 shrink-0 ${item.active ? 'text-[#0D5A34] dark:text-emerald-400' : 'text-zinc-400 dark:text-zinc-500'}`} />
+                    <Icon className={`w-4 h-4 shrink-0 ${item.active ? 'text-[#0AB600]' : 'text-zinc-400 dark:text-zinc-500'}`} />
                     {!isCollapsed && <span className="truncate">{item.name}</span>}
                 </div>
             </Link>
@@ -201,6 +255,7 @@ export default function AdminSidebar({
                             type="button"
                             onClick={() => setIsCollapsed(false)}
                             title="Perluas Sidebar"
+                            data-tooltip-pos="right"
                             className="w-9 h-9 flex items-center justify-center shrink-0 transition-transform hover:scale-105 cursor-pointer"
                         >
                             <img
@@ -224,7 +279,7 @@ export default function AdminSidebar({
                                 </div>
                                 <div className="flex flex-col truncate">
                                     <span className="text-sm sm:text-[15px] font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-                                        STAS RG <span className="text-emerald-700 dark:text-emerald-400 font-bold">Projects</span>
+                                        STAS RG <span className="text-[#0AB600] font-bold">Projects</span>
                                     </span>
                                 </div>
                             </Link>
@@ -248,8 +303,51 @@ export default function AdminSidebar({
                 </div>
             </div>
 
-            {/* Bottom: User Card */}
-            <div className="p-3 border-t border-zinc-200/80 dark:border-zinc-800/80">
+            {/* Bottom: Developer Support & User Card */}
+            <div className="p-3 border-t border-zinc-200/80 dark:border-zinc-800/80 space-y-2">
+                {/* Developer Support Quick Contact */}
+                {!isCollapsed ? (
+                    <a
+                        href="https://wa.me/6283133977214?text=Halo%20Developer%20STAS%20RG%2C%20saya%20admin%20membutuhkan%20bantuan%20teknis."
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-between p-2 rounded-xl bg-[#0AB600]/10 border border-[#0AB600]/30 hover:bg-[#0AB600]/15 hover:border-[#0AB600]/50 transition-all group cursor-pointer shadow-2xs"
+                        title="Hubungi Developer via WhatsApp (0831-3397-7214)"
+                        data-tooltip-pos="top"
+                    >
+                        <div className="flex items-center gap-2 truncate">
+                            <img
+                                src="/assets/img/icon/profile_dev.png"
+                                alt="Developer Profile"
+                                className="w-7 h-7 rounded-lg object-cover border border-[#0AB600]/40 shrink-0 group-hover:scale-105 transition-transform"
+                            />
+                            <div className="flex flex-col truncate">
+                                <span className="text-[11px] font-bold text-[#0AB600] group-hover:text-[#089600] transition-colors truncate">
+                                    Developer Support
+                                </span>
+                                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono truncate">
+                                    0831-3397-7214
+                                </span>
+                            </div>
+                        </div>
+                        <ExternalLink className="w-3 h-3 text-[#0AB600] shrink-0 transition-colors mr-1" />
+                    </a>
+                ) : (
+                    <a
+                        href="https://wa.me/6283133977214?text=Halo%20Developer%20STAS%20RG%2C%20saya%20admin%20membutuhkan%20bantuan%20teknis."
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Developer Support: 0831-3397-7214"
+                        data-tooltip-pos="right"
+                        className="w-full flex items-center justify-center p-2 rounded-xl bg-[#0AB600]/10 border border-[#0AB600]/30 hover:bg-[#0AB600]/15 text-[#0AB600] transition-all"
+                    >
+                        <img
+                            src="/assets/img/icon/profile_dev.png"
+                            alt="Developer Profile"
+                            className="w-7 h-7 rounded-lg object-cover border border-[#0AB600]/40"
+                        />
+                    </a>
+                )}
                 {/* User Pill & Quick Logout (Clean without background) */}
                 <div className={`px-2.5 py-1.5 flex items-center ${isCollapsed ? 'justify-center' : 'justify-between gap-2'}`}>
                     <div className="flex items-center gap-2.5 truncate">
@@ -260,7 +358,7 @@ export default function AdminSidebar({
                                 className="w-8 h-8 rounded-full object-cover shrink-0 border border-zinc-200 dark:border-zinc-700"
                             />
                         ) : (
-                            <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-[#0D5A34] dark:text-emerald-300 font-bold text-xs flex items-center justify-center shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-[#0AB600]/10 border border-[#0AB600]/30 text-[#0AB600] font-bold text-xs flex items-center justify-center shrink-0">
                                 {user.name ? user.name.charAt(0).toUpperCase() : 'A'}
                             </div>
                         )}

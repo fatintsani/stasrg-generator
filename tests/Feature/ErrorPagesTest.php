@@ -28,7 +28,6 @@ class ErrorPagesTest extends TestCase
         $response->assertStatus(404);
         $response->assertSee('404');
         $response->assertSee('Halaman Tidak Ditemukan');
-        $response->assertSee('HTTP 404 • Not Found');
         $response->assertSee('STAS-RG', false);
     }
 
@@ -39,7 +38,6 @@ class ErrorPagesTest extends TestCase
         $response->assertStatus(403);
         $response->assertSee('403');
         $response->assertSee('Akses Ditolak');
-        $response->assertSee('HTTP 403 • Forbidden');
     }
 
     public function test_401_unauthorized_renders_custom_error_page(): void
@@ -49,7 +47,6 @@ class ErrorPagesTest extends TestCase
         $response->assertStatus(401);
         $response->assertSee('401');
         $response->assertSee('Autentikasi Diperlukan');
-        $response->assertSee('HTTP 401 • Unauthorized');
     }
 
     public function test_400_bad_request_renders_custom_error_page(): void
@@ -59,7 +56,6 @@ class ErrorPagesTest extends TestCase
         $response->assertStatus(400);
         $response->assertSee('400');
         $response->assertSee('Permintaan Tidak Valid');
-        $response->assertSee('HTTP 400 • Bad Request');
     }
 
     public function test_419_page_expired_renders_custom_error_page(): void
@@ -69,7 +65,6 @@ class ErrorPagesTest extends TestCase
         $response->assertStatus(419);
         $response->assertSee('419');
         $response->assertSee('Sesi Halaman Telah Kedaluwarsa');
-        $response->assertSee('HTTP 419 • Page Expired');
     }
 
     public function test_429_too_many_requests_renders_custom_error_page(): void
@@ -79,7 +74,6 @@ class ErrorPagesTest extends TestCase
         $response->assertStatus(429);
         $response->assertSee('429');
         $response->assertSee('Terlalu Banyak Permintaan');
-        $response->assertSee('HTTP 429 • Too Many Requests');
     }
 
     public function test_500_internal_server_error_renders_clean_page_without_stack_traces(): void
@@ -89,7 +83,6 @@ class ErrorPagesTest extends TestCase
         $response->assertStatus(500);
         $response->assertSee('500');
         $response->assertSee('Terjadi Kesalahan pada Server');
-        $response->assertSee('HTTP 500 • Internal Server Error');
         $response->assertDontSee('Stack trace');
         $response->assertDontSee('SQLSTATE');
     }
@@ -101,7 +94,6 @@ class ErrorPagesTest extends TestCase
         $response->assertStatus(503);
         $response->assertSee('503');
         $response->assertSee('Layanan Sedang dalam Pemeliharaan');
-        $response->assertSee('HTTP 503 • Service Unavailable');
     }
 
     public function test_inertia_request_on_error_returns_inertia_error_component(): void

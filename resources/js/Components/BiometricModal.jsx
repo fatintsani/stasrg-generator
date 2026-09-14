@@ -189,8 +189,8 @@ export default function BiometricModal({ isOpen, onClose, onSuccess, userEmail =
 
                     {/* Header */}
                     <div className="text-center mb-6">
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/70 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-[11px] font-semibold tracking-wide mb-3">
-                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0AB600]/10 border border-[#0AB600]/30 text-[#0AB600] text-[11px] font-semibold tracking-wide mb-3">
+                            <ShieldCheck className="w-3.5 h-3.5 text-[#0AB600]" />
                             <span>{hasWebAuthn ? (t.auth?.biometric?.supportedBadge || 'FIDO2 / WebAuthn') : 'WebAuthn'}</span>
                         </div>
                         <h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
@@ -210,12 +210,12 @@ export default function BiometricModal({ isOpen, onClose, onSuccess, userEmail =
                                     <motion.div
                                         animate={{ scale: [1, 1.35, 1], opacity: [0.6, 0, 0.6] }}
                                         transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                                        className="absolute inset-0 rounded-full border border-emerald-400/40 dark:border-emerald-500/30"
+                                        className="absolute inset-0 rounded-full border border-[#0AB600]/30"
                                     />
                                     <motion.div
                                         animate={{ scale: [1, 1.2, 1], opacity: [0.8, 0.1, 0.8] }}
                                         transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
-                                        className="absolute inset-2 rounded-full border border-emerald-500/50 dark:border-emerald-400/40"
+                                        className="absolute inset-2 rounded-full border border-[#0AB600]/50 dark:border-[#0AB600]/30"
                                     />
                                 </>
                             )}
@@ -224,11 +224,11 @@ export default function BiometricModal({ isOpen, onClose, onSuccess, userEmail =
                             <div
                                 className={`w-24 h-24 rounded-2xl flex items-center justify-center transition-all duration-300 border ${
                                     scanState === 'success'
-                                        ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-400 dark:border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                                        ? 'bg-[#0AB600]/10 border-[#0AB600]/40 dark:border-[#0AB600] text-[#0AB600]'
                                         : scanState === 'error'
                                         ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-400 dark:border-rose-500 text-rose-600 dark:text-rose-400'
                                         : scanState === 'scanning'
-                                        ? 'bg-emerald-50/50 dark:bg-zinc-900 border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                                        ? 'bg-[#0AB600]/10 dark:bg-zinc-900 border-[#0AB600] text-[#0AB600]'
                                         : 'bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400'
                                 }`}
                             >
@@ -238,7 +238,7 @@ export default function BiometricModal({ isOpen, onClose, onSuccess, userEmail =
                                         animate={{ scale: 1 }}
                                         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                                     >
-                                        <CheckCircle2 className="w-12 h-12 text-emerald-600 dark:text-emerald-400" />
+                                        <CheckCircle2 className="w-12 h-12 text-[#0AB600]" />
                                     </motion.div>
                                 ) : scanState === 'error' ? (
                                     <motion.div
@@ -250,7 +250,7 @@ export default function BiometricModal({ isOpen, onClose, onSuccess, userEmail =
                                     </motion.div>
                                 ) : (
                                     <div className="relative flex items-center justify-center">
-                                        <Fingerprint className={`w-12 h-12 transition-colors ${scanState === 'scanning' ? 'text-[#0D5A34] dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-400'}`} />
+                                        <Fingerprint className={`w-12 h-12 transition-colors ${scanState === 'scanning' ? 'text-[#0AB600]' : 'text-zinc-500 dark:text-zinc-400'}`} />
                                         {/* Scanner beam line */}
                                         {scanState === 'scanning' && (
                                             <motion.div
@@ -288,7 +288,7 @@ export default function BiometricModal({ isOpen, onClose, onSuccess, userEmail =
                             <button
                                 type="button"
                                 onClick={startBiometricScan}
-                                className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-[#0D5A34] hover:bg-[#094226] text-white text-xs sm:text-sm font-semibold border border-[#0D5A34] transition-colors cursor-pointer"
+                                className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-[#0AB600] hover:bg-[#089600] text-white text-xs sm:text-sm font-semibold border border-[#0AB600] transition-colors cursor-pointer"
                             >
                                 <RefreshCw className="w-4 h-4" />
                                 <span>{t.auth?.biometric?.retry || 'Pindai Ulang'}</span>
@@ -297,7 +297,7 @@ export default function BiometricModal({ isOpen, onClose, onSuccess, userEmail =
                             <button
                                 type="button"
                                 onClick={startBiometricScan}
-                                className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-[#0D5A34] hover:bg-[#094226] text-white text-xs sm:text-sm font-semibold border border-[#0D5A34] transition-colors cursor-pointer"
+                                className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-[#0AB600] hover:bg-[#089600] text-white text-xs sm:text-sm font-semibold border border-[#0AB600] transition-colors cursor-pointer"
                             >
                                 <Fingerprint className="w-4 h-4" />
                                 <span>{t.auth?.biometric?.triggerScan || 'Mulai Pemindaian'}</span>

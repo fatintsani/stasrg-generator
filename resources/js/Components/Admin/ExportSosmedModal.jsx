@@ -219,13 +219,13 @@ export default function ExportSosmedModal({ project, isOpen, onClose }) {
                 {/* Modal Header */}
                 <div className="px-6 py-4 border-b border-zinc-200/80 dark:border-zinc-800 flex items-center justify-between gap-4 bg-zinc-50/70 dark:bg-zinc-900/50">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        <div className="p-2 rounded-xl bg-[#0AB600]/10 text-[#0AB600] border border-[#0AB600]/20">
                             <Share2 className="w-5 h-5" />
                         </div>
                         <div>
                             <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                 <span>Multi-Format & Media Sosial Exporter</span>
-                                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#0AB600]/15 dark:bg-[#0AB600]/10 text-[#0AB600] border border-[#0AB600]/30">
                                     Sosmed Ready
                                 </span>
                             </h2>
@@ -271,14 +271,14 @@ export default function ExportSosmedModal({ project, isOpen, onClose }) {
                                             onClick={() => setSelectedFormat(opt.id)}
                                             className={`p-3 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between space-y-2 ${
                                                 isSelected
-                                                    ? 'bg-emerald-50 dark:bg-emerald-950/40 border-[#0D5A34] dark:border-emerald-600 ring-2 ring-[#0D5A34]/20'
+                                                    ? 'bg-[#0AB600]/10 border-[#0AB600] ring-2 ring-[#0AB600]/20'
                                                     : 'bg-white dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
                                             }`}
                                         >
                                             <div className="flex items-center justify-between">
                                                 <span className={`p-1.5 rounded-lg ${
                                                     isSelected 
-                                                        ? 'bg-[#0D5A34] text-white' 
+                                                        ? 'bg-[#0AB600] text-white' 
                                                         : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'
                                                 }`}>
                                                     <IconComponent className="w-4 h-4" />
@@ -289,7 +289,7 @@ export default function ExportSosmedModal({ project, isOpen, onClose }) {
                                             </div>
                                             <div>
                                                 <h4 className={`text-xs font-bold truncate ${
-                                                    isSelected ? 'text-[#0D5A34] dark:text-emerald-300' : 'text-slate-800 dark:text-zinc-200'
+                                                    isSelected ? 'text-[#0AB600]' : 'text-slate-800 dark:text-zinc-200'
                                                 }`}>
                                                     {opt.name}
                                                 </h4>
@@ -322,7 +322,7 @@ export default function ExportSosmedModal({ project, isOpen, onClose }) {
                                             onClick={() => setSelectedTheme(theme.id)}
                                             className={`p-2.5 rounded-xl border flex items-center gap-2.5 text-left transition-all cursor-pointer ${
                                                 isSelected
-                                                    ? 'border-[#0D5A34] bg-emerald-50/50 dark:bg-emerald-950/20 ring-1 ring-[#0D5A34]'
+                                                    ? 'border-[#0AB600] bg-[#0AB600]/10 ring-1 ring-[#0AB600]'
                                                     : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 hover:bg-zinc-50'
                                             }`}
                                         >
@@ -364,11 +364,11 @@ export default function ExportSosmedModal({ project, isOpen, onClose }) {
                                             onClick={() => setSelectedPrintMode(mode.id)}
                                             className={`p-2.5 rounded-xl border flex items-center gap-2.5 text-left transition-all cursor-pointer ${
                                                 isSelected
-                                                    ? 'border-[#0D5A34] bg-emerald-50/50 dark:bg-emerald-950/20 ring-1 ring-[#0D5A34]'
+                                                    ? 'border-[#0AB600] bg-[#0AB600]/10 ring-1 ring-[#0AB600]'
                                                     : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 hover:bg-zinc-50'
                                             }`}
                                         >
-                                            <span className={`p-1 rounded-lg ${isSelected ? 'bg-[#0D5A34] text-white' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'}`}>
+                                            <span className={`p-1 rounded-lg ${isSelected ? 'bg-[#0AB600] text-white' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'}`}>
                                                 <IconComponent className="w-3.5 h-3.5" />
                                             </span>
                                             <div className="min-w-0">
@@ -397,7 +397,7 @@ export default function ExportSosmedModal({ project, isOpen, onClose }) {
                                     type="button"
                                     onClick={handleDownloadPng}
                                     disabled={downloadingPng}
-                                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0D5A34] hover:bg-[#094226] text-white text-xs font-bold shadow-md shadow-emerald-950/20 transition-all cursor-pointer disabled:cursor-wait"
+                                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0AB600] hover:bg-[#089600] text-white text-xs font-bold shadow-md shadow-black/20 transition-all cursor-pointer disabled:cursor-wait"
                                     title="Download Gambar PNG Resolusi Tinggi (300 DPI)"
                                 >
                                     {downloadingPng ? (
@@ -443,7 +443,7 @@ export default function ExportSosmedModal({ project, isOpen, onClose }) {
                                     disabled={copyingClipboard}
                                     className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                                         copiedSuccess
-                                            ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300'
+                                            ? 'bg-[#0AB600]/15 text-[#0AB600] border-[#0AB600]/30 dark:bg-[#0AB600]/10 dark:text-[#0AB600]'
                                             : 'bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 border-zinc-200 dark:border-zinc-700'
                                     }`}
                                     title="Salin gambar visual langsung ke Clipboard (Bisa Ctrl+V di WA Web)"
@@ -455,7 +455,7 @@ export default function ExportSosmedModal({ project, isOpen, onClose }) {
                                         </>
                                     ) : copiedSuccess ? (
                                         <>
-                                            <Check className="w-4 h-4 text-emerald-600" />
+                                            <Check className="w-4 h-4 text-[#0AB600]" />
                                             <span>Gambar Tersalin!</span>
                                         </>
                                     ) : (
@@ -491,7 +491,7 @@ export default function ExportSosmedModal({ project, isOpen, onClose }) {
                     >
                         <div className="w-full flex items-center justify-between mb-4">
                             <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-                                <Maximize2 className="w-3.5 h-3.5 text-emerald-600" />
+                                <Maximize2 className="w-3.5 h-3.5 text-[#0AB600]" />
                                 <span>Live Visual Preview ({formatConfig.name})</span>
                             </span>
                             <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800">

@@ -22,7 +22,7 @@
         'ocean_tech' => '#0F2B48',
         'crimson_innovation' => '#8B1538',
         'slate_monochrome' => '#1E293B',
-        default => '#0D5A34',
+        default => '#0AB600',
     };
 
     /*

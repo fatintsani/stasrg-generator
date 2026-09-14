@@ -10,7 +10,7 @@ export const AVAILABLE_SOCIAL_PLATFORMS = [
         placeholder: 'www.stas-rg.com',
         prefix: 'Web:',
         defaultHandle: 'www.stas-rg.com',
-        color: '#0D5A34',
+        color: '#0AB600',
     },
     {
         id: 'instagram',
@@ -90,7 +90,7 @@ export const AVAILABLE_SOCIAL_PLATFORMS = [
         placeholder: 'stasrg@telkomuniversity.ac.id',
         prefix: 'Email:',
         defaultHandle: 'stasrg@telkomuniversity.ac.id',
-        color: '#0D5A34',
+        color: '#0AB600',
     },
     {
         id: 'custom',
@@ -110,7 +110,7 @@ export function getSocialPlatformConfig(platformId) {
         placeholder: 'URL / Akun',
         prefix: `${platformId}:`,
         defaultHandle: '',
-        color: '#0D5A34',
+        color: '#0AB600',
     };
 }
 

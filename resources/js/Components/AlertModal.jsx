@@ -57,19 +57,30 @@ export default function AlertModal({
 
     const isConfirm = type === 'confirm';
 
-    // Default button labels
-    const resolvedConfirmText = confirmText || (isConfirm ? 'Konfirmasi' : 'Mengerti');
-    const resolvedCancelText = cancelText || 'Batal';
+    // Default button labels - ensure they are NEVER empty strings or non-strings
+    const resolvedConfirmText =
+        typeof confirmText === 'string' && confirmText.trim().length > 0
+            ? confirmText
+            : isConfirm
+            ? variant === 'danger'
+                ? 'Hapus'
+                : 'Konfirmasi'
+            : 'Mengerti';
+
+    const resolvedCancelText =
+        typeof cancelText === 'string' && cancelText.trim().length > 0
+            ? cancelText
+            : 'Batal';
 
     // Determine icon & styling based on type and variant
     const getModalConfig = () => {
         switch (type) {
             case 'success':
                 return {
-                    icon: <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />,
-                    iconBg: 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800/80',
+                    icon: <CheckCircle2 className="w-6 h-6 text-[#0AB600]" />,
+                    iconBg: 'bg-[#0AB600]/10 border-[#0AB600]/30',
                     confirmBtnClass:
-                        'bg-gradient-to-r from-[#0D5A34] to-[#147a47] hover:from-[#147a47] hover:to-[#0D5A34] text-white shadow-lg shadow-[#0D5A34]/20 focus:ring-emerald-500',
+                        'bg-gradient-to-r from-[#0AB600] to-[#147a47] hover:from-[#147a47] hover:to-[#0AB600] text-white shadow-lg shadow-[#0AB600]/20 focus:ring-[#0AB600]',
                 };
             case 'error':
                 return {
@@ -103,10 +114,10 @@ export default function AlertModal({
                     };
                 }
                 return {
-                    icon: <HelpCircle className="w-6 h-6 text-[#0D5A34] dark:text-emerald-400" />,
-                    iconBg: 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800/80',
+                    icon: <HelpCircle className="w-6 h-6 text-[#0AB600]" />,
+                    iconBg: 'bg-[#0AB600]/10 border-[#0AB600]/30',
                     confirmBtnClass:
-                        'bg-gradient-to-r from-[#0D5A34] to-[#147a47] hover:from-[#147a47] hover:to-[#0D5A34] text-white shadow-lg shadow-[#0D5A34]/25 focus:ring-emerald-500',
+                        'bg-gradient-to-r from-[#0AB600] to-[#147a47] hover:from-[#147a47] hover:to-[#0AB600] text-white shadow-lg shadow-[#0AB600]/25 focus:ring-[#0AB600]',
                 };
             case 'info':
             default:
@@ -114,7 +125,7 @@ export default function AlertModal({
                     icon: <Info className="w-6 h-6 text-sky-600 dark:text-sky-400" />,
                     iconBg: 'bg-sky-50 dark:bg-sky-950/50 border-sky-200 dark:border-sky-800/80',
                     confirmBtnClass:
-                        'bg-gradient-to-r from-[#0D5A34] to-[#147a47] hover:from-[#147a47] hover:to-[#0D5A34] text-white shadow-lg shadow-[#0D5A34]/20 focus:ring-emerald-500',
+                        'bg-gradient-to-r from-[#0AB600] to-[#147a47] hover:from-[#147a47] hover:to-[#0AB600] text-white shadow-lg shadow-[#0AB600]/20 focus:ring-[#0AB600]',
                 };
         }
     };

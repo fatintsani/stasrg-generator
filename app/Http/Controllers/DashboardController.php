@@ -64,8 +64,8 @@ class DashboardController extends Controller
                 'footer_website' => $project->footer_website,
                 'footer_instagram' => $project->footer_instagram,
                 'footer_youtube' => $project->footer_youtube,
-                'updated_at' => $project->updated_at->format('d M Y'),
-                'created_at' => $project->created_at->format('d M Y'),
+                'updated_at' => $project->updated_at->translatedFormat('d M Y'),
+                'created_at' => $project->created_at->translatedFormat('d M Y'),
             ];
         })->all();
 
@@ -152,7 +152,7 @@ class DashboardController extends Controller
                     'edit_url' => route('projects.edit', $p),
                     'show_url' => route('projects.show', $p),
                     'public_url' => route('projects.showcase.show', $p),
-                    'created_at' => $p->created_at->format('d M Y'),
+                    'created_at' => $p->created_at->translatedFormat('d M Y'),
                 ];
             });
 
@@ -163,6 +163,7 @@ class DashboardController extends Controller
             ['title' => 'Buat Proyek Baru', 'keywords' => 'buat tambah create new add form generator flyer dokumen', 'subtitle' => 'Formulir pembuatan proyek baru', 'url' => route('projects.create'), 'icon' => 'FilePlus2'],
             ['title' => 'User Approval & Akun', 'keywords' => 'user pengguna user approval persetujuan reject approve peneliti member akun anggota', 'subtitle' => 'Manajemen dan persetujuan pengguna', 'url' => route('users.index'), 'icon' => 'Users'],
             ['title' => 'Activity & Audit Logs', 'keywords' => 'activity audit log riwayat history autentikasi export print perubahan jejak audit', 'subtitle' => 'Riwayat perubahan & log keamanan', 'url' => route('activity-logs.index'), 'icon' => 'Activity'],
+            ['title' => 'Pusat Tiket Dukungan & Kontak', 'keywords' => 'support kontak bantuan tiket helpdesk contact aduan keluhan error pertanyaan', 'subtitle' => 'Kelola tiket bantuan dan permohonan', 'url' => route('support-tickets.index'), 'icon' => 'LifeBuoy'],
             ['title' => 'Pengaturan Profil & Keamanan', 'keywords' => 'settings pengaturan profil password kata sandi passkey biometrik avatar foto cache optimize maintenance', 'subtitle' => 'Konfigurasi akun dan sistem', 'url' => route('settings'), 'icon' => 'Settings'],
             ['title' => 'Showcase Inovasi Publik', 'keywords' => 'showcase publik landing portal beranda pameran expo', 'subtitle' => 'Halaman etalase riset publik', 'url' => route('home'), 'icon' => 'ExternalLink'],
         ];
