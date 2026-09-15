@@ -130,12 +130,13 @@ export default function Navbar() {
                 <nav className="hidden md:flex items-center gap-1 p-1 rounded-full bg-zinc-100/70 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/60">
                     {navItems.map((item) => {
                         const isActive = activeSection === item.id;
+                        const isStandalonePage = item.href.startsWith('/') && !item.href.startsWith('/#');
                         
-                        if (item.id === 'support') {
+                        if (isStandalonePage) {
                             return (
                                 <Link
                                     key={item.id}
-                                    href="/support"
+                                    href={item.href}
                                     className={`text-xs font-semibold px-3.5 py-1.5 rounded-full transition-all duration-200 cursor-pointer ${
                                         isActive
                                             ? 'bg-white dark:bg-zinc-800 text-[#0AB600] border border-zinc-200/80 dark:border-zinc-700/80 shadow-xs'

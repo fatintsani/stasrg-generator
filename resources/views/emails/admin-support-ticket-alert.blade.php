@@ -63,7 +63,7 @@
         <p style="margin: 0; color: #1e293b; font-size: 14px; line-height: 1.6; white-space: pre-line;">{{ $ticket->message }}</p>
         @if($ticket->attachment_original_name)
             <div style="margin-top: 10px; font-size: 12px; color: #7f1d1d;">
-                📎 Ada Lampiran: <strong>{{ $ticket->attachment_original_name }}</strong>
+                Ada Lampiran: <strong>{{ $ticket->attachment_original_name }}</strong>
             </div>
         @endif
     </div>

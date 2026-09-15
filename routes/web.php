@@ -122,6 +122,17 @@ Route::get('/support', function () {
 Route::get('/documentation', function () {
     return Inertia::render('Documentation');
 })->name('documentation');
+Route::get('/dokumentasi', function () {
+    return Inertia::render('Documentation');
+});
+
+// Public Developer & Research Team Page
+Route::get('/team', function () {
+    return Inertia::render('Team');
+})->name('team');
+Route::get('/developer-team', function () {
+    return Inertia::render('Team');
+});
 
 Route::post('/support/submit', [SupportTicketController::class, 'submit'])
     ->middleware('throttle:10,1')

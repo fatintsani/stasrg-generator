@@ -105,25 +105,25 @@ Dengan platform ini, para peneliti dan administrator laboratorium tidak perlu me
 ```mermaid
 flowchart TD
     subgraph Publik["Portal Publik & Pengunjung"]
-        A[Landing Page & Showcase] --> B[Scan QR Code Stand]
-        B --> C[Gateway Analitik /qr/{slug}]
-        C --> D[Halaman Showcase Proyek Riset]
-        A --> E[Formulir Tiket Bantuan]
+        A["Landing Page & Showcase"] --> B["Scan QR Code Stand"]
+        B --> C["Gateway Analitik /qr/:slug"]
+        C --> D["Halaman Showcase Proyek Riset"]
+        A --> E["Formulir Tiket Bantuan"]
     end
 
     subgraph CoreEngine["STASIKATOR Core Engine"]
-        F[Inertia.js + React SPA] --> G[Laravel 12 Application Layer]
-        G --> H[(Database & Cache Layer)]
-        G --> I[Google Gemini / OpenAI Engine]
-        G --> J[Queue Worker / Asynchronous Mail]
+        F["Inertia.js + React SPA"] --> G["Laravel 12 Application Layer"]
+        G --> H[("Database & Cache Layer")]
+        G --> I["Google Gemini / OpenAI Engine"]
+        G --> J["Queue Worker / Asynchronous Mail"]
     end
 
     subgraph AdminLayer["Panel Administrator Lab"]
-        K[Autentikasi: Password / Google / Passkey] --> L[Dashboard Metrik & Statistik]
-        L --> M[Penyusun Dokumen Flyer & Trifold]
-        L --> N[Direktori Master Peneliti & HKI]
-        L --> O[Media Library & Sanitizer]
-        L --> P[Pusat Tiket & Balasan Email]
+        K["Autentikasi: Password / Google / Passkey"] --> L["Dashboard Metrik & Statistik"]
+        L --> M["Penyusun Dokumen Flyer & Trifold"]
+        L --> N["Direktori Master Peneliti & HKI"]
+        L --> O["Media Library & Sanitizer"]
+        L --> P["Pusat Tiket & Balasan Email"]
     end
 
     E -->|Kirim Tiket| G

@@ -19,7 +19,7 @@
     <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #16a34a; border-radius: 8px; padding: 20px; margin: 20px 0;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #dcfce7; padding-bottom: 8px;">
             <span style="font-size: 13px; font-weight: 700; color: #166534;">
-                💬 Balasan dari {{ $admin ? $admin->name : 'Tim Layanan STAS-RG' }}:
+                Balasan dari {{ $admin ? $admin->name : 'Tim Layanan STAS-RG' }}:
             </span>
             <span style="font-size: 11px; color: #15803d;">
                 {{ $reply->created_at ? $reply->created_at->translatedFormat('d M Y, H:i') : now()->translatedFormat('d M Y, H:i') }} WIB

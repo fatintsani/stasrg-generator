@@ -233,17 +233,18 @@ export default function Footer() {
 
                 </div>
 
-                {/* Bottom Bar: Copyright & Security Badges */}
+                {/* Bottom Bar: Copyright & Security Badges (Row 1) */}
                 <div className="mt-14 pt-6 border-t border-zinc-200/60 dark:border-zinc-800/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500 dark:text-zinc-400">
-                    <div className="flex items-center gap-2">
+                    <div className="text-center sm:text-left">
                         <span>{t.footer.copyright}</span>
                     </div>
 
-                    <div className="flex items-center gap-4 flex-wrap text-xs">
+                    <div className="flex items-center gap-3.5 flex-wrap text-xs justify-center sm:justify-end">
                         <span className="inline-flex items-center gap-1.5 text-[#0AB600] bg-[#0AB600]/10 dark:bg-[#0AB600]/20 border border-[#0AB600]/30 px-2.5 py-0.5 rounded-full font-medium">
                             <ShieldCheck className="w-3.5 h-3.5 text-[#0AB600]" />
                             <span>{t.footer.sso}</span>
                         </span>
+                        <span className="text-zinc-300 dark:text-zinc-700">•</span>
                         <Link href="/privacy" className="hover:text-[#0AB600] dark:hover:text-[#0AB600] transition-colors">
                             {t.footer.privacy}
                         </Link>
@@ -252,6 +253,14 @@ export default function Footer() {
                             {t.footer.terms}
                         </Link>
                     </div>
+                </div>
+
+                {/* Bottom Attribution: Developed By (Row 2 - Paling Bawah) */}
+                <div className="mt-4 pt-3.5 border-t border-zinc-100 dark:border-zinc-800/40 text-center text-xs text-zinc-500 dark:text-zinc-400">
+                    <span>{t.footer?.developedBy || 'Developed by'} </span>
+                    <Link href="/team" className="font-bold text-[#0AB600] dark:text-[#0AB600] hover:text-[#089600] dark:hover:text-[#089600] hover:underline transition-colors">
+                        {t.footer?.teamTitle || 'Tim Pengembang CoE STAS-RG'}
+                    </Link>
                 </div>
             </div>
         </footer>
