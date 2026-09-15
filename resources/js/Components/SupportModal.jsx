@@ -23,6 +23,7 @@ import {
     ArrowRight
 } from 'lucide-react';
 import { router } from '@inertiajs/react';
+import RichTextEditor from './Admin/RichTextEditor';
 
 export default function SupportModal({ isOpen, onClose, translations: t, lang = 'id' }) {
     const [formData, setFormData] = useState({
@@ -460,13 +461,11 @@ export default function SupportModal({ isOpen, onClose, translations: t, lang = 
                             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                                 {s.message || 'Pesan / Rincian Kendala'} <span className="text-rose-500">*</span>
                             </label>
-                            <textarea
-                                rows={4}
-                                required
+                            <RichTextEditor
                                 value={formData.message}
-                                onChange={(e) => handleInputChange('message', e.target.value)}
+                                onChange={(val) => handleInputChange('message', val)}
                                 placeholder={s.messagePlaceholder || 'Tuliskan rincian pesan, kendala, atau kebutuhan Anda secara jelas...'}
-                                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0AB600] focus:border-[#0AB600] transition-all resize-y"
+                                minHeight="140px"
                             />
                             {errors.message && (
                                 <p className="text-rose-500 text-xs mt-1 flex items-center gap-1">

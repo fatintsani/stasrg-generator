@@ -113,9 +113,8 @@ export default function ErrorPage({ status = 404, message }) {
         <div className="min-h-screen bg-[#FAFBFD] dark:bg-[#090D16] text-slate-900 dark:text-white flex flex-col justify-between items-center p-4 sm:p-6 relative overflow-x-hidden selection:bg-[#0AB600]/20 selection:text-[#0AB600]">
             <Head title={`${config.code} — ${config.title} | STASIKATOR`} />
 
-            {/* Ambient Background Glows */}
-            <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-3/4 max-w-2xl h-72 bg-[#0AB600]/10 dark:bg-[#0AB600]/5 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-20 right-5 w-80 h-80 bg-[#0AB600]/10 dark:bg-[#0AB600]/5 rounded-full blur-3xl pointer-events-none" />
+            {/* Ambient Background Glow Effect (Subtle SaaS light) */}
+            <div className="ambient-glow" style={{ filter: 'blur(64px)', WebkitFilter: 'blur(64px)' }} />
 
             {/* Header Brand */}
             <Link

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Mail\AdminNewUserAlertMail;
 use App\Mail\UserRegisteredMail;
+use App\Models\AdminNotification;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -80,6 +81,25 @@ class RegisteredUserController extends Controller
             }
         } catch (\Throwable $e) {
             Log::warning('Failed to send registration emails: '.$e->getMessage());
+        }
+
+        try {
+            AdminNotification::create([
+                'user_id' => null,
+                'type' => 'user',
+                'title' => 'Pendaftaran Akun Baru',
+                'message' => "Pengguna {$user->name} ({$user->email}) baru saja mendaftar dan menunggu persetujuan (approval) admin.",
+                'action_url' => '/users',
+                'icon' => 'UserPlus',
+                'level' => 'warning',
+                'data' => [
+                    'user_id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to create admin notification for new user: '.$e->getMessage());
         }
 
         // Do NOT auto-login pending user

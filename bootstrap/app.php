@@ -24,6 +24,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'approved' => EnsureAccountApproved::class,
         ]);
 
+        $middleware->validateCsrfTokens(except: [
+            'api/ai/public-chat',
+        ]);
+
         $middleware->preventRequestsDuringMaintenance(except: [
             'settings*',
             'login*',

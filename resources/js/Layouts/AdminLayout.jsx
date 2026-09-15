@@ -18,6 +18,7 @@ import {
 
 function getSkeletonForRoute(path = '') {
     const cleanPath = (path || '').toLowerCase();
+    if (cleanPath.includes('/ai-assistant')) return <DashboardSkeleton />;
     if (cleanPath.includes('/analytics')) return <AnalyticsSkeleton />;
     if (cleanPath.includes('/activity-logs')) return <ActivityLogsSkeleton />;
     if (cleanPath.includes('/support-tickets')) return <ProjectsIndexSkeleton />;

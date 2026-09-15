@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\AdminAiAssistantController;
+use App\Http\Controllers\AdminNotificationController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\GoogleAuthController;
@@ -11,6 +13,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MediaAssetController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectTemplateController;
+use App\Http\Controllers\PublicAiChatController;
 use App\Http\Controllers\ResearcherController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SupportTicketController;
@@ -134,9 +137,37 @@ Route::get('/developer-team', function () {
     return Inertia::render('Team');
 });
 
+// Public NARA AI Introduction Page
+Route::get('/nara', function () {
+    return Inertia::render('Nara');
+})->name('nara');
+Route::get('/kenalan-nara', function () {
+    return Inertia::render('Nara');
+});
+
 Route::post('/support/submit', [SupportTicketController::class, 'submit'])
     ->middleware('throttle:10,1')
     ->name('support.submit');
+
+Route::post('/support/track/verify', [SupportTicketController::class, 'verifyTicket'])
+    ->middleware('throttle:20,1')
+    ->name('support.track.verify');
+
+Route::get('/support/ticket/{ticketNumber}', [SupportTicketController::class, 'showPublicTicket'])
+    ->name('support.ticket.show');
+
+Route::post('/support/ticket/{ticketNumber}/reply', [SupportTicketController::class, 'publicReply'])
+    ->middleware('throttle:20,1')
+    ->name('support.ticket.reply');
+
+Route::get('/api/support-tickets/{ticketNumber}/messages', [SupportTicketController::class, 'getMessages'])
+    ->middleware('throttle:120,1')
+    ->name('api.support-tickets.messages');
+
+// Public AI Chat Assistant
+Route::post('/api/ai/public-chat', [PublicAiChatController::class, 'chat'])
+    ->middleware('throttle:60,1')
+    ->name('api.ai.public-chat');
 
 // Guest Authentication Routes
 Route::middleware('guest')->group(function () {
@@ -185,6 +216,19 @@ Route::middleware(['auth', 'approved'])->group(function () {
     Route::get('/search/global', [DashboardController::class, 'globalSearch'])
         ->middleware('throttle:60,1')
         ->name('admin.global-search');
+
+    // Admin Notifications
+    Route::get('/admin/notifications', [AdminNotificationController::class, 'index'])->name('admin.notifications.index');
+    Route::post('/admin/notifications/mark-all-read', [AdminNotificationController::class, 'markAllAsRead'])->name('admin.notifications.mark-all-read');
+    Route::post('/admin/notifications/{id}/read', [AdminNotificationController::class, 'markAsRead'])->name('admin.notifications.read');
+    Route::delete('/admin/notifications/{id}', [AdminNotificationController::class, 'destroy'])->name('admin.notifications.destroy');
+    Route::delete('/admin/notifications', [AdminNotificationController::class, 'clearAll'])->name('admin.notifications.clear-all');
+
+    // NARA AI Assistant for Admin
+    Route::get('/ai-assistant', [AdminAiAssistantController::class, 'index'])->name('admin.ai-assistant.index');
+    Route::post('/ai-assistant/chat', [AdminAiAssistantController::class, 'chat'])
+        ->middleware('throttle:60,1')
+        ->name('admin.ai-assistant.chat');
 
     // Project Management
     Route::resource('projects', ProjectController::class);

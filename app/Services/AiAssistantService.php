@@ -724,55 +724,98 @@ INSTRUCTION;
     /**
      * Send prompt to Gemini or OpenAI API and return text response.
      */
+    /**
+     * Send prompt to Gemini or OpenAI API and return text response.
+     *
+     * @param  array{mime_type: string, data: string}|null  $imageAttachment
+     */
     private static function executePrompt(
         string $systemInstruction,
         string $userPrompt,
         string $apiKey,
         string $provider,
-        string $model
+        string $model,
+        ?array $imageAttachment = null
     ): string {
         try {
             if ($provider === 'gemini') {
-                $endpoint = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent";
+                $modelsToTry = array_unique(array_filter([
+                    $model,
+                    'gemini-2.5-flash',
+                    'gemini-2.0-flash',
+                    'gemini-1.5-flash',
+                ]));
 
-                $response = Http::timeout(60)
-                    ->connectTimeout(20)
-                    ->retry(2, 500, throw: false)
-                    ->withHeaders([
-                        'Content-Type' => 'application/json',
-                        'x-goog-api-key' => $apiKey,
-                    ])
-                    ->post($endpoint, [
-                        'systemInstruction' => [
-                            'parts' => [
-                                ['text' => $systemInstruction],
+                $lastError = null;
+                foreach ($modelsToTry as $currentModel) {
+                    $endpoint = "https://generativelanguage.googleapis.com/v1beta/models/{$currentModel}:generateContent";
+
+                    $parts = [];
+                    if (! empty($imageAttachment) && ! empty($imageAttachment['data'])) {
+                        $parts[] = [
+                            'inlineData' => [
+                                'mimeType' => $imageAttachment['mime_type'] ?? 'image/jpeg',
+                                'data' => $imageAttachment['data'],
                             ],
-                        ],
-                        'contents' => [
-                            [
+                        ];
+                    }
+                    $parts[] = ['text' => $userPrompt];
+
+                    $response = Http::timeout(60)
+                        ->connectTimeout(20)
+                        ->retry(2, 500, throw: false)
+                        ->withHeaders([
+                            'Content-Type' => 'application/json',
+                            'x-goog-api-key' => $apiKey,
+                        ])
+                        ->post($endpoint, [
+                            'systemInstruction' => [
                                 'parts' => [
-                                    ['text' => $userPrompt],
+                                    ['text' => $systemInstruction],
                                 ],
                             ],
-                        ],
-                        'generationConfig' => [
-                            'temperature' => 0.4,
-                            'topP' => 0.95,
-                        ],
-                    ]);
+                            'contents' => [
+                                [
+                                    'parts' => $parts,
+                                ],
+                            ],
+                            'generationConfig' => [
+                                'temperature' => 0.4,
+                                'topP' => 0.95,
+                            ],
+                        ]);
 
-                if (! $response->successful()) {
+                    if ($response->successful()) {
+                        $json = $response->json();
+                        $text = $json['candidates'][0]['content']['parts'][0]['text'] ?? '';
+                        if (! empty(trim($text))) {
+                            return $text;
+                        }
+                    }
+
                     $errorMsg = $response->json('error.message') ?: $response->body();
-                    throw new \RuntimeException("Google Gemini API Error: {$errorMsg}");
+                    $lastError = "Google Gemini API Error ({$currentModel}): {$errorMsg}";
+                    Log::warning("Gemini model {$currentModel} failed: {$errorMsg}");
                 }
 
-                $json = $response->json();
-
-                return $json['candidates'][0]['content']['parts'][0]['text'] ?? '';
+                if ($lastError) {
+                    throw new \RuntimeException($lastError);
+                }
             }
 
             // OpenAI / Compatible
             $endpoint = SystemSetting::get('ai_custom_endpoint') ?: 'https://api.openai.com/v1/chat/completions';
+
+            $userMessageContent = $userPrompt;
+            if (! empty($imageAttachment) && ! empty($imageAttachment['data'])) {
+                $mimeType = $imageAttachment['mime_type'] ?? 'image/jpeg';
+                $base64Data = $imageAttachment['data'];
+                $userMessageContent = [
+                    ['type' => 'text', 'text' => $userPrompt],
+                    ['type' => 'image_url', 'image_url' => ['url' => "data:{$mimeType};base64,{$base64Data}"]],
+                ];
+            }
+
             $response = Http::timeout(60)
                 ->connectTimeout(20)
                 ->retry(2, 500, throw: false)
@@ -781,7 +824,7 @@ INSTRUCTION;
                     'model' => $model ?: 'gpt-4o-mini',
                     'messages' => [
                         ['role' => 'system', 'content' => $systemInstruction],
-                        ['role' => 'user', 'content' => $userPrompt],
+                        ['role' => 'user', 'content' => $userMessageContent],
                     ],
                     'temperature' => 0.4,
                 ]);
@@ -821,6 +864,236 @@ INSTRUCTION;
         }
 
         return $raw;
+    }
+
+    /**
+     * Interactive grounded chat for public landing page visitors with voice, attachments, and specialized modes.
+     *
+     * @param  list<array{role: string, content: string}>  $history
+     * @param  array{mime_type?: string, data?: string, text?: string, filename?: string}|null  $attachment
+     */
+    public static function chatWithGroundedAssistant(
+        string $userMessage,
+        array $history = [],
+        string $language = 'id',
+        ?string $groundingContext = null,
+        string $mode = 'general',
+        ?array $attachment = null
+    ): string {
+        $apiKey = SystemSetting::get('ai_api_key') ?: config('services.ai.gemini_key') ?: config('services.ai.openai_key');
+        $provider = SystemSetting::get('ai_provider', 'gemini');
+        $model = SystemSetting::get('ai_model', 'gemini-3.6-flash');
+
+        $isId = strtolower($language) !== 'en';
+
+        // Graceful fallback if no API key is set
+        if (empty($apiKey)) {
+            if ($isId) {
+                return 'Halo! Saya NARA, Asisten AI CoE STAS-RG Telkom University. Saat ini layanan AI live sedang dalam mode informasi dasar. Center of Excellence STAS-RG berfokus pada riset IoT Pintar, Otomasi Industri, Telekomunikasi, dan Keamanan Siber. Anda dapat menjelajahi proyek terbit di halaman showcase kami atau menghubungi tim kami melalui menu Bantuan (/support).';
+            }
+
+            return 'Hello! I am NARA, the CoE STAS-RG Telkom University AI Assistant. The live AI service is currently in basic mode. CoE STAS-RG focuses on Smart IoT, Industrial Automation, Telecommunications, and Cyber Security. You can explore our published projects in the showcase or contact our team via the Support page (/support).';
+        }
+
+        // Mode specific custom guidelines
+        $modeGuidelinesId = match ($mode) {
+            'research' => "MODE AKTIF: KONSULTASI RISET & IOT TERAPAN\n- Berikan analisis mendalam mengenai arsitektur sistem, pemilihan mikrokontroler/sensor, topologi komunikasi jaringan, serta metodologi penelitian terapan.\n- Rujuk proyek riset CoE STAS-RG yang relevan jika ada kecocokan topik.\n",
+            'document' => "MODE AKTIF: ANALISIS & STANDARISASI DOKUMEN\n- Bantu pengguna menyusun naskah Flyer A4 (1 halaman padat), Brosur Lipat Tiga (Trifold), atau Factsheet sesuai batasan karakter presisi STASIKATOR.\n- Berikan saran perbaikan teks agar lebih persuasif, ringkas, dan bebas kata bertele-tele.\n",
+            'partner' => "MODE AKTIF: KEMITRAAN & KOLABORASI INDUSTRI\n- Fokus bantu calon mitra industri, instansi pemerintah, dan akademisi memahami skema kerjasama riset, lisensi HKI/paten, pengujian laboratorium, dan pengajuan tiket kerjasama resmi via /support.\n",
+            default => "MODE AKTIF: ASISTEN UMUM & EKSPLORASI INOVASI\n- Jawab pertanyaan seputar profil CoE STAS-RG, direktori inovasi, peneliti, dan fitur platform STASIKATOR secara ramah dan menyeluruh.\n",
+        };
+
+        $modeGuidelinesEn = match ($mode) {
+            'research' => "ACTIVE MODE: APPLIED RESEARCH & IOT CONSULTATION\n- Provide deep technical analysis on system architecture, sensors/MCU selection, telemetry protocols, and academic methodologies.\n- Reference published CoE STAS-RG research projects whenever relevant.\n",
+            'document' => "ACTIVE MODE: DOCUMENT ANALYSIS & STANDARDIZATION\n- Help user refine content for A4 Flyers, Trifold Brochures, or Factsheets conforming strictly to STASIKATOR 1-page character limits.\n- Provide crisp, punchy, and impactful copywriting suggestions.\n",
+            'partner' => "ACTIVE MODE: INDUSTRY PARTNERSHIP & COLLABORATION\n- Guide potential industry partners and institutions on research collaboration schemes, IP/patent licensing, lab validation, and filing formal inquiries via /support.\n",
+            default => "ACTIVE MODE: GENERAL ASSISTANT & DISCOVERY\n- Assist visitors in discovering CoE STAS-RG innovations, research directories, faculties, and STASIKATOR platform capabilities.\n",
+        };
+
+        $systemInstruction = $isId
+            ? "Nama Anda adalah 'NARA' (Navigation & Research Assistant), asisten AI resmi yang cerdas, solutif, dan ramah untuk Center of Excellence Sustainable Technology and Applied Sciences Research Group (CoE STAS-RG) Telkom University.\n\n"
+                ."ATURAN IDENTITAS & GAYA BICARA (SANGAT PENTING):\n"
+                ."- Selalu sadari dan gunakan nama Anda: 'NARA'.\n"
+                ."- Saat menyapa atau membuka jawaban, perkenalkan diri atau sapa sebagai NARA (misalnya: 'Halo! Saya NARA, siap membantu...', 'Hai! NARA di sini...').\n"
+                ."- Saat memberikan opini, analisa, atau saran, sebut diri Anda sebagai 'NARA' (misalnya: 'Menurut NARA...', 'NARA merekomendasikan...', 'Dari data yang NARA telusuri...', 'NARA sarankan...').\n"
+                ."- Jangan pernah menyebut 'Saya adalah model bahasa besar yang dikembangkan oleh OpenAI/Google'. Selalu tegaskan identitas Anda sebagai NARA dari CoE STAS-RG Telkom University.\n"
+                ."- Di akhir balasan, Anda boleh menawarkan bantuan lebih lanjut (misalnya: 'Ada hal lain seputar riset atau platform yang ingin ditanyakan ke NARA?').\n\n"
+                .$modeGuidelinesId
+                ."Tugas Utama NARA:\n"
+                ."1. Menjelaskan profil, bidang riset unggulan CoE STAS-RG (Smart Agriculture, IoT Sensing, Telekomunikasi & Antena, UAV/Aerospace, Cyber Security).\n"
+                ."2. Menginformasikan portofolio proyek riset, paten/HKI, peneliti, dan publikasi yang ada di platform STASIKATOR berdasarkan data konteks yang tersedia.\n"
+                ."3. Memberikan panduan pembuatan dokumen ilmiah & expo (Flyer A4 1-Halaman, Brosur Lipat 3 Trifold, Factsheet, Dynamic QR Expo, Login Passkey WebAuthn).\n"
+                ."4. Analisis Multimodal Gambar & Dokumen: Jika pengguna melampirkan gambar (seperti logo instansi BRIN/Badan Riset dan Inovasi Nasional, Telkom University, diagram sistem IoT, foto mikrokontroler, prototipe, dokumen), analisalah gambar tersebut secara cermat, kenali objek/logo/teks di dalamnya, dan jawab pertanyaan pengguna dengan jelas dan akurat.\n\n"
+                ."Pedoman Format:\n"
+                ."- Berikan jawaban yang terstruktur rapi, elegan, gunakan Markdown (heading bold, bullet points, numbered list) agar mudah dibaca.\n"
+                ."- Jika pengguna ingin kerjasama atau butuh bantuan lebih lanjut, arahkan ke menu Bantuan (/support) atau email stas.researchgroup@telkomuniversity.ac.id.\n"
+                .($groundingContext ? "\n=== Data Pengetahuan & Riset Terverifikasi ===\n{$groundingContext}\n" : '')
+            : "Your name is 'NARA' (Navigation & Research Assistant), the official intelligent, insightful, and friendly AI assistant for the Center of Excellence Sustainable Technology and Applied Sciences Research Group (CoE STAS-RG) at Telkom University.\n\n"
+                ."IDENTITY & TONE GUIDELINES (CRITICAL):\n"
+                ."- Always embrace and consistently use your name: 'NARA'.\n"
+                ."- When greeting or starting answers, refer to yourself as NARA (e.g. 'Hello! I am NARA, happy to help you...', 'Hi there! NARA is here...').\n"
+                ."- When offering suggestions, insights, or opinions, refer to yourself as 'NARA' (e.g. 'According to NARA...', 'NARA recommends...', 'From the research data NARA found...', 'NARA suggests...').\n"
+                ."- Never state 'I am a large language model trained by OpenAI/Google'. Always affirm your identity as NARA from CoE STAS-RG Telkom University.\n"
+                ."- You may close with a warm offer for further assistance (e.g. 'Is there anything else NARA can help you with regarding STAS-RG?').\n\n"
+                .$modeGuidelinesEn
+                ."Key Responsibilities:\n"
+                ."1. Explain CoE STAS-RG core research domains (Smart Agriculture, IoT Sensing, Telecommunications, UAV/Aerospace, Cyber Security).\n"
+                ."2. Provide accurate information about research projects, patents, researchers, and publications from STASIKATOR verified context.\n"
+                ."3. Guide users on standardized scientific document generation (1-Page A4 Flyer, 3-Panel Trifold Brochure, Factsheet, Expo QR Codes, Passkey WebAuthn).\n"
+                ."4. Multimodal & Vision Analysis: When the user attaches an image (e.g. institutional logo like BRIN - National Research and Innovation Agency, Telkom University, IoT block diagrams, hardware prototypes, charts), inspect the image carefully, recognize the logo/text/content, and address the user's question directly and informatively.\n\n"
+                ."Formatting Guidelines:\n"
+                ."- Structure answers cleanly with Markdown (bold headings, bullet lists) for clarity.\n"
+                ."- For formal collaborations or inquiries, direct users to /support or stas.researchgroup@telkomuniversity.ac.id.\n"
+                .($groundingContext ? "\n=== Verified Research & Knowledge Base ===\n{$groundingContext}\n" : '');
+
+        // Format conversational history context (last 6 turns)
+        $formattedPrompt = '';
+        if (! empty($history)) {
+            $formattedPrompt .= "=== Riwayat Percakapan Sebelumnya ===\n";
+            $recentHistory = array_slice($history, -6);
+            foreach ($recentHistory as $turn) {
+                $role = ($turn['role'] ?? 'user') === 'assistant' ? 'NARA' : 'Pengguna';
+                $content = trim($turn['content'] ?? '');
+                if ($content !== '') {
+                    $formattedPrompt .= "{$role}: {$content}\n";
+                }
+            }
+            $formattedPrompt .= "\n";
+        }
+
+        // Attach text file content if provided
+        $attachmentPrompt = '';
+        if (! empty($attachment['text'])) {
+            $filename = $attachment['filename'] ?? 'dokumen_terlampir.txt';
+            $attachmentPrompt .= "\n[Lampiran Berkas: {$filename}]\nIsi Berkas:\n```\n{$attachment['text']}\n```\n";
+        }
+
+        // Image attachment for multimodal models
+        $imageAttachment = null;
+        if (! empty($attachment['data']) && ! empty($attachment['mime_type']) && str_starts_with($attachment['mime_type'], 'image/')) {
+            $imageAttachment = [
+                'mime_type' => $attachment['mime_type'],
+                'data' => $attachment['data'],
+            ];
+            $filename = $attachment['filename'] ?? 'gambar_terlampir.png';
+            $attachmentPrompt .= "\n[Pengguna melampirkan berkas gambar: {$filename}]\n";
+        }
+
+        $formattedPrompt .= '=== Pertanyaan / Permintaan Pengguna ===';
+        if ($attachmentPrompt !== '') {
+            $formattedPrompt .= $attachmentPrompt;
+        }
+        $formattedPrompt .= "\nPengguna: {$userMessage}\n\nBerikan tanggapan terbaik sebagai NARA:";
+
+        try {
+            return trim(self::executePrompt($systemInstruction, $formattedPrompt, $apiKey, $provider, $model, $imageAttachment));
+        } catch (\Throwable $e) {
+            Log::warning('Public AI Chat Exception: '.$e->getMessage());
+
+            if ($isId) {
+                return 'Terima kasih atas pertanyaan Anda. CoE STAS-RG Telkom University terus berinovasi dalam teknologi terapan berkelanjutan (IoT, AI Terapan, Telekomunikasi). Untuk informasi lebih lengkap atau konsultasi langsung dengan peneliti kami, silakan ajukan pesan melalui formulir Bantuan (/support).';
+            }
+
+            return 'Thank you for your question. CoE STAS-RG Telkom University continuously innovates in sustainable applied technologies (IoT, Applied AI, Telecom). For direct inquiries, feel free to reach out via our Support form (/support).';
+        }
+    }
+
+    /**
+     * Dedicated Admin AI Chat with complete operational knowledge (projects, stats, researchers, tickets, logs, settings).
+     *
+     * @param  list<array{role: string, content: string}>  $history
+     * @param  array{mime_type?: string, data?: string, text?: string, filename?: string}|null  $attachment
+     */
+    public static function chatWithAdminAssistant(
+        string $userMessage,
+        array $history = [],
+        string $language = 'id',
+        ?string $adminDataContext = null,
+        string $mode = 'all_data',
+        ?array $attachment = null,
+        ?string $adminUserName = null
+    ): string {
+        $apiKey = SystemSetting::get('ai_api_key') ?: config('services.ai.gemini_key') ?: config('services.ai.openai_key');
+        $provider = SystemSetting::get('ai_provider', 'gemini');
+        $model = SystemSetting::get('ai_model', 'gemini-3.6-flash');
+
+        $isId = strtolower($language) !== 'en';
+        $adminName = $adminUserName ?: 'Administrator';
+
+        if (empty($apiKey)) {
+            return $isId
+                ? "Halo {$adminName}! NARA siap membantu dalam mode dasar. Konfigurasikan AI API Key di menu Settings untuk mengaktifkan pemrosesan analitik dan inteligensi mendalam."
+                : "Hello {$adminName}! NARA is ready in basic mode. Please configure your AI API Key in Settings to unlock deep intelligence and analytics.";
+        }
+
+        $systemInstruction = $isId
+            ? "Anda adalah 'NARA Admin Co-Pilot' (Navigation & Research Assistant), asisten AI khusus administrator internal untuk platform STASIKATOR CoE STAS-RG Telkom University.\n\n"
+                ."HAK AKSES & OTORISASI KHUSUS ADMIN (FULL ACCESS):\n"
+                ."- Anda memiliki akses penuh terhadap data internal platform STASIKATOR (semua proyek publik/draf/arsip, statistik analitik, tiket bantuan, direktori peneliti, persetujuan user, log aktivitas, dan konfigurasi sistem).\n"
+                ."- Berikan jawaban yang mendalam, taktis, berbasis data riil dari data yang dilampirkan dalam konteks di bawah.\n"
+                ."- Jika diminta meringkas atau menganalisis data proyek, tiket, atau peneliti, sajikan dalam format tabel Markdown, bullet point, atau metrik yang rapi dan mudah dieksekusi.\n"
+                ."- Anda dapat membantu administrator menyusun draft pengumuman, menganalisis beban helpdesk, mengecek konsistensi data paten/HKI, merekomendasikan tata letak (A4 Flyer / Trifold), hingga mereview berkas dan gambar teknis yang diunggah.\n\n"
+                ."IDENTITAS & GAYA KOMUNIKASI:\n"
+                ."- Selalu menyapa ramah dan profesional kepada {$adminName}.\n"
+                ."- Sebut diri Anda sebagai 'NARA'.\n"
+                ."- Berikan respon cepat, solutif, analitis, dan tepat sasaran.\n"
+                .($adminDataContext ? "\n=== DATA INTERNAL SISTEM STASIKATOR (LIVE DATABASE CONTEXT) ===\n{$adminDataContext}\n" : '')
+            : "You are 'NARA Admin Co-Pilot' (Navigation & Research Assistant), the dedicated internal intelligence assistant for administrators of STASIKATOR CoE STAS-RG Telkom University.\n\n"
+                ."SPECIAL PRIVILEGED ACCESS (FULL DATA CONTEXT):\n"
+                ."- You possess complete visibility into internal platform data (all published/draft/archived projects, system analytics, support tickets, researcher directories, user approvals, activity logs, and settings).\n"
+                ."- Provide actionable, precise, data-driven responses based on the live system context provided below.\n"
+                ."- Present data summaries using Markdown tables, structured metrics, or bullet points.\n"
+                ."- Support administrator tasks including drafting broadcasts, inspecting support bottlenecks, validating character limits, and analyzing multimodal uploaded files/images.\n\n"
+                ."TONE & IDENTITY:\n"
+                ."- Address {$adminName} professionally and warmly.\n"
+                ."- Identify as 'NARA'.\n"
+                .($adminDataContext ? "\n=== LIVE INTERNAL SYSTEM CONTEXT ===\n{$adminDataContext}\n" : '');
+
+        $formattedPrompt = '';
+        if (! empty($history)) {
+            $formattedPrompt .= "=== Riwayat Percakapan Admin Sebelumnya ===\n";
+            $recentHistory = array_slice($history, -8);
+            foreach ($recentHistory as $turn) {
+                $role = ($turn['role'] ?? 'user') === 'assistant' ? 'NARA' : $adminName;
+                $content = trim($turn['content'] ?? '');
+                if ($content !== '') {
+                    $formattedPrompt .= "{$role}: {$content}\n";
+                }
+            }
+            $formattedPrompt .= "\n";
+        }
+
+        $attachmentPrompt = '';
+        if (! empty($attachment['text'])) {
+            $filename = $attachment['filename'] ?? 'berkas_admin.txt';
+            $attachmentPrompt .= "\n[Lampiran Berkas Admin: {$filename}]\nIsi Berkas:\n```\n{$attachment['text']}\n```\n";
+        }
+
+        $imageAttachment = null;
+        if (! empty($attachment['data']) && ! empty($attachment['mime_type']) && str_starts_with($attachment['mime_type'], 'image/')) {
+            $imageAttachment = [
+                'mime_type' => $attachment['mime_type'],
+                'data' => $attachment['data'],
+            ];
+            $filename = $attachment['filename'] ?? 'gambar_admin.png';
+            $attachmentPrompt .= "\n[Admin melampirkan berkas gambar: {$filename}]\n";
+        }
+
+        $formattedPrompt .= '=== Permintaan / Instruksi Administrator ===';
+        if ($attachmentPrompt !== '') {
+            $formattedPrompt .= $attachmentPrompt;
+        }
+        $formattedPrompt .= "\n{$adminName}: {$userMessage}\n\nBerikan tanggapan komprehensif sebagai NARA Admin Co-Pilot:";
+
+        try {
+            return trim(self::executePrompt($systemInstruction, $formattedPrompt, $apiKey, $provider, $model, $imageAttachment));
+        } catch (\Throwable $e) {
+            Log::warning('Admin AI Chat Exception: '.$e->getMessage());
+
+            return $isId
+                ? "Mohon maaf, terjadi kendala saat memproses permintaan: {$e->getMessage()}. Silakan periksa koneksi atau API Key di menu Settings."
+                : "Apologies, an error occurred while processing your admin request: {$e->getMessage()}. Please check your connection or API Key in Settings.";
+        }
     }
 
     /**

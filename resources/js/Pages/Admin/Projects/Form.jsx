@@ -1532,7 +1532,7 @@ export default function Form({ project = null, categories = [] }) {
                                 ) : (
                                     <>
                                         <Sparkles className="w-4 h-4" />
-                                        <span>{language === 'en' ? 'AI Translate to English' : 'Terjemahkan AI ke English'}</span>
+                                        <span>{language === 'en' ? 'Translate to English' : 'Terjemahkan ke English'}</span>
                                     </>
                                 )}
                             </button>
@@ -3845,7 +3845,7 @@ export default function Form({ project = null, categories = [] }) {
                                         className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0AB600] hover:bg-[#089600] text-white text-xs font-semibold transition-colors cursor-pointer shadow-sm"
                                     >
                                         {livePngLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />}
-                                        <span>Download PNG</span>
+                                        <span>{pf.downloadPngBtn || 'PNG'}</span>
                                     </button>
 
                                     {/* Close Button */}

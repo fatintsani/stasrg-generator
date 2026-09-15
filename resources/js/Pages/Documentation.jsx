@@ -354,9 +354,11 @@ function DocsContent() {
             <div className="min-h-screen flex flex-col bg-[#FAFBFD] dark:bg-[#070D18] text-slate-900 dark:text-slate-100 selection:bg-[#0AB600]/20 selection:text-[#0AB600] font-sans antialiased transition-colors">
                 <Navbar />
 
-                <main className="flex-grow py-10 sm:py-16">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <main className="flex-grow py-10 sm:py-16 relative overflow-hidden">
+                    {/* Ambient Background Glow Effect (Subtle SaaS light) */}
+                    <div className="ambient-glow" style={{ filter: 'blur(64px)', WebkitFilter: 'blur(64px)' }} />
 
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                         {/* ═══════ HERO HEADER ═══════ */}
                         <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16 space-y-4">
                             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-mono font-semibold tracking-wider uppercase bg-[#0AB600]/10 text-[#0AB600] border border-[#0AB600]/30 shadow-xs">

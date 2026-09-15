@@ -3,8 +3,10 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="x-apple-disable-message-reformatting">
+    <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
     <title>{{ $subject ?? 'Pemberitahuan — STAS RG Projects' }}</title>
     <!--[if mso]>
     <noscript>
@@ -38,6 +40,7 @@
             line-height: 100%;
             outline: none;
             text-decoration: none;
+            max-width: 100%;
         }
 
         body {
@@ -48,6 +51,7 @@
             background-color: #F8FAFC;
             color: #0F172A;
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
 
         /* Layout */
@@ -60,11 +64,17 @@
 
         .main-container {
             max-width: 580px;
+            width: 100%;
             margin: 0 auto;
             background-color: #FFFFFF;
             border: 1px solid #E2E8F0;
             border-radius: 24px;
             overflow: hidden;
+        }
+
+        .header-cell {
+            padding: 28px 36px 20px 36px;
+            border-bottom: 1px solid #F1F5F9;
         }
 
         .content-area {
@@ -76,8 +86,8 @@
             font-size: 20px;
             font-weight: 800;
             color: #0F172A;
-            line-height: 1.3;
-            margin: 0 0 4px 0;
+            line-height: 1.35;
+            margin: 0 0 6px 0;
             letter-spacing: -0.3px;
         }
 
@@ -92,7 +102,7 @@
         .email-subtitle {
             font-size: 13px;
             color: #64748B;
-            line-height: 1.5;
+            line-height: 1.55;
             margin: 0 0 20px 0;
         }
 
@@ -123,7 +133,7 @@
             letter-spacing: 0.2px;
         }
 
-        .badge-dot, .badge-dot-success, .badge-dot-info, .badge-dot-warning, .badge-dot-error {
+        .badge-dot, .badge-dot-success, .badge-dot-info, .badge-dot-warning, .badge-dot-error, .badge-dot-pending {
             display: inline-block;
             width: 6px;
             height: 6px;
@@ -147,7 +157,7 @@
             border: 1px solid #FDE68A;
             color: #92400E !important;
         }
-        .badge-pending .badge-dot {
+        .badge-dot-pending, .badge-pending .badge-dot {
             background-color: #F59E0B;
         }
 
@@ -160,7 +170,7 @@
             background-color: #EA580C;
         }
 
-        .badge-error {
+        .badge-error, .badge-danger {
             background-color: #FEF2F2;
             border: 1px solid #FECACA;
             color: #991B1B !important;
@@ -169,7 +179,7 @@
             background-color: #EF4444;
         }
 
-        .badge-info {
+        .badge-info, .badge-primary {
             background-color: #EFF6FF;
             border: 1px solid #BFDBFE;
             color: #1E40AF !important;
@@ -185,6 +195,7 @@
             border-radius: 16px;
             padding: 18px 20px;
             margin: 20px 0;
+            box-sizing: border-box;
         }
 
         .card-table {
@@ -202,7 +213,7 @@
             vertical-align: middle;
             border-bottom: 1px solid #EDF2F7;
             width: 36%;
-            white-space: nowrap;
+            word-break: break-word;
         }
 
         .card-value {
@@ -212,6 +223,7 @@
             color: #0F172A;
             vertical-align: middle;
             border-bottom: 1px solid #EDF2F7;
+            word-break: break-word;
         }
 
         .card-table tr:last-child .card-label,
@@ -225,11 +237,53 @@
             padding: 20px;
             text-align: center;
             margin: 24px 0;
+            box-sizing: border-box;
         }
 
         .status-box-otp {
             background: linear-gradient(180deg, #F0FDF4 0%, #DCFCE7 100%);
             border: 1.5px solid #86EFAC;
+        }
+
+        .otp-code {
+            font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
+            font-size: 34px;
+            font-weight: 800;
+            color: #0AB600;
+            letter-spacing: 8px;
+            word-break: break-all;
+        }
+
+        /* Message Boxes */
+        .message-box {
+            border-radius: 12px;
+            padding: 16px 18px;
+            margin: 20px 0;
+            box-sizing: border-box;
+        }
+
+        .message-box-success {
+            background-color: #F0FDF4;
+            border: 1px solid #BBF7D0;
+            border-left: 4px solid #16A34A;
+        }
+
+        .message-box-info {
+            background-color: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-left: 4px solid #3B82F6;
+        }
+
+        .message-box-warning {
+            background-color: #FFFBEB;
+            border: 1px solid #FDE68A;
+            border-left: 4px solid #F59E0B;
+        }
+
+        .message-box-danger {
+            background-color: #FEF2F2;
+            border: 1px solid #FECACA;
+            border-left: 4px solid #EF4444;
         }
 
         /* Buttons & CTA */
@@ -249,6 +303,7 @@
             border-radius: 12px;
             text-align: center;
             box-shadow: 0 2px 6px rgba(10, 182, 0, 0.15);
+            box-sizing: border-box;
         }
 
         .btn-primary:hover {
@@ -265,6 +320,7 @@
             font-size: 12px;
             color: #475569;
             line-height: 1.5;
+            box-sizing: border-box;
         }
 
         /* Footer */
@@ -283,36 +339,133 @@
             font-weight: 600;
         }
 
-        /* Mobile */
+        /* Responsive Mobile Styles */
         @media screen and (max-width: 600px) {
             .wrapper {
-                padding: 16px 8px !important;
+                padding: 12px 6px !important;
+            }
+
+            .main-container {
+                border-radius: 16px !important;
+                border: 1px solid #E2E8F0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            .header-cell {
+                padding: 18px 16px 14px 16px !important;
             }
 
             .content-area {
-                padding: 24px 20px !important;
+                padding: 22px 16px 24px 16px !important;
             }
 
             .footer-wrap {
-                padding: 24px 20px !important;
+                padding: 22px 16px 28px 16px !important;
             }
 
             h1, .email-title {
                 font-size: 18px !important;
+                line-height: 1.35 !important;
+            }
+
+            .email-subtitle {
+                font-size: 12.5px !important;
+                margin-bottom: 16px !important;
+            }
+
+            p, .paragraph {
+                font-size: 13px !important;
+                line-height: 1.6 !important;
+                margin-bottom: 14px !important;
+            }
+
+            .greeting {
+                font-size: 13.5px !important;
+                margin-bottom: 10px !important;
+            }
+
+            .card, .info-card {
+                padding: 14px 14px !important;
+                margin: 16px 0 !important;
+                border-radius: 12px !important;
             }
 
             .card-label {
-                width: 42% !important;
+                width: 38% !important;
                 font-size: 12px !important;
+                padding: 7px 8px 7px 0 !important;
             }
 
             .card-value {
                 font-size: 12.5px !important;
+                padding: 7px 0 !important;
+            }
+
+            .button-wrapper {
+                margin: 20px 0 16px 0 !important;
+                text-align: center !important;
             }
 
             .btn-primary {
+                display: block !important;
                 width: 100% !important;
-                box-sizing: border-box;
+                box-sizing: border-box !important;
+                text-align: center !important;
+                padding: 13px 18px !important;
+                font-size: 13px !important;
+                border-radius: 12px !important;
+            }
+
+            .status-box {
+                padding: 16px 12px !important;
+                margin: 18px 0 !important;
+                border-radius: 12px !important;
+            }
+
+            .otp-code {
+                font-size: 28px !important;
+                letter-spacing: 5px !important;
+            }
+
+            .message-box {
+                padding: 14px 12px !important;
+                margin: 16px 0 !important;
+            }
+
+            .info-callout {
+                padding: 10px 12px !important;
+                font-size: 11.5px !important;
+            }
+
+            .social-link {
+                margin-right: 8px !important;
+                font-size: 11.5px !important;
+                padding: 4px 0 !important;
+            }
+        }
+
+        @media screen and (max-width: 420px) {
+            .header-title-text {
+                font-size: 12px !important;
+            }
+
+            .header-sub-text {
+                font-size: 9.5px !important;
+            }
+
+            .card-label {
+                width: 40% !important;
+                font-size: 11.5px !important;
+            }
+
+            .card-value {
+                font-size: 12px !important;
+            }
+
+            .otp-code {
+                font-size: 24px !important;
+                letter-spacing: 4px !important;
             }
         }
     </style>
@@ -331,27 +484,27 @@
                 <table role="presentation" class="main-container" width="100%" cellspacing="0" cellpadding="0" border="0">
                     <!-- 1. Header Section -->
                     <tr>
-                        <td style="padding: 28px 36px 20px 36px; border-bottom: 1px solid #F1F5F9;">
+                        <td class="header-cell">
                             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                                 <tr>
                                     <td align="left" style="vertical-align: middle;">
                                         <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                                             <tr>
-                                                <td style="vertical-align: middle; padding-right: 10px;">
-                                                    <img src="{{ config('app.url') }}/assets/img/stas.png" alt="STAS RG" width="34" height="34" style="display: block; width: 34px; height: 34px; object-fit: contain;">
+                                                <td style="vertical-align: middle; padding-right: 8px;">
+                                                    <img src="{{ config('app.url') }}/assets/img/stas.png" alt="STAS RG" width="32" height="32" style="display: block; width: 32px; height: 32px; object-fit: contain;">
                                                 </td>
-                                                <td style="vertical-align: middle; padding-right: 10px; border-right: 1px solid #E2E8F0; height: 24px;"></td>
-                                                <td style="vertical-align: middle; padding-left: 10px;">
-                                                    <img src="{{ config('app.url') }}/assets/img/telu.png" alt="Telkom University" height="28" style="display: block; height: 28px; width: auto;">
+                                                <td style="vertical-align: middle; padding-right: 8px; border-right: 1px solid #E2E8F0; height: 22px;"></td>
+                                                <td style="vertical-align: middle; padding-left: 8px;">
+                                                    <img src="{{ config('app.url') }}/assets/img/telu.png" alt="Telkom University" height="26" style="display: block; height: 26px; width: auto;">
                                                 </td>
                                             </tr>
                                         </table>
                                     </td>
                                     <td align="right" style="vertical-align: middle;">
-                                        <div style="font-size: 13px; font-weight: 800; color: #0F172A; letter-spacing: -0.3px;">
+                                        <div class="header-title-text" style="font-size: 13px; font-weight: 800; color: #0F172A; letter-spacing: -0.3px;">
                                             STAS RG <span style="font-weight: 600; color: #0AB600;">Projects</span>
                                         </div>
-                                        <div style="font-size: 10px; color: #94A3B8; font-weight: 500;">
+                                        <div class="header-sub-text" style="font-size: 10px; color: #94A3B8; font-weight: 500;">
                                             CoE STAS-RG Platform
                                         </div>
                                     </td>
@@ -388,7 +541,7 @@
                                     <td style="padding-top: 12px; border-top: 1px solid #E2E8F0;">
                                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                                             <tr>
-                                                <td align="left" style="font-size: 11px; color: #64748B;">
+                                                <td align="left" style="font-size: 11px; color: #64748B; line-height: 1.8;">
                                                     <a href="{{ config('app.url') }}" class="social-link" style="color: #0AB600;">Website</a> •
                                                     <a href="https://instagram.com/stas.rg" class="social-link" style="color: #0AB600;">Instagram</a> •
                                                     <a href="https://telkomuniversity.ac.id" class="social-link" style="color: #0AB600;">Tel-U</a> •
@@ -396,7 +549,7 @@
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td align="left" style="padding-top: 12px; font-size: 10.5px; color: #94A3B8; line-height: 1.5;">
+                                                <td align="left" style="padding-top: 10px; font-size: 10.5px; color: #94A3B8; line-height: 1.5;">
                                                     Email ini dikirimkan secara otomatis oleh sistem internal STASIKATOR / STAS RG Projects. Harap jangan membalas langsung ke email ini.
                                                 </td>
                                             </tr>

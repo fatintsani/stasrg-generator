@@ -106,30 +106,8 @@ export default function AuthLayout({ children, title, subtitle, badge }) {
             </header>
 
             {/* Main Auth Content Container */}
-            <main className="flex-1 flex flex-col justify-center items-center py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
+            <main className="flex-1 flex flex-col justify-center items-center py-10 sm:py-16 px-4 sm:px-6 lg:px-8">
                 <div className="w-full max-w-md">
-                    {/* Header Badge & Title (Optional) */}
-                    {(badge || title) && (
-                        <div className="text-center mb-6">
-                            {badge && (
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0AB600]/10 border border-[#0AB600]/30 text-[#0AB600] text-[11px] font-semibold tracking-wide mb-3">
-                                    <ShieldCheck className="w-3.5 h-3.5 text-[#0AB600]" />
-                                    <span>{badge}</span>
-                                </div>
-                            )}
-                            {title && (
-                                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                                    {title}
-                                </h1>
-                            )}
-                            {subtitle && (
-                                <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-sm mx-auto leading-relaxed">
-                                    {subtitle}
-                                </p>
-                            )}
-                        </div>
-                    )}
-
                     {/* Children Component (Card Form) */}
                     {children}
                 </div>

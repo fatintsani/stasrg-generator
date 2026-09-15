@@ -45,17 +45,45 @@ class AuthenticatedSessionController extends Controller
             ->orWhere('username', $loginInput)
             ->first();
 
-        if (! $user || ! $user->password || ! Hash::check($password, $user->password)) {
+        if (! $user) {
             ActivityLogger::logAuth(
                 action: 'auth.login_failed',
-                description: "Percobaan login gagal untuk identitas \"{$loginInput}\"",
-                user: $user,
-                properties: ['input' => $loginInput, 'reason' => 'invalid_credentials'],
+                description: "Percobaan login gagal: Identitas \"{$loginInput}\" tidak terdaftar",
+                user: null,
+                properties: ['input' => $loginInput, 'reason' => 'user_not_found'],
                 request: $request
             );
 
             throw ValidationException::withMessages([
-                'email' => __('auth.failed'),
+                'email' => 'Email atau Username tidak terdaftar dalam sistem.',
+            ]);
+        }
+
+        if (! $user->password) {
+            ActivityLogger::logAuth(
+                action: 'auth.login_failed',
+                description: "Percobaan login gagal untuk \"{$user->email}\": Belum membuat kata sandi",
+                user: $user,
+                properties: ['input' => $loginInput, 'reason' => 'no_password_set'],
+                request: $request
+            );
+
+            throw ValidationException::withMessages([
+                'email' => 'Akun ini terdaftar melalui Google Sign-In atau Passkey dan belum memiliki kata sandi. Silakan gunakan Google Sign-In atau fitur Lupa Kata Sandi.',
+            ]);
+        }
+
+        if (! Hash::check($password, $user->password)) {
+            ActivityLogger::logAuth(
+                action: 'auth.login_failed',
+                description: "Percobaan login gagal untuk identitas \"{$loginInput}\": Kata sandi salah",
+                user: $user,
+                properties: ['input' => $loginInput, 'reason' => 'invalid_password'],
+                request: $request
+            );
+
+            throw ValidationException::withMessages([
+                'password' => 'Kata sandi yang Anda masukkan salah. Silakan periksa kembali atau gunakan Lupa Kata Sandi.',
             ]);
         }
 

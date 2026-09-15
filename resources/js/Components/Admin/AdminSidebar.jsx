@@ -21,6 +21,8 @@ import {
     LayoutTemplate,
     Headphones,
     ExternalLink,
+    Bot,
+    Sparkles,
 } from 'lucide-react';
 import { useApp } from '../../Context/AppContext';
 import { useAlert } from '../../Context/AlertContext';
@@ -58,6 +60,15 @@ export default function AdminSidebar({
             href: '/dashboard',
             icon: LayoutDashboard,
             active: currentPath === '/dashboard',
+        },
+        {
+            id: 'ai-assistant',
+            name: 'NARA AI Assistant',
+            href: '/ai-assistant',
+            icon: Bot,
+            avatar: '/assets/img/icon/profile_cs.png',
+            badge: 'AI',
+            active: currentPath.startsWith('/ai-assistant'),
         },
         {
             id: 'projects',
@@ -233,9 +244,20 @@ export default function AdminSidebar({
                 }`}
             >
                 <div className="flex items-center gap-3 truncate">
-                    <Icon className={`w-4 h-4 shrink-0 ${item.active ? 'text-[#0AB600]' : 'text-zinc-400 dark:text-zinc-500'}`} />
+                    {item.avatar ? (
+                        <div className={`relative w-5 h-5 rounded-full overflow-hidden shrink-0 border ${item.active ? 'border-[#0AB600]' : 'border-zinc-300 dark:border-zinc-700'}`}>
+                            <img src={item.avatar} alt={item.name} className="w-full h-full object-cover" />
+                        </div>
+                    ) : (
+                        <Icon className={`w-4 h-4 shrink-0 ${item.active ? 'text-[#0AB600]' : 'text-zinc-400 dark:text-zinc-500'}`} />
+                    )}
                     {!isCollapsed && <span className="truncate">{item.name}</span>}
                 </div>
+                {!isCollapsed && item.badge && (
+                    <span className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded-full bg-[#0AB600]/15 text-[#0AB600] border border-[#0AB600]/30 shrink-0">
+                        {item.badge}
+                    </span>
+                )}
             </Link>
         );
     };
@@ -320,7 +342,7 @@ export default function AdminSidebar({
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center justify-between p-2 rounded-xl bg-[#0AB600]/10 border border-[#0AB600]/30 hover:bg-[#0AB600]/15 hover:border-[#0AB600]/50 transition-all group cursor-pointer shadow-2xs"
-                        title="Hubungi Developer via WhatsApp (0831-3397-7214)"
+                        title="Hubungi Sekarang"
                         data-tooltip-pos="top"
                     >
                         <div className="flex items-center gap-2 truncate">
@@ -345,7 +367,7 @@ export default function AdminSidebar({
                         href="https://wa.me/6283133977214?text=Halo%20Developer%20STAS%20RG%2C%20saya%20admin%20membutuhkan%20bantuan%20teknis."
                         target="_blank"
                         rel="noopener noreferrer"
-                        title="Developer Support: 0831-3397-7214"
+                        title="Hubungi Sekarang"
                         data-tooltip-pos="right"
                         className="w-full flex items-center justify-center p-2 rounded-xl bg-[#0AB600]/10 border border-[#0AB600]/30 hover:bg-[#0AB600]/15 text-[#0AB600] transition-all"
                     >

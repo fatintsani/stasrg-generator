@@ -243,7 +243,7 @@ export default function Show({ project }) {
                                 ) : (
                                     <>
                                         <ImageIcon className="w-3.5 h-3.5" />
-                                        <span>Download PNG ({previewLang.toUpperCase()})</span>
+                                        <span>PNG ({previewLang.toUpperCase()})</span>
                                     </>
                                 )}
                             </button>

@@ -142,8 +142,23 @@ function ForgotPasswordFormContent() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                className="w-full p-7 sm:p-9 rounded-3xl bg-white dark:bg-[#18181B] border border-zinc-200/80 dark:border-zinc-800/80 transition-colors"
+                className="w-full p-7 sm:p-9 rounded-3xl bg-white dark:bg-[#18181B] border border-zinc-200/80 dark:border-zinc-800/80 transition-colors shadow-sm"
             >
+                {/* Header inside Card */}
+                <div className="text-center mb-6 sm:mb-8">
+                    <div className="w-12 h-12 rounded-2xl bg-[#0AB600]/10 text-[#0AB600] flex items-center justify-center mx-auto mb-3">
+                        {step === 'email' ? <Mail className="w-6 h-6" /> : <ShieldCheck className="w-6 h-6" />}
+                    </div>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                        {step === 'email' ? (t.auth?.forgot?.title || 'Lupa Kata Sandi?') : (t.auth?.forgot?.otpTitle || 'Verifikasi Kode OTP')}
+                    </h1>
+                    <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-sm mx-auto leading-relaxed">
+                        {step === 'email' 
+                            ? (t.auth?.forgot?.subtitle || 'Masukkan email akun terdaftar Anda untuk menerima kode OTP pemulihan.') 
+                            : (t.auth?.forgot?.otpSubtitle || 'Masukkan 6 digit kode OTP yang kami kirimkan ke email Anda.')}
+                    </p>
+                </div>
+
                 {/* Global Error Banner */}
                 {errorMessage && (
                     <div className="mb-5 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-xs font-semibold text-rose-800 dark:text-rose-300 flex items-center gap-2">

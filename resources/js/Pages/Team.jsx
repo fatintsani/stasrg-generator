@@ -46,6 +46,16 @@ function LinkedinIcon({ className = "w-4 h-4" }) {
     );
 }
 
+function InstagramIcon({ className = "w-4 h-4" }) {
+    return (
+        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+        </svg>
+    );
+}
+
 function TeamContent() {
     const { t, language } = useApp();
     const isId = language === 'id';
@@ -68,8 +78,11 @@ function TeamContent() {
             <div className="min-h-screen flex flex-col bg-[#FAFBFD] dark:bg-[#070D18] text-slate-900 dark:text-slate-100 selection:bg-[#0AB600]/20 selection:text-[#0AB600] font-sans antialiased transition-colors">
                 <Navbar />
 
-                <main className="flex-grow py-12 sm:py-20">
-                    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <main className="flex-grow py-12 sm:py-20 relative overflow-hidden">
+                    {/* Ambient Background Glow Effect (Subtle SaaS light) */}
+                    <div className="ambient-glow" style={{ filter: 'blur(64px)', WebkitFilter: 'blur(64px)' }} />
+
+                    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
                         {/* ═══════ HERO SECTION ═══════ */}
                         <div className="text-center max-w-3xl mx-auto mb-16 sm:mb-20 space-y-4">
@@ -92,24 +105,20 @@ function TeamContent() {
                         {/* ═══════ LEAD DEVELOPER SPOTLIGHT ═══════ */}
                         <div className="mb-16">
                             <div className="p-6 sm:p-10 rounded-3xl bg-white dark:bg-[#121824] border border-zinc-200/80 dark:border-zinc-800 shadow-xs relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-80 h-80 bg-[#0AB600]/5 dark:bg-[#0AB600]/10 rounded-full blur-3xl pointer-events-none -z-0" />
+                                <div className="absolute top-0 right-0 w-80 h-80 bg-[#0AB600]/5 dark:bg-[#0AB600]/10 rounded-full blur-3xl pointer-events-none -z-0" style={{ filter: 'blur(64px)', WebkitFilter: 'blur(64px)' }} />
 
                                 <div className="relative z-10 flex flex-col lg:flex-row items-center lg:items-start gap-8 lg:gap-12">
                                     {/* Avatar / Photo */}
                                     <div className="flex flex-col items-center shrink-0">
-                                        <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-3xl overflow-hidden border-2 border-[#0AB600]/30 bg-zinc-100 dark:bg-zinc-800 shadow-md">
+                                        <div className="relative w-48 h-48 sm:w-56 sm:h-56 lg:w-64 lg:h-64 flex items-center justify-center">
                                             <img
                                                 src="/assets/img/icon/profile_dev.png"
                                                 alt="Fatin Muflihuts Tsani"
-                                                className="w-full h-full object-cover"
+                                                className="w-full h-full object-contain"
                                                 onError={(e) => {
                                                     e.currentTarget.src = 'https://github.com/fatintsani.png';
                                                 }}
                                             />
-                                        </div>
-                                        <div className="mt-3.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0AB600]/10 border border-[#0AB600]/30 text-xs font-bold text-[#0AB600]">
-                                            <Code2 className="w-3.5 h-3.5" />
-                                            <span>Lead Developer</span>
                                         </div>
                                     </div>
 
@@ -166,7 +175,7 @@ function TeamContent() {
                                         </div>
 
                                         {/* Social Contact Links */}
-                                        <div className="pt-2 flex items-center justify-center lg:justify-start gap-3">
+                                        <div className="pt-2 flex items-center justify-center lg:justify-start gap-3 flex-wrap">
                                             <a
                                                 href="https://github.com/fatintsani"
                                                 target="_blank"
@@ -184,6 +193,15 @@ function TeamContent() {
                                             >
                                                 <LinkedinIcon className="w-4 h-4" />
                                                 <span>LinkedIn</span>
+                                            </a>
+                                            <a
+                                                href="https://instagram.com/fatintsani"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-[#0AB600]/10 dark:hover:bg-[#0AB600]/20 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-[#0AB600] dark:hover:text-[#0AB600] border border-zinc-200 dark:border-zinc-700 transition-colors"
+                                            >
+                                                <InstagramIcon className="w-4 h-4 text-black dark:text-white" />
+                                                <span>Instagram</span>
                                             </a>
                                         </div>
                                     </div>
@@ -288,33 +306,89 @@ function TeamContent() {
                         </div>
 
                         {/* ═══════ BOTTOM CTA BANNER ═══════ */}
-                        <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-br from-[#0AB600]/10 via-[#0AB600]/5 to-transparent border border-[#0AB600]/25 text-center">
-                            <div className="w-14 h-14 rounded-2xl bg-[#0AB600]/10 border border-[#0AB600]/30 flex items-center justify-center mx-auto mb-4">
-                                <GraduationCap className="w-7 h-7 text-[#0AB600]" />
-                            </div>
-                            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                                {isId ? 'Tertarik Berkolaborasi dengan Lab Kami?' : 'Interested in Research Collaboration?'}
-                            </h3>
-                            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-6 max-w-md mx-auto leading-relaxed">
-                                {isId
-                                    ? 'Kami membuka kesempatan kemitraan riset terapan, pengujian teknologi, dan kolaborasi industri bersama CoE STAS-RG Telkom University.'
-                                    : 'We welcome applied research partnerships, technology trials, and industrial collaborations with CoE STAS-RG Telkom University.'}
-                            </p>
-                            <div className="flex flex-wrap items-center justify-center gap-3">
-                                <Link
-                                    href="/support"
-                                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0AB600] hover:bg-[#089600] text-white text-xs sm:text-sm font-semibold transition-all shadow-xs"
-                                >
-                                    <Mail className="w-4 h-4" />
-                                    <span>{isId ? 'Hubungi Tim Riset' : 'Contact Research Team'}</span>
-                                </Link>
-                                <Link
-                                    href="/documentation"
-                                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs sm:text-sm font-medium border border-zinc-200 dark:border-zinc-700 shadow-xs transition-all"
-                                >
-                                    <BookOpen className="w-4 h-4" />
-                                    <span>{isId ? 'Buka Dokumentasi' : 'Open Documentation'}</span>
-                                </Link>
+                        <div className="relative p-6 sm:p-10 lg:p-12 rounded-3xl bg-gradient-to-br from-[#0AB600]/10 via-[#0AB600]/5 to-transparent border border-[#0AB600]/25 overflow-hidden shadow-xs">
+                            {/* Ambient Glows */}
+                            <div className="absolute -top-16 -left-16 w-48 sm:w-64 h-48 sm:h-64 bg-[#0AB600]/10 rounded-full blur-3xl pointer-events-none" style={{ filter: 'blur(64px)', WebkitFilter: 'blur(64px)' }} />
+                            <div className="absolute -bottom-16 -right-16 w-48 sm:w-64 h-48 sm:h-64 bg-[#0AB600]/10 rounded-full blur-3xl pointer-events-none" style={{ filter: 'blur(64px)', WebkitFilter: 'blur(64px)' }} />
+
+                            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-8">
+                                
+                                {/* Left Avatar: Profile CS (Transparent & Tilted) */}
+                                <div className="hidden md:flex shrink-0 items-center justify-center">
+                                    <img
+                                        src="/assets/img/icon/profile_cs.png"
+                                        alt="Customer Support"
+                                        className="w-28 h-28 lg:w-36 lg:h-36 xl:w-40 xl:h-40 object-contain -rotate-6 hover:rotate-0 transition-transform duration-300 pointer-events-none select-none"
+                                        onError={(e) => {
+                                            e.currentTarget.src = '/assets/img/icon/profile_cs.png';
+                                        }}
+                                    />
+                                </div>
+
+                                {/* Center Content */}
+                                <div className="flex-1 text-center max-w-xl mx-auto space-y-3 sm:space-y-4">
+                                    {/* Mobile-only avatar pair */}
+                                    <div className="flex md:hidden items-center justify-center gap-4 mb-1">
+                                        <img
+                                            src="/assets/img/icon/profile_cs.png"
+                                            alt="Customer Support"
+                                            className="w-16 h-16 object-contain -rotate-6 pointer-events-none"
+                                        />
+                                        <div className="w-10 h-10 rounded-2xl bg-[#0AB600]/10 border border-[#0AB600]/30 flex items-center justify-center">
+                                            <GraduationCap className="w-5 h-5 text-[#0AB600]" />
+                                        </div>
+                                        <img
+                                            src="/assets/img/icon/profile_dev.png"
+                                            alt="Developer"
+                                            className="w-16 h-16 object-contain rotate-6 pointer-events-none"
+                                        />
+                                    </div>
+
+                                    {/* Desktop Center Icon */}
+                                    <div className="hidden md:flex w-12 h-12 lg:w-14 lg:h-14 rounded-2xl bg-[#0AB600]/10 border border-[#0AB600]/30 items-center justify-center mx-auto">
+                                        <GraduationCap className="w-6 h-6 lg:w-7 lg:h-7 text-[#0AB600]" />
+                                    </div>
+
+                                    <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-900 dark:text-white">
+                                        {isId ? 'Tertarik Berkolaborasi dengan Lab Kami?' : 'Interested in Research Collaboration?'}
+                                    </h3>
+
+                                    <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 max-w-md mx-auto leading-relaxed">
+                                        {isId
+                                            ? 'Kami membuka kesempatan kemitraan riset terapan, pengujian teknologi, dan kolaborasi industri bersama CoE STAS-RG Telkom University.'
+                                            : 'We welcome applied research partnerships, technology trials, and industrial collaborations with CoE STAS-RG Telkom University.'}
+                                    </p>
+
+                                    <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 pt-1 sm:pt-2">
+                                        <Link
+                                            href="/support"
+                                            className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-[#0AB600] hover:bg-[#089600] text-white text-xs sm:text-sm font-semibold transition-all shadow-xs hover:shadow-md hover:shadow-[#0AB600]/20"
+                                        >
+                                            <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                            <span>{isId ? 'Hubungi Tim Riset' : 'Contact Research Team'}</span>
+                                        </Link>
+                                        <Link
+                                            href="/documentation"
+                                            className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs sm:text-sm font-medium border border-zinc-200 dark:border-zinc-700 shadow-xs transition-all"
+                                        >
+                                            <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                            <span>{isId ? 'Buka Dokumentasi' : 'Open Documentation'}</span>
+                                        </Link>
+                                    </div>
+                                </div>
+
+                                {/* Right Avatar: Profile Dev (Transparent & Tilted) */}
+                                <div className="hidden md:flex shrink-0 items-center justify-center">
+                                    <img
+                                        src="/assets/img/icon/profile_dev.png"
+                                        alt="Lead Developer"
+                                        className="w-28 h-28 lg:w-36 lg:h-36 xl:w-40 xl:h-40 object-contain rotate-6 hover:rotate-0 transition-transform duration-300 pointer-events-none select-none"
+                                        onError={(e) => {
+                                            e.currentTarget.src = '/assets/img/icon/profile_dev.png';
+                                        }}
+                                    />
+                                </div>
+
                             </div>
                         </div>
 

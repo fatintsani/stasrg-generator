@@ -1,6 +1,8 @@
 @extends('emails.layouts.master')
 
 @php
+    $typeKey = is_string($eventType ?? null) ? $eventType : 'updated';
+
     $titles = [
         'created' => 'Project Riset Baru Dibuat',
         'updated' => 'Project Riset Berhasil Diperbarui',
@@ -21,7 +23,7 @@
         'pdf_downloaded' => 'Dokumen laporan resmi standar CoE STAS-RG telah berhasil digenerate dan diunduh.',
     ];
 
-    $eventBadge = match($eventType) {
+    $eventBadge = match($typeKey) {
         'published' => ['class' => 'badge-success', 'dot' => 'badge-dot-success', 'label' => 'Dipublikasikan (Live)'],
         'unpublished' => ['class' => 'badge-warning', 'dot' => 'badge-dot-warning', 'label' => 'Draft Internal'],
         'deleted' => ['class' => 'badge-error', 'dot' => 'badge-dot-error', 'label' => 'Dihapus'],
@@ -30,120 +32,90 @@
         default => ['class' => 'badge-info', 'dot' => 'badge-dot-info', 'label' => 'Diperbarui'],
     };
 
-    $headerTitle = $titles[$eventType] ?? 'Pemberitahuan Aktivitas Project';
-    $headerSubtitle = $subtitles[$eventType] ?? 'Pembaruan data pada sistem repositori STASIKATOR.';
+    $headerTitle = $titles[$typeKey] ?? 'Pemberitahuan Aktivitas Project';
+    $headerSubtitle = $subtitles[$typeKey] ?? 'Pembaruan data pada sistem repositori STASIKATOR.';
 @endphp
 
 @section('title', $headerTitle)
 @section('header_subtitle', 'Notifikasi Aktivitas Project STAS-RG')
 
 @section('content')
-    <h2 class="email-title" style="margin: 0 0 4px 0; font-size: 20px; font-weight: 800; color: #0F172A; letter-spacing: -0.3px;">{{ $headerTitle }}</h2>
-    <p class="email-subtitle" style="margin: 0 0 20px 0; font-size: 13px; color: #64748B; line-height: 1.5;">{{ $headerSubtitle }}</p>
+    <h2 class="email-title">{{ $headerTitle }}</h2>
+    <p class="email-subtitle">{{ $headerSubtitle }}</p>
 
-    <div class="greeting" style="margin-bottom: 12px; font-size: 14px; font-weight: 700; color: #0F172A;">
+    <div class="greeting">
         Halo {{ $user->name }},
     </div>
 
-    <p class="paragraph" style="margin: 0 0 18px 0; font-size: 13.5px; line-height: 1.65; color: #334155;">
+    <p class="paragraph">
         Kami menginformasikan bahwa aktivitas <strong>{{ str_replace('_', ' ', $eventType) }}</strong> telah berhasil diproses untuk project riset berikut:
     </p>
 
     <!-- Structured Project Summary Card -->
-    <div class="card" style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 16px; padding: 18px 22px; margin: 22px 0;">
+    <div class="card">
         @if(!empty($project->main_image))
             <div style="margin-bottom: 16px; border-radius: 10px; overflow: hidden; border: 1px solid #E2E8F0; text-align: center; background-color: #FFFFFF;">
-                <img src="{{ url('/storage/' . $project->main_image) }}" alt="{{ $project->title }}" style="max-width: 100%; height: auto; display: block; border-radius: 10px;" />
+                <img src="{{ url('/storage/' . $project->main_image) }}" alt="{{ $project->title }}" style="max-width: 100%; height: auto; display: block; margin: 0 auto; border-radius: 10px;" />
             </div>
         @endif
 
-        <table class="card-table" width="100%" cellspacing="0" cellpadding="0" border="0" style="width: 100%; border-collapse: collapse;">
+        <table class="card-table">
             <tr>
-                <td class="card-label" style="padding: 10px 14px 10px 0; width: 36%; font-size: 12.5px; font-weight: 600; color: #64748B; vertical-align: middle; border-bottom: 1px solid #EDF2F7; white-space: nowrap;">
-                    Judul Project
-                </td>
-                <td class="card-value" style="padding: 10px 0; font-size: 13.5px; font-weight: 700; color: #0F172A; vertical-align: middle; border-bottom: 1px solid #EDF2F7;">
-                    {{ $project->title ?? $project->name }}
-                </td>
+                <td class="card-label">Judul Project</td>
+                <td class="card-value"><strong>{{ $project->title ?? $project->name }}</strong></td>
             </tr>
             <tr>
-                <td class="card-label" style="padding: 10px 14px 10px 0; width: 36%; font-size: 12.5px; font-weight: 600; color: #64748B; vertical-align: middle; border-bottom: 1px solid #EDF2F7; white-space: nowrap;">
-                    Kategori Riset
-                </td>
-                <td class="card-value" style="padding: 10px 0; font-size: 13px; vertical-align: middle; border-bottom: 1px solid #EDF2F7;">
-                    <span class="badge badge-info" style="display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; background-color: #EFF6FF; border: 1px solid #BFDBFE; color: #1E40AF; line-height: 1.2;">
-                        <span class="badge-dot badge-dot-info" style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #3B82F6; margin-right: 5px; vertical-align: middle;"></span>
+                <td class="card-label">Kategori Riset</td>
+                <td class="card-value">
+                    <span class="badge badge-info">
+                        <span class="badge-dot badge-dot-info"></span>
                         {{ $project->category ?? 'Spesifikasi Sistem & IoT' }}
                     </span>
                 </td>
             </tr>
             @if(!empty($project->project_leader))
             <tr>
-                <td class="card-label" style="padding: 10px 14px 10px 0; width: 36%; font-size: 12.5px; font-weight: 600; color: #64748B; vertical-align: middle; border-bottom: 1px solid #EDF2F7; white-space: nowrap;">
-                    Ketua Tim / Peneliti
-                </td>
-                <td class="card-value" style="padding: 10px 0; font-size: 13px; font-weight: 600; color: #1E293B; vertical-align: middle; border-bottom: 1px solid #EDF2F7;">
-                    {{ $project->project_leader }}
-                </td>
+                <td class="card-label">Ketua Tim / Peneliti</td>
+                <td class="card-value">{{ $project->project_leader }}</td>
             </tr>
             @endif
             <tr>
-                <td class="card-label" style="padding: 10px 14px 10px 0; width: 36%; font-size: 12.5px; font-weight: 600; color: #64748B; vertical-align: middle; border-bottom: 1px solid #EDF2F7; white-space: nowrap;">
-                    Status Terkini
-                </td>
-                <td class="card-value" style="padding: 10px 0; font-size: 13px; vertical-align: middle; border-bottom: 1px solid #EDF2F7;">
-                    @php
-                        $bgStyle = match($eventType) {
-                            'published', 'pdf_downloaded' => 'background-color: #ECFDF5; border: 1px solid #A7F3D0; color: #0AB600;',
-                            'unpublished' => 'background-color: #FFF7ED; border: 1px solid #FED7AA; color: #9A3412;',
-                            'deleted' => 'background-color: #FEF2F2; border: 1px solid #FECACA; color: #991B1B;',
-                            default => 'background-color: #EFF6FF; border: 1px solid #BFDBFE; color: #1E40AF;',
-                        };
-                        $dotColor = match($eventType) {
-                            'published', 'pdf_downloaded' => '#10B981',
-                            'unpublished' => '#EA580C',
-                            'deleted' => '#EF4444',
-                            default => '#3B82F6',
-                        };
-                    @endphp
-                    <span class="badge {{ $eventBadge['class'] }}" style="display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; {{ $bgStyle }} line-height: 1.2;">
-                        <span class="badge-dot {{ $eventBadge['dot'] }}" style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: {{ $dotColor }}; margin-right: 5px; vertical-align: middle;"></span>
+                <td class="card-label">Status Terkini</td>
+                <td class="card-value">
+                    <span class="badge {{ $eventBadge['class'] }}">
+                        <span class="badge-dot {{ $eventBadge['dot'] }}"></span>
                         {{ $eventBadge['label'] }}
                     </span>
                 </td>
             </tr>
             <tr>
-                <td class="card-label" style="padding: 10px 14px 2px 0; width: 36%; font-size: 12.5px; font-weight: 600; color: #64748B; vertical-align: middle; border-bottom: none; white-space: nowrap;">
-                    Waktu Pembaruan
-                </td>
-                <td class="card-value" style="padding: 10px 0 2px 0; font-size: 13px; font-weight: 600; color: #1E293B; vertical-align: middle; border-bottom: none;">
-                    {{ now()->translatedFormat('d F Y, H:i') . ' WIB' }}
-                </td>
+                <td class="card-label">Waktu Pembaruan</td>
+                <td class="card-value">{{ now()->translatedFormat('d F Y, H:i') . ' WIB' }}</td>
             </tr>
         </table>
     </div>
 
     @if($eventType !== 'deleted')
-        <div class="button-wrapper" style="margin: 26px 0 20px 0; text-align: left;">
+        <div class="button-wrapper">
             @if($eventType === 'published')
-                <a href="{{ url('/#projects-showcase') }}" class="btn-primary" target="_blank" style="display: inline-block; background-color: #0AB600; color: #FFFFFF !important; font-size: 13px; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 12px; text-align: center; box-shadow: 0 2px 6px rgba(10, 182, 0, 0.15);">
+                <a href="{{ url('/#projects-showcase') }}" class="btn-primary" target="_blank">
                     Lihat di Showcase Publik
                 </a>
             @else
-                <a href="{{ url('/projects/' . ($project->slug ?? $project->id)) }}" class="btn-primary" target="_blank" style="display: inline-block; background-color: #0AB600; color: #FFFFFF !important; font-size: 13px; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 12px; text-align: center; box-shadow: 0 2px 6px rgba(10, 182, 0, 0.15);">
+                <a href="{{ url('/projects/' . ($project->slug ?? $project->id)) }}" class="btn-primary" target="_blank">
                     Buka Detail Project
                 </a>
             @endif
         </div>
     @else
-        <div class="button-wrapper" style="margin: 26px 0 20px 0; text-align: left;">
-            <a href="{{ url('/projects') }}" class="btn-primary" target="_blank" style="display: inline-block; background-color: #0AB600; color: #FFFFFF !important; font-size: 13px; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 12px; text-align: center; box-shadow: 0 2px 6px rgba(10, 182, 0, 0.15);">
+        <div class="button-wrapper">
+            <a href="{{ url('/projects') }}" class="btn-primary" target="_blank">
                 Kembali ke Daftar Project
             </a>
         </div>
     @endif
 
-    <div class="info-callout" style="background-color: #F8FAFC; border-left: 3px solid #0AB600; border-radius: 0 10px 10px 0; padding: 12px 16px; margin: 20px 0 0 0; font-size: 12px; color: #475569; line-height: 1.5;">
+    <div class="info-callout">
         Seluruh histori perubahan dan versi dokumen tersimpan pada repositori audit laboratorium STAS-RG.
     </div>
 @endsection

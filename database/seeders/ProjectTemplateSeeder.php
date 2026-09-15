@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\ProjectTemplate;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class ProjectTemplateSeeder extends Seeder
 {
@@ -20,6 +21,7 @@ class ProjectTemplateSeeder extends Seeder
             // 1. Template Brosur A4 Lipat 3 (brochure_trifold)
             [
                 'name' => 'Brosur Inovasi Lipat 3 Riset STAS-RG',
+                'slug' => 'brosur-inovasi-lipat-3-riset-stas-rg',
                 'category' => 'Smart Agriculture & IoT',
                 'description' => 'Template brosur pameran dan leaflet inovasi lipat 3 (trifold) 3 panel modular untuk diseminasi produk teknologi riset, expo inovasi, dan profil kemitraan industri.',
                 'design_style' => 'modern_split',
@@ -109,6 +111,7 @@ class ProjectTemplateSeeder extends Seeder
             // 2. Template A4 Flyer Publikasi Riset & Expo (a4_flyer)
             [
                 'name' => 'A4 Flyer Publikasi Riset & Expo Teknologi',
+                'slug' => 'a4-flyer-publikasi-riset-expo-teknologi',
                 'category' => 'IoT & Automation',
                 'description' => 'Template publikasi 1 halaman A4 flyer resmi untuk display poster riset, pameran produk teknologi laboratorium, dan arsip berkas luaran proyek.',
                 'design_style' => 'classic_standard',
@@ -168,6 +171,7 @@ class ProjectTemplateSeeder extends Seeder
             // 3. Template Factsheet 2-Kolom Riset Terapan (factsheet_2col)
             [
                 'name' => 'Factsheet Eksekutif 2-Kolom Riset Terapan',
+                'slug' => 'factsheet-eksekutif-2-kolom-riset-terapan',
                 'category' => 'Telecommunication & Sensing',
                 'description' => 'Format ringkas 2-kolom berstruktur padat untuk brief investor, pitch mitra industri, lembar fakta hibah riset, dan katalog inovasi siap komersialisasi.',
                 'design_style' => 'academic_brief',
@@ -226,9 +230,11 @@ class ProjectTemplateSeeder extends Seeder
         ];
 
         foreach ($templates as $templateData) {
+            $slug = $templateData['slug'] ?? Str::slug($templateData['name']);
             ProjectTemplate::updateOrCreate(
                 ['name' => $templateData['name']],
                 array_merge($templateData, [
+                    'slug' => $slug,
                     'user_id' => $adminId,
                 ])
             );

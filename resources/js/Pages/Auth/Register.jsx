@@ -64,6 +64,16 @@ function RegisterFormContent() {
                 transition={{ duration: 0.3 }}
                 className="w-full p-7 sm:p-9 rounded-3xl bg-white dark:bg-[#18181B] border border-zinc-200/80 dark:border-zinc-800/80 transition-colors shadow-sm"
             >
+                {/* Header inside Card */}
+                <div className="text-center mb-6 sm:mb-8">
+                    <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                        {t.auth?.register?.title || 'Daftar Akun Baru'}
+                    </h1>
+                    <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-sm mx-auto leading-relaxed">
+                        {t.auth?.register?.subtitle || 'Buat akun untuk mengajukan akses ke platform STAS RG Projects.'}
+                    </p>
+                </div>
+
                 {/* Notice Alert about Admin Approval Flow */}
                 <div className="mb-6 p-3.5 rounded-2xl bg-[#0AB600]/10 border border-[#0AB600]/30 flex items-start gap-2.5">
                     <Info className="w-4 h-4 text-[#0AB600] shrink-0 mt-0.5" />

@@ -33,8 +33,21 @@ function ResetPasswordFormContent({ token, email }) {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                className="w-full p-7 sm:p-9 rounded-3xl bg-white dark:bg-[#18181B] border border-zinc-200/80 dark:border-zinc-800/80 transition-colors"
+                className="w-full p-7 sm:p-9 rounded-3xl bg-white dark:bg-[#18181B] border border-zinc-200/80 dark:border-zinc-800/80 transition-colors shadow-sm"
             >
+                {/* Header inside Card */}
+                <div className="text-center mb-6 sm:mb-8">
+                    <div className="w-12 h-12 rounded-2xl bg-[#0AB600]/10 text-[#0AB600] flex items-center justify-center mx-auto mb-3">
+                        <Lock className="w-6 h-6" />
+                    </div>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                        {t.auth?.reset?.title || 'Atur Ulang Kata Sandi'}
+                    </h1>
+                    <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-sm mx-auto leading-relaxed">
+                        {t.auth?.reset?.subtitle || 'Buat kata sandi baru yang aman untuk akun Anda.'}
+                    </p>
+                </div>
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {/* User Email Indicator */}
                     {data.email && (

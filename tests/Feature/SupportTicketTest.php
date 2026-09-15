@@ -356,4 +356,110 @@ class SupportTicketTest extends TestCase
             return $mail->hasTo('pengirim@example.com');
         });
     }
+
+    /**
+     * Test user can verify ticket with matching code and email.
+     */
+    public function test_user_can_verify_ticket_with_matching_code_and_email(): void
+    {
+        $ticket = SupportTicket::create([
+            'ticket_number' => 'STAS-20260915-VER1',
+            'name' => 'Ahmad Dani',
+            'email' => 'ahmad@example.com',
+            'category' => SupportTicket::CATEGORY_GENERAL,
+            'subject' => 'Pertanyaan Kerjasama',
+            'message' => 'Detail pertanyaan.',
+            'status' => SupportTicket::STATUS_PENDING,
+        ]);
+
+        $response = $this->post(route('support.track.verify'), [
+            'ticket_number' => 'STAS-20260915-VER1',
+            'email' => 'ahmad@example.com',
+        ]);
+
+        $response->assertRedirect(route('support.ticket.show', ['ticketNumber' => 'STAS-20260915-VER1']));
+        $this->assertEquals('ahmad@example.com', session('verified_ticket_STAS-20260915-VER1'));
+    }
+
+    /**
+     * Test verification fails with wrong email.
+     */
+    public function test_user_cannot_verify_ticket_with_wrong_email(): void
+    {
+        SupportTicket::create([
+            'ticket_number' => 'STAS-20260915-VER2',
+            'name' => 'Ahmad Dani',
+            'email' => 'ahmad@example.com',
+            'category' => SupportTicket::CATEGORY_GENERAL,
+            'subject' => 'Pertanyaan',
+            'message' => 'Detail.',
+            'status' => SupportTicket::STATUS_PENDING,
+        ]);
+
+        $response = $this->post(route('support.track.verify'), [
+            'ticket_number' => 'STAS-20260915-VER2',
+            'email' => 'wrong@example.com',
+        ]);
+
+        $response->assertSessionHasErrors('ticket_number');
+    }
+
+    /**
+     * Test user can send reply in live chat room and update replies history.
+     */
+    public function test_user_can_send_reply_in_live_chat(): void
+    {
+        $ticket = SupportTicket::create([
+            'ticket_number' => 'STAS-20260915-CHAT',
+            'name' => 'User Live Chat',
+            'email' => 'userchat@example.com',
+            'category' => SupportTicket::CATEGORY_TECHNICAL,
+            'subject' => 'Kendala API',
+            'message' => 'Pesan awal permohonan.',
+            'status' => SupportTicket::STATUS_PENDING,
+        ]);
+
+        session(['verified_ticket_STAS-20260915-CHAT' => 'userchat@example.com']);
+
+        $response = $this->post(route('support.ticket.reply', ['ticketNumber' => 'STAS-20260915-CHAT']), [
+            'message' => 'Ini pesan balasan dari user di live chat room.',
+            'email' => 'userchat@example.com',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('support_ticket_replies', [
+            'support_ticket_id' => $ticket->id,
+            'sender_type' => 'user',
+            'sender_name' => 'User Live Chat',
+            'message' => 'Ini pesan balasan dari user di live chat room.',
+        ]);
+    }
+
+    /**
+     * Test JSON messages polling endpoint.
+     */
+    public function test_polling_messages_endpoint_returns_json(): void
+    {
+        $ticket = SupportTicket::create([
+            'ticket_number' => 'STAS-20260915-POLL',
+            'name' => 'User Polling',
+            'email' => 'poll@example.com',
+            'category' => SupportTicket::CATEGORY_GENERAL,
+            'subject' => 'Polling Test',
+            'message' => 'Pesan test.',
+            'status' => SupportTicket::STATUS_PENDING,
+        ]);
+
+        session(['verified_ticket_STAS-20260915-POLL' => 'poll@example.com']);
+
+        $response = $this->getJson(route('api.support-tickets.messages', ['ticketNumber' => 'STAS-20260915-POLL']));
+
+        $response->assertOk();
+        $response->assertJsonStructure([
+            'success',
+            'status',
+            'replies',
+        ]);
+    }
 }

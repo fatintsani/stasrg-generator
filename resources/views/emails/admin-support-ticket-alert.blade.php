@@ -12,7 +12,7 @@
         <table class="card-table">
             <tr>
                 <td class="card-label">Nomor Tiket</td>
-                <td class="card-value"><strong style="color: #b91c1c; font-family: monospace; font-size: 15px;">#{{ $ticket->ticket_number }}</strong></td>
+                <td class="card-value"><strong style="color: #B91C1C; font-family: monospace; font-size: 14px;">#{{ $ticket->ticket_number }}</strong></td>
             </tr>
             <tr>
                 <td class="card-label">Nama Pengirim</td>
@@ -20,7 +20,7 @@
             </tr>
             <tr>
                 <td class="card-label">Email Pengirim</td>
-                <td class="card-value"><a href="mailto:{{ $ticket->email }}" style="color: #2563eb;">{{ $ticket->email }}</a></td>
+                <td class="card-value"><a href="mailto:{{ $ticket->email }}" style="color: #0AB600; text-decoration: none; word-break: break-all;">{{ $ticket->email }}</a></td>
             </tr>
             @if($ticket->phone)
             <tr>
@@ -41,7 +41,8 @@
             <tr>
                 <td class="card-label">Prioritas</td>
                 <td class="card-value">
-                    <span class="badge {{ $ticket->priority === 'urgent' ? 'badge-danger' : ($ticket->priority === 'high' ? 'badge-warning' : 'badge-primary') }}">
+                    <span class="badge {{ $ticket->priority === 'urgent' ? 'badge-error' : ($ticket->priority === 'high' ? 'badge-warning' : 'badge-info') }}">
+                        <span class="badge-dot {{ $ticket->priority === 'urgent' ? 'badge-dot-error' : ($ticket->priority === 'high' ? 'badge-dot-warning' : 'badge-dot-info') }}"></span>
                         {{ strtoupper($ticket->priority) }}
                     </span>
                 </td>
@@ -58,12 +59,12 @@
     </div>
 
     <!-- Message Preview Box -->
-    <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; border-radius: 8px; padding: 16px; margin: 20px 0;">
-        <div style="font-size: 12px; font-weight: 700; color: #991b1b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Isi Pesan Masuk:</div>
-        <p style="margin: 0; color: #1e293b; font-size: 14px; line-height: 1.6; white-space: pre-line;">{{ $ticket->message }}</p>
+    <div class="message-box message-box-danger">
+        <div style="font-size: 11px; font-weight: 700; color: #991B1B; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Isi Pesan Masuk:</div>
+        <p style="margin: 0; color: #1E293B; font-size: 13.5px; line-height: 1.6; white-space: pre-wrap; word-break: break-word;">{{ $ticket->message }}</p>
         @if($ticket->attachment_original_name)
-            <div style="margin-top: 10px; font-size: 12px; color: #7f1d1d;">
-                Ada Lampiran: <strong>{{ $ticket->attachment_original_name }}</strong>
+            <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #FECACA; font-size: 12px; color: #7F1D1D;">
+                Lampiran: <strong>{{ $ticket->attachment_original_name }}</strong>
             </div>
         @endif
     </div>

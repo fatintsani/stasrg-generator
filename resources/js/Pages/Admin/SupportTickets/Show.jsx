@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
 import { useApp } from '../../../Context/AppContext';
@@ -33,11 +33,16 @@ import {
     Share2,
     ChevronRight,
     Headphones,
+    Paperclip,
+    X,
+    Mic,
+    MicOff,
+    Square,
 } from 'lucide-react';
 
 export default function SupportTicketShow({ ticket }) {
-    const { t } = useApp();
-    const { showSuccess, showError, showConfirm } = useAlert();
+    const { t, language } = useApp();
+    const { showSuccess, showError, showConfirm, showWarning } = useAlert();
 
     const [statusDraft, setStatusDraft] = useState(ticket.status || 'pending');
     const [priorityDraft, setPriorityDraft] = useState(ticket.priority || 'medium');
@@ -46,6 +51,120 @@ export default function SupportTicketShow({ ticket }) {
     const [isDeleting, setIsDeleting] = useState(false);
     const [copiedNumber, setCopiedNumber] = useState(false);
     const [copiedEmail, setCopiedEmail] = useState(false);
+
+    // Live replies & attachments state
+    const [replies, setReplies] = useState(ticket.replies || []);
+    const [replyMessage, setReplyMessage] = useState('');
+    const [replyStatus, setReplyStatus] = useState(ticket.status === 'pending' ? 'in_progress' : ticket.status);
+    const [replyAttachment, setReplyAttachment] = useState(null);
+    const [attachmentError, setAttachmentError] = useState('');
+    const [isSendingReply, setIsSendingReply] = useState(false);
+
+    // Voice Speech-to-Text state
+    const [isListening, setIsListening] = useState(false);
+    const recognitionRef = useRef(null);
+    const fileInputRef = useRef(null);
+
+    // Web Speech API: Voice Recognition Setup
+    useEffect(() => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = language === 'id' ? 'id-ID' : 'en-US';
+
+            recognition.onstart = () => {
+                setIsListening(true);
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results?.[0]?.[0]?.transcript;
+                if (transcript) {
+                    setReplyMessage((prev) => (prev ? `${prev} ${transcript}` : transcript));
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.warn('Speech recognition error:', event.error);
+                if (event.error === 'not-allowed') {
+                    showWarning({
+                        title: 'Izin Mikrofon Ditolak',
+                        message: 'Harap izinkan akses mikrofon pada browser Anda untuk menggunakan fitur suara.',
+                    });
+                }
+                setIsListening(false);
+            };
+
+            recognition.onend = () => {
+                setIsListening(false);
+            };
+
+            recognitionRef.current = recognition;
+        }
+
+        return () => {
+            if (recognitionRef.current) {
+                try {
+                    recognitionRef.current.abort();
+                } catch {
+                    // ignore
+                }
+            }
+        };
+    }, [language]);
+
+    const handleToggleVoice = () => {
+        if (!recognitionRef.current) {
+            showWarning({
+                title: 'Input Suara Tidak Didukung',
+                message: 'Browser Anda belum mendukung Web Speech API.',
+                confirmText: 'Mengerti',
+            });
+            return;
+        }
+
+        if (isListening) {
+            recognitionRef.current.stop();
+            setIsListening(false);
+        } else {
+            try {
+                recognitionRef.current.start();
+            } catch (err) {
+                console.warn('Recognition start error:', err);
+                setIsListening(false);
+            }
+        }
+    };
+
+    // Auto-polling for live incoming user messages
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            try {
+                const response = await fetch(`/api/support-tickets/${ticket.ticket_number}/messages`, {
+                    headers: { Accept: 'application/json' },
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.replies) {
+                        setReplies((prevReplies) => {
+                            if (JSON.stringify(data.replies) !== JSON.stringify(prevReplies)) {
+                                return data.replies;
+                            }
+                            return prevReplies;
+                        });
+                        if (data.status && data.status !== statusDraft) {
+                            setStatusDraft(data.status);
+                        }
+                    }
+                }
+            } catch (e) {
+                // Silently ignore background polling errors
+            }
+        }, 4000);
+
+        return () => clearInterval(interval);
+    }, [ticket.ticket_number, statusDraft]);
 
     const categoryLabels = {
         general: { label: 'Pertanyaan Umum', color: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700' },
@@ -85,9 +204,45 @@ export default function SupportTicketShow({ ticket }) {
         }
     };
 
-    const [replyMessage, setReplyMessage] = useState('');
-    const [replyStatus, setReplyStatus] = useState(ticket.status === 'pending' ? 'in_progress' : ticket.status);
-    const [isSendingReply, setIsSendingReply] = useState(false);
+    const handleFileChange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.size > 5 * 1024 * 1024) {
+            const errorMsg = 'Ukuran berkas tidak boleh melebihi 5MB.';
+            setAttachmentError(errorMsg);
+            showWarning({
+                title: 'Ukuran Berkas Terlalu Besar',
+                message: errorMsg,
+                confirmText: 'Mengerti',
+            });
+            return;
+        }
+
+        const allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'zip', 'doc', 'docx'];
+        const ext = file.name.split('.').pop()?.toLowerCase();
+        if (!ext || !allowedExtensions.includes(ext)) {
+            const errorMsg = 'Format berkas tidak didukung (gunakan JPG, PNG, PDF, ZIP, DOCX).';
+            setAttachmentError(errorMsg);
+            showWarning({
+                title: 'Format Tidak Didukung',
+                message: errorMsg,
+                confirmText: 'Mengerti',
+            });
+            return;
+        }
+
+        setAttachmentError('');
+        setReplyAttachment(file);
+    };
+
+    const handleRemoveFile = () => {
+        setReplyAttachment(null);
+        setAttachmentError('');
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
 
     const replyTemplates = [
         {
@@ -127,23 +282,30 @@ export default function SupportTicketShow({ ticket }) {
 
     const handleSendEmailReply = (e) => {
         e?.preventDefault();
-        if (!replyMessage.trim()) {
+        if (!replyMessage.trim() && !replyAttachment) {
             showError('Pesan Kosong', 'Harap tuliskan isi pesan balasan email terlebih dahulu.');
             return;
         }
 
         setIsSendingReply(true);
+
+        const formData = new FormData();
+        formData.append('message', replyMessage);
+        formData.append('status', replyStatus);
+        if (replyAttachment) {
+            formData.append('attachment', replyAttachment);
+        }
+
         router.post(
             `/support-tickets/${ticket.id}/reply`,
+            formData,
             {
-                message: replyMessage,
-                status: replyStatus,
-            },
-            {
+                forceFormData: true,
                 preserveScroll: true,
                 onSuccess: () => {
                     setIsSendingReply(false);
                     setReplyMessage('');
+                    handleRemoveFile();
                     showSuccess(
                         'Email Balasan Terkirim',
                         `Balasan resmi berhasil dikirimkan via email ke ${ticket.email}.`
@@ -302,12 +464,12 @@ export default function SupportTicketShow({ ticket }) {
                 </div>
 
                 {/* 2-Column Responsive Layout */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    {/* Left Column (8 cols): Original Message & Resolution Form */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    {/* Left Column (8 cols): Unified Chronological Conversation Stream & Reply Composer */}
                     <div className="lg:col-span-8 space-y-6">
                         
-                        {/* 1. Original Message Content Box */}
-                        <div className="p-6 rounded-3xl bg-white dark:bg-[#101622] border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs space-y-4">
+                        {/* 1. Unified Conversation Stream Card */}
+                        <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#101622] border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs space-y-5">
                             <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
                                 <div className="flex items-center gap-2.5">
                                     <div className="p-2 rounded-xl bg-[#0AB600]/10 border border-[#0AB600]/30 text-[#0AB600]">
@@ -315,198 +477,122 @@ export default function SupportTicketShow({ ticket }) {
                                     </div>
                                     <div>
                                         <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                                            Isi Pesan Tiket Pengunjung
+                                            Riwayat Percakapan & Tiket
                                         </h3>
                                         <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                                            Pesan asli yang dikirimkan melalui formulir Helpdesk STAS-RG.
+                                            Percakapan dua arah terintegrasi email antara pengunjung dan tim CoE STAS-RG.
                                         </p>
                                     </div>
                                 </div>
+                                <span className="px-2.5 py-1 rounded-lg bg-[#0AB600]/10 text-[#0AB600] border border-[#0AB600]/30 text-xs font-semibold font-mono">
+                                    {1 + (replies ? replies.length : 0)} Pesan
+                                </span>
                             </div>
 
-                            {/* Message text area with rich styled quote box */}
-                            <div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/70 dark:border-zinc-800/70 text-slate-800 dark:text-zinc-200 text-sm leading-relaxed whitespace-pre-wrap selection:bg-[#0AB600]/20 selection:text-[#0AB600]">
-                                {ticket.message}
-                            </div>
-
-                            {/* Attachment Box (if present) */}
-                            {ticket.attachment_path && (
-                                <div className="p-4 rounded-2xl bg-[#0AB600]/5 border border-[#0AB600]/25 flex items-center justify-between gap-4">
-                                    <div className="flex items-center gap-3 overflow-hidden">
-                                        <div className="w-10 h-10 rounded-xl bg-[#0AB600]/15 text-[#0AB600] flex items-center justify-center shrink-0">
-                                            <FileText className="w-5 h-5" />
+                            {/* Thread Messages */}
+                            <div className="space-y-4">
+                                
+                                {/* Initial Message from Visitor */}
+                                <div className="p-4 sm:p-5 rounded-2xl bg-zinc-50/90 dark:bg-zinc-900/70 border border-zinc-200/70 dark:border-zinc-800/70 space-y-3">
+                                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="w-8 h-8 rounded-xl font-bold text-xs flex items-center justify-center shrink-0 bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                                                <User className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs font-bold text-slate-900 dark:text-white">
+                                                        {ticket.name}
+                                                    </span>
+                                                    <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-semibold border border-amber-200 dark:border-amber-900/60">
+                                                        Permohonan Awal Pengunjung
+                                                    </span>
+                                                </div>
+                                                <span className="text-[11px] text-zinc-400">{ticket.email}</span>
+                                            </div>
                                         </div>
-                                        <div className="truncate">
-                                            <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                                                {ticket.attachment_original_name || 'Lampiran Berkas'}
-                                            </p>
-                                            <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                                                {ticket.attachment_size ? `${(ticket.attachment_size / 1024).toFixed(1)} KB` : 'Dokumen pendukung'}
-                                            </p>
-                                        </div>
-                                    </div>
 
-                                    <a
-                                        href={ticket.attachment_url || `/storage/${ticket.attachment_path}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        download
-                                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0AB600] hover:bg-[#089600] text-white text-xs font-semibold transition-all shadow-xs shrink-0 cursor-pointer"
-                                    >
-                                        <Download className="w-3.5 h-3.5" />
-                                        <span>Unduh Berkas</span>
-                                    </a>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* 2. Official Email Reply Composer Card */}
-                        <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#101622] border border-blue-200/80 dark:border-blue-900/40 shadow-xs space-y-5">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-100 dark:border-zinc-800/80">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2.5 rounded-2xl bg-blue-600 text-white shadow-xs">
-                                        <Mail className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                                                Kirim Balasan Resmi via Email
-                                            </h3>
-                                            <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-[10px] font-semibold border border-blue-200 dark:border-blue-900/50">
-                                                Email Notifikasi
+                                        <div className="flex items-center gap-2 text-[11px] text-zinc-400">
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${priorityBadges[ticket.priority]?.color || priorityBadges.medium.color}`}>
+                                                {priorityBadges[ticket.priority]?.label || ticket.priority}
                                             </span>
+                                            <span>{ticket.created_at}</span>
                                         </div>
-                                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                                            Tanggapan akan dikirimkan langsung ke <strong className="text-slate-800 dark:text-zinc-200">{ticket.email}</strong> dengan template resmi CoE STAS-RG.
-                                        </p>
                                     </div>
-                                </div>
-                            </div>
 
-                            {/* Quick Response Templates */}
-                            <div className="space-y-2">
-                                <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
-                                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                                    <span>Pilih Templat Tanggapan Cepat:</span>
-                                </span>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    {replyTemplates.map((template) => (
-                                        <button
-                                            key={template.id}
-                                            type="button"
-                                            onClick={() => applyReplyTemplate(template)}
-                                            className="p-2.5 rounded-xl text-left bg-zinc-50 dark:bg-zinc-900/60 hover:bg-blue-50/70 dark:hover:bg-blue-950/30 border border-zinc-200/70 dark:border-zinc-800/70 hover:border-blue-300 dark:hover:border-blue-800 transition-all group cursor-pointer"
-                                        >
-                                            <div className="text-xs font-bold text-slate-800 dark:text-zinc-200 group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                                                {template.title}
-                                            </div>
-                                            <div className="text-[10px] text-zinc-500 dark:text-zinc-400 line-clamp-1">
-                                                {template.desc}
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Reply Message Form */}
-                            <form onSubmit={handleSendEmailReply} className="space-y-4 pt-1">
-                                <div className="space-y-1.5">
-                                    <label className="block text-xs font-semibold text-slate-800 dark:text-zinc-200 flex items-center justify-between">
-                                        <span>Isi Pesan Balasan Email</span>
-                                        <span className="text-[11px] font-normal text-zinc-400">Mendukung format teks rapi & salam penutup</span>
-                                    </label>
-                                    <textarea
-                                        rows={6}
-                                        value={replyMessage}
-                                        onChange={(e) => setReplyMessage(e.target.value)}
-                                        placeholder={`Tuliskan tanggapan resmi laboratorium untuk ${ticket.name}...`}
-                                        className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors resize-y"
+                                    {/* Message Body */}
+                                    <div
+                                        className="p-3.5 rounded-xl bg-white dark:bg-zinc-950/60 border border-zinc-200/50 dark:border-zinc-800/50 text-slate-800 dark:text-zinc-200 text-xs sm:text-sm leading-relaxed prose dark:prose-invert max-w-none"
+                                        dangerouslySetInnerHTML={{ __html: ticket.message }}
                                     />
+
+                                    {/* Attachment (if any) */}
+                                    {ticket.attachment_path && (
+                                        <div className="pt-1 flex items-center justify-between gap-3 bg-[#0AB600]/5 p-2.5 rounded-xl border border-[#0AB600]/20">
+                                            <div className="flex items-center gap-2 truncate">
+                                                <FileText className="w-4 h-4 text-[#0AB600] shrink-0" />
+                                                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
+                                                    {ticket.attachment_original_name || 'Lampiran Berkas'}
+                                                </span>
+                                            </div>
+                                            <a
+                                                href={ticket.attachment_url || `/storage/${ticket.attachment_path}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                download
+                                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#0AB600] hover:bg-[#089600] text-white text-[11px] font-semibold transition-all shrink-0 cursor-pointer"
+                                            >
+                                                <Download className="w-3 h-3" />
+                                                <span>Unduh</span>
+                                            </a>
+                                        </div>
+                                    )}
                                 </div>
 
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
-                                    <div className="flex items-center gap-2">
-                                        <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 shrink-0">
-                                            Status setelah membalas:
-                                        </label>
-                                        <select
-                                            value={replyStatus}
-                                            onChange={(e) => setReplyStatus(e.target.value)}
-                                            className="px-3 py-1.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                                        >
-                                            <option value="in_progress">Sedang Diproses (In Progress)</option>
-                                            <option value="resolved">Tandai Selesai (Resolved)</option>
-                                            <option value="closed">Tutup Tiket (Closed)</option>
-                                            <option value="pending">Tetap Menunggu (Pending)</option>
-                                        </select>
-                                    </div>
+                                {/* Chronological Replies */}
+                                {replies && replies.map((reply) => {
+                                    const isUser = reply.sender_type === 'user';
 
-                                    <button
-                                        type="submit"
-                                        disabled={isSendingReply || !replyMessage.trim()}
-                                        className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shrink-0"
-                                    >
-                                        {isSendingReply ? (
-                                            <>
-                                                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                <span>Mengirim Email...</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Send className="w-3.5 h-3.5" />
-                                                <span>Kirim Balasan Email Resmi</span>
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-
-                        {/* 3. Communication Timeline & Replies Thread */}
-                        <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#101622] border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs space-y-4">
-                            <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="p-2 rounded-xl bg-teal-500/10 border border-teal-500/30 text-teal-500">
-                                        <MessageSquare className="w-4 h-4" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                                            Riwayat Komunikasi & Balasan Email
-                                        </h3>
-                                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                                            Jejak pesan balasan resmi yang telah dikirimkan oleh tim admin ke pengguna.
-                                        </p>
-                                    </div>
-                                </div>
-                                <span className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-semibold font-mono">
-                                    {ticket.replies ? ticket.replies.length : 0} Balasan
-                                </span>
-                            </div>
-
-                            {ticket.replies && ticket.replies.length > 0 ? (
-                                <div className="space-y-4">
-                                    {ticket.replies.map((reply) => (
+                                    return (
                                         <div
                                             key={reply.id}
-                                            className="p-4 sm:p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/70 dark:border-zinc-800/70 space-y-3"
+                                            className={`p-4 sm:p-5 rounded-2xl border space-y-3 ${
+                                                isUser
+                                                    ? 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-200/70 dark:border-amber-900/50'
+                                                    : 'bg-blue-50/30 dark:bg-blue-950/20 border-blue-200/70 dark:border-blue-900/50'
+                                            }`}
                                         >
                                             <div className="flex items-center justify-between gap-3 flex-wrap">
                                                 <div className="flex items-center gap-2.5">
-                                                    <div className="w-8 h-8 rounded-xl bg-blue-600/15 text-blue-600 dark:text-blue-400 font-bold text-xs flex items-center justify-center shrink-0">
-                                                        {reply.user?.name ? reply.user.name.charAt(0).toUpperCase() : 'A'}
+                                                    <div
+                                                        className={`w-8 h-8 rounded-xl font-bold text-xs flex items-center justify-center shrink-0 ${
+                                                            isUser
+                                                                ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                                                                : 'bg-[#0AB600]/15 text-[#0AB600]'
+                                                        }`}
+                                                    >
+                                                        {isUser ? <User className="w-4 h-4" /> : (reply.user?.name ? reply.user.name.charAt(0).toUpperCase() : 'A')}
                                                     </div>
                                                     <div>
                                                         <div className="flex items-center gap-2">
                                                             <span className="text-xs font-bold text-slate-900 dark:text-white">
-                                                                {reply.user?.name || 'Admin Laboratorium'}
+                                                                {isUser
+                                                                    ? (reply.sender_name || ticket.name)
+                                                                    : (reply.user?.name || reply.sender_name || 'Admin Laboratorium')}
                                                             </span>
-                                                            <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-medium">
-                                                                <CheckCheck className="w-3 h-3 text-blue-500" />
-                                                                Terkirim via Email
-                                                            </span>
+                                                            {isUser ? (
+                                                                <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-semibold border border-amber-200 dark:border-amber-900/60">
+                                                                    Pengunjung / User
+                                                                </span>
+                                                            ) : (
+                                                                <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md bg-[#0AB600]/10 text-[#0AB600] font-semibold border border-[#0AB600]/30">
+                                                                    <CheckCheck className="w-3 h-3 text-[#0AB600]" />
+                                                                    Admin CoE STAS-RG
+                                                                </span>
+                                                            )}
                                                         </div>
                                                         <span className="text-[11px] text-zinc-400">
-                                                            {reply.user?.email}
+                                                            {isUser ? ticket.email : (reply.user?.email || 'admin@stasrg.com')}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -514,7 +600,7 @@ export default function SupportTicketShow({ ticket }) {
                                                 <div className="flex items-center gap-2 text-[11px] text-zinc-400">
                                                     {reply.status_at_reply && (
                                                         <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${statusBadges[reply.status_at_reply]?.color || statusBadges.pending.color}`}>
-                                                            Status: {statusBadges[reply.status_at_reply]?.label || reply.status_at_reply}
+                                                            {statusBadges[reply.status_at_reply]?.label || reply.status_at_reply}
                                                         </span>
                                                     )}
                                                     <span>{reply.created_at} ({reply.created_at_human})</span>
@@ -523,123 +609,250 @@ export default function SupportTicketShow({ ticket }) {
 
                                             <div className="p-3.5 rounded-xl bg-white dark:bg-zinc-950/60 border border-zinc-200/50 dark:border-zinc-800/50 text-slate-800 dark:text-zinc-200 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
                                                 {reply.message}
+
+                                                {reply.attachment_url && (
+                                                    <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-900 p-2.5 rounded-xl">
+                                                        <div className="flex items-center gap-2 truncate">
+                                                            <FileText className="w-4 h-4 text-[#0AB600] shrink-0" />
+                                                            <span className="text-xs font-semibold truncate">
+                                                                {reply.attachment_original_name || 'Lampiran Berkas'}
+                                                            </span>
+                                                        </div>
+                                                        <a
+                                                            href={reply.attachment_url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            download
+                                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#0AB600] hover:bg-[#089600] text-white text-[11px] font-semibold transition-all shrink-0"
+                                                        >
+                                                            <Download className="w-3 h-3" />
+                                                            <span>Unduh</span>
+                                                        </a>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-900/40 border border-dashed border-zinc-200 dark:border-zinc-800 text-center space-y-1.5">
-                                    <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-                                        Belum ada pesan balasan resmi yang dikirimkan.
-                                    </p>
-                                    <p className="text-[11px] text-zinc-400">
-                                        Gunakan formulir di atas untuk mengirimkan tanggapan langsung ke email pengirim.
-                                    </p>
-                                </div>
-                            )}
+                                    );
+                                })}
+
+                            </div>
                         </div>
 
-                        {/* 4. Alternative Direct Channels */}
-                        <div className="p-6 rounded-3xl bg-white dark:bg-[#101622] border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs space-y-4">
+                        {/* 2. Official Email Reply Composer Card (Positioned directly below the conversation thread) */}
+                        <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#101622] border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs space-y-4">
                             <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
                                 <div className="flex items-center gap-2.5">
-                                    <div className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-                                        <Share2 className="w-4 h-4" />
+                                    <div className="p-2 rounded-xl bg-blue-600 text-white shadow-xs">
+                                        <Mail className="w-4 h-4" />
                                     </div>
                                     <div>
                                         <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                                            Saluran Kontak Alternatif
+                                            Kirim Balasan Resmi
                                         </h3>
                                         <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                                            Tautan cepat membuka aplikasi email eksternal atau percakapan WhatsApp.
+                                            Tanggapan akan terkirim langsung ke email <strong className="text-slate-800 dark:text-zinc-200">{ticket.email}</strong> dan muncul di ruang lacak tiket pengunjung.
                                         </p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                                {/* Email Reply Action Button */}
-                                <a
-                                    href={mailtoUrl}
-                                    className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/70 dark:border-zinc-800/70 hover:border-blue-300 dark:hover:border-blue-800 transition-all flex items-start gap-3 group cursor-pointer"
-                                >
-                                    <div className="p-2 rounded-xl bg-blue-600 text-white shrink-0 group-hover:scale-105 transition-transform">
-                                        <Mail className="w-3.5 h-3.5" />
-                                    </div>
-                                    <div className="space-y-0.5">
-                                        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
-                                            <span>Buka Email Client</span>
-                                            <ExternalLink className="w-3 h-3 text-zinc-400" />
-                                        </div>
-                                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-1">
-                                            Gunakan Outlook / Thunderbird / Gmail lokal
-                                        </p>
-                                    </div>
-                                </a>
-
-                                {/* WhatsApp Reply Action Button */}
-                                {ticket.phone ? (
-                                    <a
-                                        href={whatsappUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="p-3.5 rounded-2xl bg-[#0AB600]/5 dark:bg-[#0AB600]/10 border border-[#0AB600]/30 hover:border-[#0AB600] transition-all flex items-start gap-3 group cursor-pointer"
-                                    >
-                                        <div className="p-2 rounded-xl bg-[#0AB600] text-white shrink-0 group-hover:scale-105 transition-transform">
-                                            <Phone className="w-3.5 h-3.5" />
-                                        </div>
-                                        <div className="space-y-0.5">
-                                            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-[#0AB600]">
-                                                <span>Kirim Pesan WhatsApp</span>
-                                                <ExternalLink className="w-3 h-3 text-[#0AB600]" />
-                                            </div>
-                                            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-1">
-                                                Kontak instan ke {ticket.phone}
-                                            </p>
-                                        </div>
-                                    </a>
-                                ) : (
-                                    <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200/60 dark:border-zinc-800/60 flex items-start gap-3 opacity-60">
-                                        <div className="p-2 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-400 shrink-0">
-                                            <Phone className="w-3.5 h-3.5" />
-                                        </div>
-                                        <div className="space-y-0.5">
-                                            <p className="text-xs font-semibold text-zinc-500">WhatsApp Tidak Tersedia</p>
-                                            <p className="text-[11px] text-zinc-400">Pengirim tidak mencantumkan nomor telepon.</p>
-                                        </div>
-                                    </div>
-                                )}
+                            {/* Quick Response Templates */}
+                            <div className="space-y-1.5">
+                                <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+                                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                                    <span>Templat Balasan Cepat:</span>
+                                </span>
+                                <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                                    {replyTemplates.map((template) => (
+                                        <button
+                                            key={template.id}
+                                            type="button"
+                                            onClick={() => applyReplyTemplate(template)}
+                                            className="px-3 py-1.5 rounded-xl whitespace-nowrap text-xs font-semibold bg-zinc-50 dark:bg-zinc-900/60 hover:bg-[#0AB600]/10 hover:text-[#0AB600] border border-zinc-200/70 dark:border-zinc-800/70 hover:border-[#0AB600]/30 transition-all cursor-pointer shrink-0"
+                                        >
+                                            {template.title}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
+
+                            {/* Active Voice Listening Banner */}
+                            {isListening && (
+                                <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-[#0AB600]/10 border border-[#0AB600]/30 text-[#0AB600] animate-in fade-in-50">
+                                    <div className="flex items-center gap-2.5">
+                                        <span className="relative flex h-3 w-3">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#0AB600] opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-[#0AB600]"></span>
+                                        </span>
+                                        <div className="flex items-center gap-1.5 text-xs font-semibold">
+                                            <Mic className="w-3.5 h-3.5 animate-bounce text-[#0AB600]" />
+                                            <span>Mendengarkan suara... Silakan berbicara.</span>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleToggleVoice}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#0AB600] hover:bg-[#089600] text-white text-[11px] font-bold transition-all shadow-xs cursor-pointer"
+                                    >
+                                        <Square className="w-3 h-3 fill-current" />
+                                        <span>Selesai Bicara</span>
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Reply Message Form with Unified Card */}
+                            <form onSubmit={handleSendEmailReply} className="space-y-3">
+                                <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/80 focus-within:border-[#0AB600] focus-within:ring-2 focus-within:ring-[#0AB600]/20 transition-all p-3 space-y-2 shadow-xs">
+                                    
+                                    {/* Attachment Preview Pill (if any) */}
+                                    {replyAttachment && (
+                                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 text-xs font-semibold text-blue-700 dark:text-blue-300">
+                                            <FileText className="w-3.5 h-3.5 shrink-0" />
+                                            <span className="truncate max-w-xs">{replyAttachment.name}</span>
+                                            <button
+                                                type="button"
+                                                onClick={handleRemoveFile}
+                                                className="p-1 hover:bg-blue-200/50 rounded-full transition-colors cursor-pointer"
+                                            >
+                                                <X className="w-3 h-3 text-slate-500 hover:text-rose-500" />
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* Textarea Input */}
+                                    <textarea
+                                        rows={4}
+                                        value={replyMessage}
+                                        onChange={(e) => setReplyMessage(e.target.value)}
+                                        placeholder={`Tuliskan tanggapan resmi laboratorium untuk ${ticket.name}...`}
+                                        className="w-full bg-transparent border-0 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-0 resize-y p-1 leading-relaxed"
+                                    />
+
+                                    {/* Toolbar inside wrapper */}
+                                    <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-zinc-200/60 dark:border-zinc-800/60">
+                                        
+                                        {/* Left Buttons: File Attachment + Voice */}
+                                        <div className="flex items-center gap-1.5">
+                                            <input
+                                                type="file"
+                                                ref={fileInputRef}
+                                                onChange={handleFileChange}
+                                                className="hidden"
+                                                accept=".jpg,.jpeg,.png,.pdf,.zip,.doc,.docx"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => fileInputRef.current?.click()}
+                                                title="Lampirkan Dokumen / Gambar"
+                                                className={`p-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold ${
+                                                    replyAttachment
+                                                        ? 'bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-950/50'
+                                                        : 'hover:bg-zinc-200/60 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                                                }`}
+                                            >
+                                                <Paperclip className="w-4 h-4" />
+                                                <span className="hidden sm:inline text-[11px]">
+                                                    {replyAttachment ? 'Lampiran Dipilih' : 'Lampirkan Berkas'}
+                                                </span>
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={handleToggleVoice}
+                                                title={isListening ? 'Hentikan Rekam Suara' : 'Diktekan Pesan dengan Suara (Voice Input)'}
+                                                className={`p-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold ${
+                                                    isListening
+                                                        ? 'bg-rose-500 text-white shadow-md shadow-rose-500/25 animate-pulse'
+                                                        : 'hover:bg-zinc-200/60 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                                                }`}
+                                            >
+                                                {isListening ? (
+                                                    <>
+                                                        <MicOff className="w-4 h-4" />
+                                                        <span className="text-[11px] font-bold">Merekam...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Mic className="w-4 h-4 text-[#0AB600]" />
+                                                        <span className="hidden sm:inline text-[11px]">Input Suara</span>
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+
+                                        {/* Right Controls: Status Update + Send Button */}
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-[11px] text-zinc-500 dark:text-zinc-400 hidden sm:inline">Status:</span>
+                                                <select
+                                                    value={replyStatus}
+                                                    onChange={(e) => setReplyStatus(e.target.value)}
+                                                    className="px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#0AB600]"
+                                                >
+                                                    <option value="in_progress">Diproses</option>
+                                                    <option value="resolved">Selesai</option>
+                                                    <option value="closed">Ditutup</option>
+                                                    <option value="pending">Menunggu</option>
+                                                </select>
+                                            </div>
+
+                                            <button
+                                                type="submit"
+                                                disabled={isSendingReply || (!replyMessage.trim() && !replyAttachment)}
+                                                className="px-4 py-2 rounded-xl bg-[#0AB600] hover:bg-[#089600] text-white text-xs font-bold transition-all shadow-md shadow-[#0AB600]/20 flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                                            >
+                                                {isSendingReply ? (
+                                                    <>
+                                                        <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                        <span>Mengirim...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Send className="w-3.5 h-3.5" />
+                                                        <span>Kirim Balasan</span>
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {attachmentError && (
+                                    <p className="text-rose-500 text-xs flex items-center gap-1 px-1">
+                                        <AlertCircle className="w-3.5 h-3.5" /> {attachmentError}
+                                    </p>
+                                )}
+                            </form>
                         </div>
 
-                        {/* 3. Ticket Resolution & Admin Management Form */}
-                        <form onSubmit={handleSaveResolution} className="p-6 rounded-3xl bg-white dark:bg-[#101622] border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs space-y-5">
+                    </div>
+
+                    {/* Right Column (4 cols): Consolidated Ticket Settings, Profile & Quick Actions */}
+                    <div className="lg:col-span-4 space-y-6">
+                        
+                        {/* 1. Ticket Settings & Internal Notes Card */}
+                        <form onSubmit={handleSaveResolution} className="p-6 rounded-3xl bg-white dark:bg-[#101622] border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs space-y-4">
                             <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
                                 <div className="flex items-center gap-2.5">
                                     <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-500">
                                         <Shield className="w-4 h-4" />
                                     </div>
-                                    <div>
-                                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                                            Status Penanganan & Catatan Internal
-                                        </h3>
-                                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                                            Perbarui status kemajuan tiket dan catat solusi yang diberikan.
-                                        </p>
-                                    </div>
+                                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                                        Pengaturan & Catatan Internal
+                                    </h3>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-3 text-xs">
                                 {/* Status Selector */}
-                                <div className="space-y-1.5">
-                                    <label className="block text-xs font-semibold text-slate-800 dark:text-zinc-200">
+                                <div className="space-y-1">
+                                    <label className="block font-semibold text-slate-800 dark:text-zinc-200">
                                         Status Tiket
                                     </label>
                                     <select
                                         value={statusDraft}
                                         onChange={(e) => setStatusDraft(e.target.value)}
-                                        className="w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0AB600]/20 focus:border-[#0AB600] transition-colors"
+                                        className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#0AB600]"
                                     >
                                         <option value="pending">Menunggu (Pending)</option>
                                         <option value="in_progress">Sedang Diproses (In Progress)</option>
@@ -649,14 +862,14 @@ export default function SupportTicketShow({ ticket }) {
                                 </div>
 
                                 {/* Priority Selector */}
-                                <div className="space-y-1.5">
-                                    <label className="block text-xs font-semibold text-slate-800 dark:text-zinc-200">
+                                <div className="space-y-1">
+                                    <label className="block font-semibold text-slate-800 dark:text-zinc-200">
                                         Tingkat Prioritas
                                     </label>
                                     <select
                                         value={priorityDraft}
                                         onChange={(e) => setPriorityDraft(e.target.value)}
-                                        className="w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0AB600]/20 focus:border-[#0AB600] transition-colors"
+                                        className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#0AB600]"
                                     >
                                         <option value="low">Rendah (Low)</option>
                                         <option value="medium">Sedang (Medium)</option>
@@ -664,68 +877,57 @@ export default function SupportTicketShow({ ticket }) {
                                         <option value="urgent">Urgent / Kritis</option>
                                     </select>
                                 </div>
-                            </div>
 
-                            {/* Admin Notes / Resolution Summary Textarea */}
-                            <div className="space-y-1.5">
-                                <label className="block text-xs font-semibold text-slate-800 dark:text-zinc-200 flex items-center justify-between">
-                                    <span>Catatan Penanganan & Ringkasan Solusi</span>
-                                    <span className="text-[11px] font-normal text-zinc-400">Internal admin & arsip riset</span>
-                                </label>
-                                <textarea
-                                    rows={4}
-                                    value={adminNotesDraft}
-                                    onChange={(e) => setAdminNotesDraft(e.target.value)}
-                                    placeholder="Tuliskan ringkasan jawaban yang telah dikirimkan, tindak lanjut laboratorium, atau hasil koordinasi..."
-                                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#0AB600]/20 focus:border-[#0AB600] transition-colors resize-y"
-                                />
-                            </div>
-
-                            {/* Resolver Info Banner */}
-                            {ticket.resolver && (
-                                <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/70 dark:border-zinc-800/70 text-xs text-zinc-600 dark:text-zinc-400 flex items-center gap-2">
-                                    <CheckCircle2 className="w-4 h-4 text-[#0AB600] shrink-0" />
-                                    <span>
-                                        Tiket diselesaikan oleh <strong className="text-slate-800 dark:text-slate-200 font-semibold">{ticket.resolver.name}</strong> ({ticket.resolver.email}) pada {ticket.resolved_at}.
-                                    </span>
+                                {/* Admin Notes */}
+                                <div className="space-y-1">
+                                    <label className="block font-semibold text-slate-800 dark:text-zinc-200 flex items-center justify-between">
+                                        <span>Catatan Solusi / Audit</span>
+                                        <span className="text-[10px] text-zinc-400 font-normal">Internal Lab</span>
+                                    </label>
+                                    <textarea
+                                        rows={3}
+                                        value={adminNotesDraft}
+                                        onChange={(e) => setAdminNotesDraft(e.target.value)}
+                                        placeholder="Tuliskan catatan tindak lanjut internal..."
+                                        className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-[#0AB600] resize-y"
+                                    />
                                 </div>
-                            )}
 
-                            {/* Submit & Reset Buttons */}
-                            <div className="flex items-center justify-end gap-3 pt-2">
+                                {ticket.resolver && (
+                                    <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/70 dark:border-zinc-800/70 text-[11px] text-zinc-500 flex items-center gap-1.5">
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-[#0AB600] shrink-0" />
+                                        <span>Diselesaikan: <strong>{ticket.resolver.name}</strong></span>
+                                    </div>
+                                )}
+
                                 <button
                                     type="submit"
                                     disabled={isSaving}
-                                    className="px-6 py-2.5 rounded-xl bg-[#0AB600] hover:bg-[#089600] text-white text-xs font-bold transition-all shadow-xs flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+                                    className="w-full py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-white text-white dark:text-zinc-900 text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                                 >
                                     {isSaving ? (
                                         <>
-                                            <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                            <span>Menyimpan Perubahan...</span>
+                                            <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                            <span>Menyimpan...</span>
                                         </>
                                     ) : (
                                         <>
-                                            <Save className="w-4 h-4" />
-                                            <span>Simpan Perubahan Tiket</span>
+                                            <Save className="w-3.5 h-3.5" />
+                                            <span>Simpan Pengaturan Tiket</span>
                                         </>
                                     )}
                                 </button>
                             </div>
                         </form>
 
-                    </div>
-
-                    {/* Right Column (4 cols): Sender Profile & System Metadata */}
-                    <div className="lg:col-span-4 space-y-6">
-                        
-                        {/* 1. Sender Profile Card */}
+                        {/* 2. Sender Profile Card */}
                         <div className="p-6 rounded-3xl bg-white dark:bg-[#101622] border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs space-y-4">
                             <h3 className="text-sm font-bold text-slate-900 dark:text-white pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
                                 Profil Pengirim
                             </h3>
 
-                            <div className="flex items-center gap-3.5">
-                                <div className="w-12 h-12 rounded-2xl bg-[#0AB600]/10 border border-[#0AB600]/30 text-[#0AB600] font-bold text-base flex items-center justify-center shrink-0">
+                            <div className="flex items-center gap-3">
+                                <div className="w-11 h-11 rounded-2xl bg-[#0AB600]/10 border border-[#0AB600]/30 text-[#0AB600] font-bold text-base flex items-center justify-center shrink-0">
                                     {ticket.name ? ticket.name.charAt(0).toUpperCase() : 'U'}
                                 </div>
                                 <div className="overflow-hidden">
@@ -743,96 +945,127 @@ export default function SupportTicketShow({ ticket }) {
                                 </div>
                             </div>
 
-                            <div className="space-y-3 pt-2 border-t border-zinc-100 dark:border-zinc-800/60 text-xs">
-                                {/* Email Row */}
-                                <div className="space-y-1">
-                                    <span className="text-[10px] font-mono uppercase tracking-wider font-semibold text-zinc-400">
-                                        Alamat Email
-                                    </span>
-                                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/60 gap-2">
-                                        <a
-                                            href={`mailto:${ticket.email}`}
-                                            className="font-medium text-[#0AB600] hover:underline truncate"
-                                        >
-                                            {ticket.email}
-                                        </a>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleCopyText(ticket.email, 'email')}
-                                            title="Salin Email"
-                                            className="p-1 text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
-                                        >
-                                            {copiedEmail ? <Check className="w-3.5 h-3.5 text-[#0AB600]" /> : <Copy className="w-3.5 h-3.5" />}
-                                        </button>
-                                    </div>
+                            <div className="space-y-2.5 pt-2 border-t border-zinc-100 dark:border-zinc-800/60 text-xs">
+                                <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/60 gap-2">
+                                    <a
+                                        href={`mailto:${ticket.email}`}
+                                        className="font-medium text-[#0AB600] hover:underline truncate"
+                                    >
+                                        {ticket.email}
+                                    </a>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleCopyText(ticket.email, 'email')}
+                                        title="Salin Email"
+                                        className="p-1 text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                                    >
+                                        {copiedEmail ? <Check className="w-3.5 h-3.5 text-[#0AB600]" /> : <Copy className="w-3.5 h-3.5" />}
+                                    </button>
                                 </div>
 
-                                {/* Phone Row */}
                                 {ticket.phone && (
-                                    <div className="space-y-1">
-                                        <span className="text-[10px] font-mono uppercase tracking-wider font-semibold text-zinc-400">
-                                            Nomor Kontak / WhatsApp
-                                        </span>
-                                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/60 gap-2">
-                                            <a
-                                                href={`https://wa.me/${whatsappPhone}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="font-medium text-[#0AB600] hover:underline font-mono"
-                                            >
-                                                {ticket.phone}
-                                            </a>
-                                            <a
-                                                href={`https://wa.me/${whatsappPhone}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="p-1 text-zinc-400 hover:text-[#0AB600] transition-colors"
-                                                title="Buka Chat WhatsApp"
-                                            >
-                                                <ExternalLink className="w-3.5 h-3.5" />
-                                            </a>
-                                        </div>
+                                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/60 gap-2">
+                                        <a
+                                            href={`https://wa.me/${whatsappPhone}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="font-medium text-[#0AB600] hover:underline font-mono"
+                                        >
+                                            {ticket.phone}
+                                        </a>
+                                        <a
+                                            href={`https://wa.me/${whatsappPhone}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="p-1 text-zinc-400 hover:text-[#0AB600] transition-colors"
+                                            title="Buka Chat WhatsApp"
+                                        >
+                                            <ExternalLink className="w-3.5 h-3.5" />
+                                        </a>
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        {/* 2. System Metadata Card */}
-                        <div className="p-6 rounded-3xl bg-white dark:bg-[#101622] border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs space-y-3.5">
+                        {/* 3. Alternative Direct Action Channels */}
+                        <div className="p-6 rounded-3xl bg-white dark:bg-[#101622] border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs space-y-3">
+                            <h3 className="text-sm font-bold text-slate-900 dark:text-white pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
+                                Saluran Kontak Cepat
+                            </h3>
+
+                            <div className="grid grid-cols-1 gap-2.5">
+                                <a
+                                    href={mailtoUrl}
+                                    className="p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/70 dark:border-zinc-800/70 hover:border-[#0AB600] transition-all flex items-center gap-3 group cursor-pointer"
+                                >
+                                    <div className="p-2 rounded-xl bg-blue-600 text-white shrink-0">
+                                        <Mail className="w-3.5 h-3.5" />
+                                    </div>
+                                    <div className="space-y-0.5 min-w-0">
+                                        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
+                                            <span>Buka Email Client Lokal</span>
+                                            <ExternalLink className="w-3 h-3 text-zinc-400" />
+                                        </div>
+                                        <p className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate">
+                                            Outlook / Thunderbird / Mail
+                                        </p>
+                                    </div>
+                                </a>
+
+                                {ticket.phone && (
+                                    <a
+                                        href={whatsappUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="p-3 rounded-2xl bg-[#0AB600]/5 dark:bg-[#0AB600]/10 border border-[#0AB600]/30 hover:border-[#0AB600] transition-all flex items-center gap-3 group cursor-pointer"
+                                    >
+                                        <div className="p-2 rounded-xl bg-[#0AB600] text-white shrink-0">
+                                            <Phone className="w-3.5 h-3.5" />
+                                        </div>
+                                        <div className="space-y-0.5 min-w-0">
+                                            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-[#0AB600]">
+                                                <span>Kirim Pesan WhatsApp</span>
+                                                <ExternalLink className="w-3 h-3 text-[#0AB600]" />
+                                            </div>
+                                            <p className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate">
+                                                Hubungi {ticket.phone}
+                                            </p>
+                                        </div>
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* 4. Security & Audit Metadata Card */}
+                        <div className="p-6 rounded-3xl bg-white dark:bg-[#101622] border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs space-y-3">
                             <h3 className="text-sm font-bold text-slate-900 dark:text-white pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
                                 Data Audit & Keamanan
                             </h3>
 
-                            <div className="space-y-2.5 text-xs">
-                                <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-50 dark:bg-zinc-900/50">
-                                    <span className="text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+                            <div className="space-y-2 text-xs">
+                                <div className="flex items-center justify-between py-1 border-b border-zinc-100 dark:border-zinc-800/50">
+                                    <span className="text-zinc-500 flex items-center gap-1.5">
                                         <Globe className="w-3.5 h-3.5 text-zinc-400" />
-                                        <span>IP Address</span>
+                                        <span>IP Pengirim:</span>
                                     </span>
-                                    <span className="font-mono font-semibold text-slate-800 dark:text-zinc-200">
-                                        {ticket.ip_address || '127.0.0.1'}
-                                    </span>
+                                    <span className="font-mono text-zinc-800 dark:text-zinc-200 font-semibold">{ticket.ip_address || '127.0.0.1'}</span>
                                 </div>
-
-                                <div className="space-y-1 p-2 rounded-xl bg-zinc-50 dark:bg-zinc-900/50">
-                                    <span className="text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
-                                        <Laptop className="w-3.5 h-3.5 text-zinc-400" />
-                                        <span>User Agent / Browser</span>
-                                    </span>
-                                    <p className="text-[11px] text-zinc-600 dark:text-zinc-400 font-mono break-all line-clamp-2">
-                                        {ticket.user_agent || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
-                                    </p>
-                                </div>
-
-                                <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-50 dark:bg-zinc-900/50">
-                                    <span className="text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+                                <div className="flex items-center justify-between py-1 border-b border-zinc-100 dark:border-zinc-800/50">
+                                    <span className="text-zinc-500 flex items-center gap-1.5">
                                         <Calendar className="w-3.5 h-3.5 text-zinc-400" />
-                                        <span>Dibuat</span>
+                                        <span>Dibuat:</span>
                                     </span>
-                                    <span className="font-semibold text-slate-800 dark:text-zinc-200">
-                                        {ticket.created_at}
-                                    </span>
+                                    <span className="text-zinc-800 dark:text-zinc-200">{ticket.created_at}</span>
                                 </div>
+                                {ticket.resolved_at && (
+                                    <div className="flex items-center justify-between py-1">
+                                        <span className="text-zinc-500 flex items-center gap-1.5">
+                                            <CheckCircle2 className="w-3.5 h-3.5 text-[#0AB600]" />
+                                            <span>Selesai:</span>
+                                        </span>
+                                        <span className="text-zinc-800 dark:text-zinc-200">{ticket.resolved_at}</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

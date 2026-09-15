@@ -51,13 +51,108 @@
     --color-brand-green-hover: #089600;
     --color-brand-green-light: #F0FDF4;
     --color-brand-green-border: #86EFAC;
+
+    --shadow-*: initial;
+    --shadow-2xs: none;
+    --shadow-xs: none;
+    --shadow-sm: none;
+    --shadow: none;
+    --shadow-md: none;
+    --shadow-lg: none;
+    --shadow-xl: none;
+    --shadow-2xl: none;
+    --shadow-inner: none;
+    --drop-shadow-*: initial;
+    --drop-shadow-xs: none;
+    --drop-shadow-sm: none;
+    --drop-shadow: none;
+    --drop-shadow-md: none;
+    --drop-shadow-lg: none;
+    --drop-shadow-xl: none;
+    --drop-shadow-2xl: none;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Strict Design Rule: Zero Shadows */
-*, ::before, ::after {
+/* Strict Universal Design Rule: Zero Shadows Across Entire Website */
+*, *::before, *::after {
     box-shadow: none !important;
+    text-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+    --tw-shadow: 0 0 #0000 !important;
+    --tw-shadow-colored: 0 0 #0000 !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    --tw-drop-shadow: none !important;
+}
+
+/* Explicit override for any drop-shadow utility */
+.drop-shadow,
+.drop-shadow-sm,
+.drop-shadow-md,
+.drop-shadow-lg,
+.drop-shadow-xl,
+.drop-shadow-2xl,
+.drop-shadow-none,
+[class*="drop-shadow"] {
+    --tw-drop-shadow: none !important;
+}
+
+/* Universal Guaranteed Blur Filters */
+.blur-3xl {
+    -webkit-filter: blur(64px) !important;
+    filter: blur(64px) !important;
+}
+
+.blur-2xl {
+    -webkit-filter: blur(40px) !important;
+    filter: blur(40px) !important;
+}
+
+.blur-xl {
+    -webkit-filter: blur(24px) !important;
+    filter: blur(24px) !important;
+}
+
+.blur-lg {
+    -webkit-filter: blur(16px) !important;
+    filter: blur(16px) !important;
+}
+
+.blur-md {
+    -webkit-filter: blur(12px) !important;
+    filter: blur(12px) !important;
+}
+
+.blur-sm {
+    -webkit-filter: blur(4px) !important;
+    filter: blur(4px) !important;
+}
+
+.blur {
+    -webkit-filter: blur(8px) !important;
+    filter: blur(8px) !important;
+}
+
+/* Ambient Background Glow Effect (Universal Subtle SaaS Light) */
+.ambient-glow {
+    position: absolute;
+    top: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 75%;
+    max-width: 56rem;
+    height: 16rem;
+    background-color: rgba(10, 182, 0, 0.05);
+    border-radius: 9999px;
+    -webkit-filter: blur(64px) !important;
+    filter: blur(64px) !important;
+    pointer-events: none;
+    z-index: 0;
+}
+
+html.dark .ambient-glow {
+    background-color: rgba(10, 182, 0, 0.10);
 }
 
 html {

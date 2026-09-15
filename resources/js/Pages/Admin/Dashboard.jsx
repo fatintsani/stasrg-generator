@@ -709,19 +709,31 @@ export default function Dashboard({ auth, stats, category_distribution = [], rec
                         </div>
 
                         {/* Quick CTA Banner */}
-                        <div className="p-6 rounded-3xl bg-gradient-to-r from-[#0AB600] to-[#089600] text-white border border-[#0AB600]/40 relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 shadow-lg shadow-[#0AB600]/20">
-                            <div className="max-w-lg z-10">
-                                <h3 className="text-base sm:text-lg font-extrabold mt-2 tracking-tight">
-                                    {d.ctaTitle || 'Ingin Menerbitkan Flyer Riset Baru?'}
-                                </h3>
-                                <p className="text-xs text-white/90 mt-1 leading-relaxed">
-                                    {d.ctaDesc || 'Lengkapi foto prototype, spesifikasi teknologi, poin manfaat, dan tautan video untuk langsung meng-generate lembar publikasi siap cetak.'}
-                                </p>
+                        <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-[#0AB600] to-[#089600] text-white border border-[#0AB600]/40 relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 shadow-lg shadow-[#0AB600]/20">
+                            <div className="flex items-center gap-4 sm:gap-5 z-10 max-w-lg">
+                                <div className="relative w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 shrink-0 flex items-center justify-center">
+                                    <img
+                                        src="/assets/img/icon/profile_dev.png"
+                                        alt="Developer Assistant"
+                                        className="w-full h-full object-contain"
+                                        onError={(e) => {
+                                            e.currentTarget.src = 'https://github.com/fatintsani.png';
+                                        }}
+                                    />
+                                </div>
+                                <div>
+                                    <h3 className="text-base sm:text-lg font-extrabold tracking-tight">
+                                        {d.ctaTitle || 'Ingin Menerbitkan Flyer Riset Baru?'}
+                                    </h3>
+                                    <p className="text-xs text-white/90 mt-1 leading-relaxed">
+                                        {d.ctaDesc || 'Lengkapi foto prototype, spesifikasi teknologi, poin manfaat, dan tautan video untuk langsung meng-generate lembar publikasi siap cetak.'}
+                                    </p>
+                                </div>
                             </div>
 
                             <Link
                                 href="/projects/create"
-                                className="inline-flex items-center gap-2 py-2.5 px-5 rounded-xl bg-white hover:bg-[#0AB600]/10 text-[#0AB600] text-xs sm:text-sm font-bold transition-all shadow-md shrink-0 cursor-pointer z-10"
+                                className="inline-flex items-center gap-2 py-2.5 px-5 rounded-xl bg-white hover:bg-zinc-100 text-[#0AB600] text-xs sm:text-sm font-bold transition-all shadow-md shrink-0 cursor-pointer z-10 self-start sm:self-center"
                             >
                                 <span>{d.ctaButton || 'Buat Sekarang'}</span>
                                 <ArrowUpRight className="w-4 h-4" />

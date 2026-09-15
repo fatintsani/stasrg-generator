@@ -77,6 +77,16 @@ function LoginFormContent({ status }) {
                 transition={{ duration: 0.3 }}
                 className="w-full p-7 sm:p-9 rounded-3xl bg-white dark:bg-[#18181B] border border-zinc-200/80 dark:border-zinc-800/80 transition-colors shadow-sm"
             >
+                {/* Header inside Card */}
+                <div className="text-center mb-6 sm:mb-8">
+                    <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                        {t.auth?.login?.title || 'Masuk ke Platform'}
+                    </h1>
+                    <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-sm mx-auto leading-relaxed">
+                        {t.auth?.login?.subtitle || 'Akses terpusat untuk repositori dokumen dan manajemen proyek STAS RG.'}
+                    </p>
+                </div>
+
                 {/* Flash Status Notification (e.g. after registration) */}
                 {status && (
                     <div className="mb-5 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800 text-xs font-semibold text-amber-900 dark:text-amber-300 flex items-start gap-2.5">

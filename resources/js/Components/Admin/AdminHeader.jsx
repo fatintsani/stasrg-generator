@@ -16,6 +16,7 @@ import {
 import { useApp } from '../../Context/AppContext';
 import { useAlert } from '../../Context/AlertContext';
 import GlobalSearchModal from './GlobalSearchModal';
+import AdminNotificationDropdown from './AdminNotificationDropdown';
 
 function IndonesiaFlag({ className = "w-5 h-3.5" }) {
     return (
@@ -172,6 +173,9 @@ export default function AdminHeader({
                     >
                         {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
                     </button>
+
+                    {/* Admin Notifications Dropdown */}
+                    <AdminNotificationDropdown />
 
                     {/* User Profile Dropdown */}
                     <div className="relative" ref={dropdownRef}>

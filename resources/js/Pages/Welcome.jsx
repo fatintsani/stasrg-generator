@@ -4,10 +4,12 @@ import { AppProvider, useApp } from '../Context/AppContext';
 import Navbar from '../Components/Navbar';
 import HeroSection from '../Components/HeroSection';
 import ProjectShowcaseSection from '../Components/ProjectShowcaseSection';
+import NaraSection from '../Components/NaraSection';
 import AboutSection from '../Components/AboutSection';
 import PrinciplesSection from '../Components/PrinciplesSection';
 import HowItWorksSection from '../Components/HowItWorksSection';
 import InternalNoteBanner from '../Components/InternalNoteBanner';
+import AiChatWidget from '../Components/AiChatWidget';
 import Footer from '../Components/Footer';
 
 function LandingContent({ publishedProjects = [], stats = {} }) {
@@ -37,6 +39,9 @@ function LandingContent({ publishedProjects = [], stats = {} }) {
                     {/* Published Projects Showcase Section */}
                     <ProjectShowcaseSection projects={publishedProjects} />
 
+                    {/* NARA AI Assistant Introduction Section */}
+                    <NaraSection />
+
                     {/* About Section */}
                     <AboutSection />
 
@@ -49,6 +54,9 @@ function LandingContent({ publishedProjects = [], stats = {} }) {
                     {/* Internal Security & Call to Action */}
                     <InternalNoteBanner />
                 </main>
+
+                {/* Floating AI Chat Assistant */}
+                <AiChatWidget />
 
                 {/* Footer */}
                 <Footer />

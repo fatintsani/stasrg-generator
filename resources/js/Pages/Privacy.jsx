@@ -18,7 +18,10 @@ function PrivacyContent() {
 
             <Navbar />
 
-            <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+            <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 relative overflow-hidden">
+                {/* Ambient Background Glow Effect (Subtle SaaS light) */}
+                <div className="ambient-glow" style={{ filter: 'blur(64px)', WebkitFilter: 'blur(64px)' }} />
+
                 {/* Header Section */}
                 <motion.div
                     initial={{ opacity: 0, y: 15 }}

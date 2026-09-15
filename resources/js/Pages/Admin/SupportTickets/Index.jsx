@@ -188,14 +188,14 @@ export default function SupportTicketsIndex({ tickets = { data: [], links: [] },
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-[#0AB600] bg-[#0AB600]/10 border border-[#0AB600]/30 hover:bg-[#0AB600]/20 shadow-2xs transition-all cursor-pointer"
-                            title="Hubungi Developer via WhatsApp (0831-3397-7214)"
+                            title="Hubungi Sekarang"
                         >
                             <img
                                 src="/assets/img/icon/profile_dev.png"
                                 alt="Developer Profile"
                                 className="w-5 h-5 rounded-md object-cover border border-[#0AB600]/40 shrink-0"
                             />
-                            <span>Kontak Developer: 0831-3397-7214</span>
+                            <span>Hubungi Sekarang</span>
                         </a>
 
                         <a

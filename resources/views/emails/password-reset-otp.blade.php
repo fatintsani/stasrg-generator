@@ -1,18 +1,21 @@
 @extends('emails.layouts.master')
 
+@section('title', 'Kode OTP Pemulihan Kata Sandi')
+@section('header_subtitle', 'Verifikasi Keamanan Akun STASIKATOR')
+
 @section('content')
-    <div class="badge-pill badge-warning">
-        <span class="badge-dot"></span>
+    <div class="badge-pill badge-warning" style="margin-bottom: 12px;">
+        <span class="badge-dot badge-dot-warning"></span>
         <span>Pemulihan Kata Sandi // OTP</span>
     </div>
 
-    <h1>Kode Verifikasi Anda</h1>
+    <h1 class="email-title">Kode Verifikasi Anda</h1>
     
     <div class="greeting">
         Halo Peneliti,
     </div>
 
-    <p>
+    <p class="paragraph">
         Kami menerima permintaan pengaturan ulang kata sandi untuk akun STAS RG Projects Anda. Gunakan kode <strong>One-Time Password (OTP)</strong> berikut untuk memverifikasi identitas Anda:
     </p>
 
@@ -21,7 +24,7 @@
         <div style="font-size: 11px; font-weight: 700; color: #0AB600; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px;">
             KODE OTP VERIFIKASI (BERLAKU 15 MENIT)
         </div>
-        <div style="font-family: 'JetBrains Mono', Consolas, Monaco, monospace; font-size: 36px; font-weight: 800; color: #0AB600; letter-spacing: 8px;">
+        <div class="otp-code">
             {{ $otpCode }}
         </div>
     </div>
@@ -31,7 +34,7 @@
         <div style="font-size: 12px; font-weight: 700; color: #92400E; margin-bottom: 4px;">
             Pemberitahuan Keamanan
         </div>
-        <div style="font-size: 12px; color: #78350F; line-height: 1.5;">
+        <div style="font-size: 12px; color: #78350F; line-height: 1.55;">
             Jangan berikan kode OTP ini kepada siapa pun, termasuk staf lab. Jika Anda tidak merasa melakukan permintaan pemulihan ini, abaikan email ini dan akun Anda akan tetap aman.
         </div>
     </div>
