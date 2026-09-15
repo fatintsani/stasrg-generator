@@ -598,6 +598,130 @@ INSTRUCTION;
     }
 
     /**
+     * Translate full project content into Academic/Scientific English (or specified target language).
+     * Strictly preserves HTML tags and complies with 1-page A4 layout limits.
+     *
+     * @param  array<string, mixed>  $sourceData
+     * @return array<string, mixed>
+     */
+    public static function translateProjectContent(array $sourceData, string $targetLanguage = 'en', string $preset = 'balanced'): array
+    {
+        $provider = SystemSetting::get('ai_provider', 'gemini');
+        $model = SystemSetting::get('ai_model', 'gemini-3.6-flash');
+        $key = SystemSetting::get('ai_api_key');
+
+        if (empty($key)) {
+            throw new \RuntimeException('API Key AI belum dikonfigurasi. Silakan atur di menu Settings terlebih dahulu.');
+        }
+
+        $limits = self::LAYOUT_LIMITS[$preset] ?? self::LAYOUT_LIMITS['balanced'];
+
+        $title = $sourceData['title'] ?? '';
+        $subtitle = $sourceData['subtitle'] ?? '';
+        $category = $sourceData['category'] ?? '';
+        $description = $sourceData['description'] ?? '';
+        $problem = $sourceData['problem_solution']['problem'] ?? ($sourceData['problem'] ?? '');
+        $solution = $sourceData['problem_solution']['solution'] ?? ($sourceData['solution'] ?? '');
+        $benefitsContent = $sourceData['benefits']['content'] ?? ($sourceData['benefits'] ?? '');
+        $specsContent = $sourceData['specifications']['content'] ?? ($sourceData['specifications'] ?? '');
+        $panels = $sourceData['problem_solution']['panels'] ?? null;
+
+        $systemInstruction = <<<INSTRUCTION
+You are an expert Scientific & Academic Technical Translator for the Center of Excellence Sustainable Technology and Applied Sciences Research Group (CoE STAS-RG) at Telkom University.
+Your task is to translate research flyer innovation content from Indonesian into formal, high-impact, professional International Academic English.
+
+STRICT RULES & CONSTRAINTS:
+1. Maintain exact HTML markup tags (<p>, <ul>, <li>, <strong>) precisely.
+2. Translate technological terms accurately and idiomatically into standard academic English (e.g., "Sistem Monitoring Pertanian Presisi" -> "Precision Agriculture Monitoring System", "Efisiensi Waktu" -> "Time Efficiency", "Daya" -> "Power Supply").
+3. DO NOT expand or add verbose fluff. Keep translations concise and punchy to strictly fit the 1-page A4 layout character limits:
+   - title: Max {$limits['title']} characters (Formal uppercase/titlecase).
+   - subtitle: Max {$limits['subtitle']} characters.
+   - description: Max {$limits['description']} characters.
+   - problem: Max {$limits['problem']} characters. Format <p>...</p>.
+   - solution: Max {$limits['solution']} characters. Format <p>...</p>.
+   - benefits: Max TOTAL {$limits['benefits']} characters plain text. Format <ul><li><strong>Key Benefit:</strong> Concise explanation.</li></ul>.
+   - specifications: Max TOTAL {$limits['specifications']} characters plain text. Format <ul><li><strong>Component:</strong> Brief spec.</li></ul>.
+
+Return ONLY pure, valid JSON with NO surrounding markdown backticks (no ```json):
+{
+  "title": "ENGLISH TITLE",
+  "subtitle": "English Subtitle",
+  "category": "English Category Name",
+  "description": "English description...",
+  "problem_solution": {
+    "title": "PROBLEM & SOLUTION",
+    "problem": "<p>English problem statement...</p>",
+    "solution": "<p>English innovation solution...</p>"
+  },
+  "benefits": {
+    "title": "KEY BENEFITS",
+    "content": "<ul><li><strong>Point:</strong> Explanation.</li></ul>"
+  },
+  "specifications": {
+    "title": "TECHNICAL SPECIFICATIONS",
+    "content": "<ul><li><strong>Item:</strong> Spec.</li></ul>"
+  }
+}
+INSTRUCTION;
+
+        $payloadToTranslate = [
+            'title' => $title,
+            'subtitle' => $subtitle,
+            'category' => $category,
+            'description' => $description,
+            'problem' => $problem,
+            'solution' => $solution,
+            'benefits' => $benefitsContent,
+            'specifications' => $specsContent,
+        ];
+
+        if (! empty($panels) && is_array($panels)) {
+            $payloadToTranslate['panels'] = $panels;
+        }
+
+        $userPrompt = "Please translate the following Indonesian research flyer content into English:\n".json_encode($payloadToTranslate, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+
+        $rawResponse = self::executePrompt($systemInstruction, $userPrompt, $key, $provider, $model);
+        $cleanJson = self::cleanJsonOutput($rawResponse);
+
+        $decoded = json_decode($cleanJson, true);
+        if (! is_array($decoded) || empty($decoded['title'])) {
+            Log::warning('AI Translation returned invalid JSON structure: '.$rawResponse);
+            throw new \RuntimeException('AI mengembalikan hasil terjemahan yang tidak dapat diurai. Silakan coba kembali.');
+        }
+
+        // Apply strict post-processing trimming to guarantee 100% compliance with A4 layout limits
+        $result = [
+            'title' => self::fitText($decoded['title'] ?? $title, $limits['title']),
+            'subtitle' => self::fitText($decoded['subtitle'] ?? $subtitle, $limits['subtitle']),
+            'category' => self::fitText($decoded['category'] ?? $category, 40),
+            'description' => self::fitParagraph($decoded['description'] ?? $description, $limits['description'], false),
+            'problem_solution' => [
+                'title' => 'PROBLEM & SOLUTION',
+                'problem' => self::fitParagraph($decoded['problem_solution']['problem'] ?? ($decoded['problem'] ?? $problem), $limits['problem']),
+                'solution' => self::fitParagraph($decoded['problem_solution']['solution'] ?? ($decoded['solution'] ?? $solution), $limits['solution']),
+            ],
+            'benefits' => [
+                'title' => 'KEY BENEFITS',
+                'content' => self::fitList($decoded['benefits']['content'] ?? ($decoded['benefits'] ?? $benefitsContent), $limits['benefits'], 4),
+            ],
+            'specifications' => [
+                'title' => 'TECHNICAL SPECIFICATIONS',
+                'content' => self::fitList($decoded['specifications']['content'] ?? ($decoded['specifications'] ?? $specsContent), $limits['specifications'], 4),
+            ],
+        ];
+
+        // Handle trifold panels translation if available
+        if (! empty($decoded['problem_solution']['panels']) && is_array($decoded['problem_solution']['panels'])) {
+            $result['problem_solution']['panels'] = $decoded['problem_solution']['panels'];
+        } elseif (! empty($decoded['panels']) && is_array($decoded['panels'])) {
+            $result['problem_solution']['panels'] = $decoded['panels'];
+        }
+
+        return $result;
+    }
+
+    /**
      * Send prompt to Gemini or OpenAI API and return text response.
      */
     private static function executePrompt(

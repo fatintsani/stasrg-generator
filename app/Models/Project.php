@@ -46,6 +46,7 @@ class Project extends Model
         'print_mode',
         'boilerplate_type',
         'layout_schema',
+        'content_en',
     ];
 
     /**
@@ -60,6 +61,7 @@ class Project extends Model
             'social_links' => 'array',
             'partner_logos' => 'array',
             'layout_schema' => 'array',
+            'content_en' => 'array',
         ];
     }
 
