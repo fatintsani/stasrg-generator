@@ -7,12 +7,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class Project extends Model
 {
     /** @use HasFactory<ProjectFactory> */
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * @var list<string>
@@ -38,6 +40,10 @@ class Project extends Model
         'footer_logo',
         'partner_logo',
         'partner_logos',
+        'research_team',
+        'lab_affiliation',
+        'patent_number',
+        'publication_doi',
         'status',
         'layout_preset',
         'design_style',
@@ -60,6 +66,7 @@ class Project extends Model
             'problem_solution' => 'array',
             'social_links' => 'array',
             'partner_logos' => 'array',
+            'research_team' => 'array',
             'layout_schema' => 'array',
             'content_en' => 'array',
         ];
@@ -89,6 +96,24 @@ class Project extends Model
                 $project->slug = static::generateUniqueSlug($project->name ?: 'project', $project->id);
             }
         });
+
+        static::saved(function () {
+            Cache::forget('landing_page_data');
+            Cache::forget('landing_published_projects');
+            Cache::forget('projects_available_categories');
+        });
+
+        static::deleted(function () {
+            Cache::forget('landing_page_data');
+            Cache::forget('landing_published_projects');
+            Cache::forget('projects_available_categories');
+        });
+
+        static::restored(function () {
+            Cache::forget('landing_page_data');
+            Cache::forget('landing_published_projects');
+            Cache::forget('projects_available_categories');
+        });
     }
 
     /**
@@ -100,7 +125,7 @@ class Project extends Model
         $slug = $baseSlug;
         $counter = 1;
 
-        while (static::where('slug', $slug)->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))->exists()) {
+        while (static::withTrashed()->where('slug', $slug)->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))->exists()) {
             $counter++;
             $slug = "{$baseSlug}-{$counter}";
         }

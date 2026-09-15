@@ -10,6 +10,7 @@ use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -265,7 +266,9 @@ class UserController extends Controller
         $userEmail = $user->email;
         $deletedUserId = $user->id;
 
-        $user->delete();
+        DB::transaction(function () use ($user) {
+            $user->delete();
+        });
 
         ActivityLogger::logUser(
             action: 'user.deleted',

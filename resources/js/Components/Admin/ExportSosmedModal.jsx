@@ -91,10 +91,15 @@ export default function ExportSosmedModal({ project, isOpen, onClose }) {
 
     const { showSuccess, showError } = useAlert();
 
-    // Local Format, Theme & Print Mode states
+    const layoutSchema = typeof project.layout_schema === 'string'
+        ? JSON.parse(project.layout_schema || '{}')
+        : (project.layout_schema || {});
+
+    // Local Format, Theme, Print Mode & Resolution states
     const [selectedFormat, setSelectedFormat] = useState(project.doc_format || 'social_feed');
     const [selectedTheme, setSelectedTheme] = useState(project.color_theme || 'stas_official');
     const [selectedPrintMode, setSelectedPrintMode] = useState(project.print_mode || 'light');
+    const [exportResolution, setExportResolution] = useState(2); // 1x, 2x, 3x
 
     // Loading & Copy States
     const [downloadingPng, setDownloadingPng] = useState(false);
@@ -107,13 +112,22 @@ export default function ExportSosmedModal({ project, isOpen, onClose }) {
     const [viewportWidth, setViewportWidth] = useState(0);
 
     const formatConfig = getDocumentFormat(selectedFormat);
-    const themeConfig = getColorTheme(selectedTheme);
+    const themeConfig = getColorTheme(selectedTheme, project.custom_colors || layoutSchema.custom_colors);
 
     const activeProjectData = {
         ...project,
         doc_format: selectedFormat,
         color_theme: selectedTheme,
         print_mode: selectedPrintMode,
+        font_family: project.font_family || layoutSchema.font_family || 'plus_jakarta',
+        bg_pattern: project.bg_pattern || layoutSchema.bg_pattern || 'none',
+        custom_colors: project.custom_colors || layoutSchema.custom_colors,
+        layout_schema: {
+            ...layoutSchema,
+            font_family: project.font_family || layoutSchema.font_family,
+            bg_pattern: project.bg_pattern || layoutSchema.bg_pattern,
+            custom_colors: project.custom_colors || layoutSchema.custom_colors,
+        },
     };
 
     const canvasDomId = `export-hub-canvas-${project.slug || project.id || 'preview'}`;
@@ -152,16 +166,16 @@ export default function ExportSosmedModal({ project, isOpen, onClose }) {
         return `${slug}_${selectedFormat}_${dateStr}`;
     };
 
-    // Download as PNG (Lossless HD 300 DPI)
+    // Download as PNG (Lossless HD / Print Ready)
     const handleDownloadPng = async () => {
         if (downloadingPng) return;
         setDownloadingPng(true);
         try {
             const filename = getFilenameBase();
             await downloadElementAsImage(canvasDomId, filename, 'png', {
-                pixelRatio: 2.5,
+                pixelRatio: exportResolution,
             });
-            showSuccess('Download PNG Berhasil', `File ${filename}.png resolusi tinggi berhasil disimpan.`);
+            showSuccess('Download PNG Berhasil', `File ${filename}.png resolusi ${exportResolution}x berhasil disimpan.`);
         } catch (error) {
             console.error('PNG export failed:', error);
             showError('Gagal Export PNG', error.message || 'Terjadi kesalahan saat memproses gambar PNG.');
@@ -177,10 +191,10 @@ export default function ExportSosmedModal({ project, isOpen, onClose }) {
         try {
             const filename = getFilenameBase();
             await downloadElementAsImage(canvasDomId, filename, 'jpg', {
-                pixelRatio: 2.5,
+                pixelRatio: exportResolution,
                 quality: 0.92,
             });
-            showSuccess('Download JPG Berhasil', `File ${filename}.jpg siap sosmed berhasil disimpan.`);
+            showSuccess('Download JPG Berhasil', `File ${filename}.jpg resolusi ${exportResolution}x siap sosmed berhasil disimpan.`);
         } catch (error) {
             console.error('JPG export failed:', error);
             showError('Gagal Export JPG', error.message || 'Terjadi kesalahan saat memproses gambar JPG.');
@@ -195,7 +209,7 @@ export default function ExportSosmedModal({ project, isOpen, onClose }) {
         setCopyingClipboard(true);
         try {
             await copyElementToClipboard(canvasDomId, {
-                pixelRatio: 2.0,
+                pixelRatio: Math.min(2.0, exportResolution),
             });
             setCopiedSuccess(true);
             showSuccess('Tersalin ke Clipboard!', 'Gambar siap dipaste (Ctrl+V) langsung ke WhatsApp Web, Canva, Telegram, atau Figma.');
@@ -385,10 +399,49 @@ export default function ExportSosmedModal({ project, isOpen, onClose }) {
                             </div>
                         </div>
 
-                        {/* 4. Action Export Buttons Section */}
+                        {/* 4. Output Resolution / Quality Selector */}
+                        <div className="space-y-2.5">
+                            <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-zinc-300 flex items-center justify-between">
+                                <span>4. Kualitas & Resolusi Ekspor</span>
+                                <span className="text-[11px] font-semibold text-[#0AB600]">
+                                    {exportResolution === 1 ? '1x (Web Fast / 72 DPI)' : exportResolution === 2 ? '2x (Retina HD / 150 DPI)' : '3x (Ultra HD / 300 DPI)'}
+                                </span>
+                            </label>
+
+                            <div className="grid grid-cols-3 gap-2">
+                                {[
+                                    { ratio: 1, label: '1x Standar', desc: `${canvasWidth}px (Web)` },
+                                    { ratio: 2, label: '2x Retina', desc: `${canvasWidth * 2}px (Sosmed)` },
+                                    { ratio: 3, label: '3x Ultra HD', desc: `${canvasWidth * 3}px (Cetak)` },
+                                ].map((res) => {
+                                    const isSelected = exportResolution === res.ratio;
+                                    return (
+                                        <button
+                                            key={res.ratio}
+                                            type="button"
+                                            onClick={() => setExportResolution(res.ratio)}
+                                            className={`p-2 rounded-xl border text-center transition-all cursor-pointer ${
+                                                isSelected
+                                                    ? 'border-[#0AB600] bg-[#0AB600]/10 ring-1 ring-[#0AB600]'
+                                                    : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 hover:bg-zinc-50'
+                                            }`}
+                                        >
+                                            <div className={`text-[11px] font-bold ${isSelected ? 'text-[#0AB600]' : 'text-slate-800 dark:text-zinc-200'}`}>
+                                                {res.label}
+                                            </div>
+                                            <div className="text-[9px] text-zinc-400 mt-0.5">
+                                                {res.desc}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* 5. Action Export Buttons Section */}
                         <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 space-y-2.5">
                             <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-zinc-300">
-                                4. Aksi Unduh & Salin
+                                5. Aksi Unduh & Salin
                             </label>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -398,7 +451,7 @@ export default function ExportSosmedModal({ project, isOpen, onClose }) {
                                     onClick={handleDownloadPng}
                                     disabled={downloadingPng}
                                     className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0AB600] hover:bg-[#089600] text-white text-xs font-bold shadow-md shadow-black/20 transition-all cursor-pointer disabled:cursor-wait"
-                                    title="Download Gambar PNG Resolusi Tinggi (300 DPI)"
+                                    title="Download Gambar PNG Resolusi Tinggi"
                                 >
                                     {downloadingPng ? (
                                         <>
@@ -408,7 +461,7 @@ export default function ExportSosmedModal({ project, isOpen, onClose }) {
                                     ) : (
                                         <>
                                             <Download className="w-4 h-4" />
-                                            <span>Download PNG (HD)</span>
+                                            <span>Download PNG ({exportResolution}x)</span>
                                         </>
                                     )}
                                 </button>

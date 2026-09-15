@@ -85,6 +85,78 @@ export default function SupportTicketShow({ ticket }) {
         }
     };
 
+    const [replyMessage, setReplyMessage] = useState('');
+    const [replyStatus, setReplyStatus] = useState(ticket.status === 'pending' ? 'in_progress' : ticket.status);
+    const [isSendingReply, setIsSendingReply] = useState(false);
+
+    const replyTemplates = [
+        {
+            id: 'ack',
+            title: 'Konfirmasi Penanganan',
+            desc: 'Pemberitahuan bahwa pesan sedang ditinjau tim lab',
+            status: 'in_progress',
+            text: `Halo ${ticket.name},\n\nTerima kasih telah menghubungi Center of Excellence (CoE) STAS-RG Telkom University.\n\nPesan dan tiket bantuan Anda (#${ticket.ticket_number}) telah kami terima dan saat ini sedang ditindaklanjuti oleh tim laboratorium kami. Kami akan mengabari Anda kembali segera setelah ada pembaruan lebih lanjut.\n\nSalam hangat,\nTim Layanan Dukungan CoE STAS-RG\nTelkom University Bandung`,
+        },
+        {
+            id: 'solved',
+            title: 'Solusi & Selesai',
+            desc: 'Tanggapan solusi dan tandai tiket selesai',
+            status: 'resolved',
+            text: `Halo ${ticket.name},\n\nMenindaklanjuti tiket bantuan #${ticket.ticket_number} terkait "${ticket.subject}", kami informasikan bahwa permohonan/kendala Anda telah berhasil kami tangani dan selesaikan.\n\nSilakan periksa kembali akun atau layanan terkait. Jika Anda masih memiliki pertanyaan atau membutuhkan bantuan tambahan, jangan ragu untuk membalas email ini secara langsung.\n\nSalam hangat,\nTim Layanan Dukungan CoE STAS-RG\nTelkom University Bandung`,
+        },
+        {
+            id: 'partnership',
+            title: 'Respon Kerjasama',
+            desc: 'Tanggapan minat kolaborasi riset / kemitraan',
+            status: 'in_progress',
+            text: `Halo ${ticket.name},\n\nTerima kasih atas ketertarikan dan inisiatif kemitraan/kolaborasi riset dengan CoE STAS-RG Telkom University.\n\nInformasi dan proposal Anda telah kami teruskan kepada Koordinator Bidang Riset & Kerjasama Lab STAS-RG. Tim kami akan segera menghubungi Anda kembali untuk mendiskusikan agenda dan peluang sinergi lebih lanjut.\n\nSalam hangat,\nTim Kerjasama & Kemitraan CoE STAS-RG\nTelkom University Bandung`,
+        },
+        {
+            id: 'closed',
+            title: 'Penutupan Tiket',
+            desc: 'Pemberitahuan penutupan tiket resmi',
+            status: 'closed',
+            text: `Halo ${ticket.name},\n\nTiket bantuan #${ticket.ticket_number} kini telah resmi kami tutup dalam sistem Helpdesk CoE STAS-RG. Terima kasih atas partisipasi dan kerjasama Anda.\n\nJika di kemudian hari Anda membutuhkan bantuan lain, silakan kunjungi portal kami dan ajukan tiket baru kapan saja.\n\nSalam hangat,\nTim Administrator CoE STAS-RG\nTelkom University Bandung`,
+        },
+    ];
+
+    const applyReplyTemplate = (template) => {
+        setReplyMessage(template.text);
+        setReplyStatus(template.status);
+    };
+
+    const handleSendEmailReply = (e) => {
+        e?.preventDefault();
+        if (!replyMessage.trim()) {
+            showError('Pesan Kosong', 'Harap tuliskan isi pesan balasan email terlebih dahulu.');
+            return;
+        }
+
+        setIsSendingReply(true);
+        router.post(
+            `/support-tickets/${ticket.id}/reply`,
+            {
+                message: replyMessage,
+                status: replyStatus,
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setIsSendingReply(false);
+                    setReplyMessage('');
+                    showSuccess(
+                        'Email Balasan Terkirim',
+                        `Balasan resmi berhasil dikirimkan via email ke ${ticket.email}.`
+                    );
+                },
+                onError: (errors) => {
+                    setIsSendingReply(false);
+                    showError('Gagal Mengirim Email', Object.values(errors)[0] || 'Terjadi kesalahan saat mengirimkan email balasan.');
+                },
+            }
+        );
+    };
+
     const handleSaveResolution = (e) => {
         e?.preventDefault();
         setIsSaving(true);
@@ -288,19 +360,198 @@ export default function SupportTicketShow({ ticket }) {
                             )}
                         </div>
 
-                        {/* 2. Fast Reply Action Center */}
-                        <div className="p-6 rounded-3xl bg-white dark:bg-[#101622] border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs space-y-4">
+                        {/* 2. Official Email Reply Composer Card */}
+                        <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#101622] border border-blue-200/80 dark:border-blue-900/40 shadow-xs space-y-5">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-100 dark:border-zinc-800/80">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2.5 rounded-2xl bg-blue-600 text-white shadow-xs">
+                                        <Mail className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                                                Kirim Balasan Resmi via Email
+                                            </h3>
+                                            <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-[10px] font-semibold border border-blue-200 dark:border-blue-900/50">
+                                                Email Notifikasi
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                                            Tanggapan akan dikirimkan langsung ke <strong className="text-slate-800 dark:text-zinc-200">{ticket.email}</strong> dengan template resmi CoE STAS-RG.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Quick Response Templates */}
+                            <div className="space-y-2">
+                                <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+                                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                                    <span>Pilih Templat Tanggapan Cepat:</span>
+                                </span>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    {replyTemplates.map((template) => (
+                                        <button
+                                            key={template.id}
+                                            type="button"
+                                            onClick={() => applyReplyTemplate(template)}
+                                            className="p-2.5 rounded-xl text-left bg-zinc-50 dark:bg-zinc-900/60 hover:bg-blue-50/70 dark:hover:bg-blue-950/30 border border-zinc-200/70 dark:border-zinc-800/70 hover:border-blue-300 dark:hover:border-blue-800 transition-all group cursor-pointer"
+                                        >
+                                            <div className="text-xs font-bold text-slate-800 dark:text-zinc-200 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                                                {template.title}
+                                            </div>
+                                            <div className="text-[10px] text-zinc-500 dark:text-zinc-400 line-clamp-1">
+                                                {template.desc}
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Reply Message Form */}
+                            <form onSubmit={handleSendEmailReply} className="space-y-4 pt-1">
+                                <div className="space-y-1.5">
+                                    <label className="block text-xs font-semibold text-slate-800 dark:text-zinc-200 flex items-center justify-between">
+                                        <span>Isi Pesan Balasan Email</span>
+                                        <span className="text-[11px] font-normal text-zinc-400">Mendukung format teks rapi & salam penutup</span>
+                                    </label>
+                                    <textarea
+                                        rows={6}
+                                        value={replyMessage}
+                                        onChange={(e) => setReplyMessage(e.target.value)}
+                                        placeholder={`Tuliskan tanggapan resmi laboratorium untuk ${ticket.name}...`}
+                                        className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors resize-y"
+                                    />
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                                    <div className="flex items-center gap-2">
+                                        <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 shrink-0">
+                                            Status setelah membalas:
+                                        </label>
+                                        <select
+                                            value={replyStatus}
+                                            onChange={(e) => setReplyStatus(e.target.value)}
+                                            className="px-3 py-1.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                        >
+                                            <option value="in_progress">Sedang Diproses (In Progress)</option>
+                                            <option value="resolved">Tandai Selesai (Resolved)</option>
+                                            <option value="closed">Tutup Tiket (Closed)</option>
+                                            <option value="pending">Tetap Menunggu (Pending)</option>
+                                        </select>
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={isSendingReply || !replyMessage.trim()}
+                                        className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shrink-0"
+                                    >
+                                        {isSendingReply ? (
+                                            <>
+                                                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                <span>Mengirim Email...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Send className="w-3.5 h-3.5" />
+                                                <span>Kirim Balasan Email Resmi</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        {/* 3. Communication Timeline & Replies Thread */}
+                        <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#101622] border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs space-y-4">
                             <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
                                 <div className="flex items-center gap-2.5">
-                                    <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-500">
-                                        <Send className="w-4 h-4" />
+                                    <div className="p-2 rounded-xl bg-teal-500/10 border border-teal-500/30 text-teal-500">
+                                        <MessageSquare className="w-4 h-4" />
                                     </div>
                                     <div>
                                         <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                                            Saluran Balasan Langsung
+                                            Riwayat Komunikasi & Balasan Email
                                         </h3>
                                         <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                                            Balas langsung ke kontak pengirim melalui Email resmi atau WhatsApp.
+                                            Jejak pesan balasan resmi yang telah dikirimkan oleh tim admin ke pengguna.
+                                        </p>
+                                    </div>
+                                </div>
+                                <span className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-semibold font-mono">
+                                    {ticket.replies ? ticket.replies.length : 0} Balasan
+                                </span>
+                            </div>
+
+                            {ticket.replies && ticket.replies.length > 0 ? (
+                                <div className="space-y-4">
+                                    {ticket.replies.map((reply) => (
+                                        <div
+                                            key={reply.id}
+                                            className="p-4 sm:p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/70 dark:border-zinc-800/70 space-y-3"
+                                        >
+                                            <div className="flex items-center justify-between gap-3 flex-wrap">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="w-8 h-8 rounded-xl bg-blue-600/15 text-blue-600 dark:text-blue-400 font-bold text-xs flex items-center justify-center shrink-0">
+                                                        {reply.user?.name ? reply.user.name.charAt(0).toUpperCase() : 'A'}
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-xs font-bold text-slate-900 dark:text-white">
+                                                                {reply.user?.name || 'Admin Laboratorium'}
+                                                            </span>
+                                                            <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-medium">
+                                                                <CheckCheck className="w-3 h-3 text-blue-500" />
+                                                                Terkirim via Email
+                                                            </span>
+                                                        </div>
+                                                        <span className="text-[11px] text-zinc-400">
+                                                            {reply.user?.email}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-2 text-[11px] text-zinc-400">
+                                                    {reply.status_at_reply && (
+                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${statusBadges[reply.status_at_reply]?.color || statusBadges.pending.color}`}>
+                                                            Status: {statusBadges[reply.status_at_reply]?.label || reply.status_at_reply}
+                                                        </span>
+                                                    )}
+                                                    <span>{reply.created_at} ({reply.created_at_human})</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="p-3.5 rounded-xl bg-white dark:bg-zinc-950/60 border border-zinc-200/50 dark:border-zinc-800/50 text-slate-800 dark:text-zinc-200 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
+                                                {reply.message}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-900/40 border border-dashed border-zinc-200 dark:border-zinc-800 text-center space-y-1.5">
+                                    <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                                        Belum ada pesan balasan resmi yang dikirimkan.
+                                    </p>
+                                    <p className="text-[11px] text-zinc-400">
+                                        Gunakan formulir di atas untuk mengirimkan tanggapan langsung ke email pengirim.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 4. Alternative Direct Channels */}
+                        <div className="p-6 rounded-3xl bg-white dark:bg-[#101622] border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs space-y-4">
+                            <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                                        <Share2 className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                                            Saluran Kontak Alternatif
+                                        </h3>
+                                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                                            Tautan cepat membuka aplikasi email eksternal atau percakapan WhatsApp.
                                         </p>
                                     </div>
                                 </div>
@@ -310,18 +561,18 @@ export default function SupportTicketShow({ ticket }) {
                                 {/* Email Reply Action Button */}
                                 <a
                                     href={mailtoUrl}
-                                    className="p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/50 hover:border-blue-400 dark:hover:border-blue-700 transition-all flex items-start gap-3 group cursor-pointer"
+                                    className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/70 dark:border-zinc-800/70 hover:border-blue-300 dark:hover:border-blue-800 transition-all flex items-start gap-3 group cursor-pointer"
                                 >
-                                    <div className="p-2.5 rounded-xl bg-blue-600 text-white shrink-0 group-hover:scale-105 transition-transform">
-                                        <Mail className="w-4 h-4" />
+                                    <div className="p-2 rounded-xl bg-blue-600 text-white shrink-0 group-hover:scale-105 transition-transform">
+                                        <Mail className="w-3.5 h-3.5" />
                                     </div>
-                                    <div className="space-y-1">
-                                        <div className="flex items-center gap-1.5 text-xs font-bold text-blue-900 dark:text-blue-300">
-                                            <span>Kirim Email Balasan</span>
-                                            <ExternalLink className="w-3 h-3 text-blue-400" />
+                                    <div className="space-y-0.5">
+                                        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
+                                            <span>Buka Email Client</span>
+                                            <ExternalLink className="w-3 h-3 text-zinc-400" />
                                         </div>
-                                        <p className="text-[11px] text-blue-700/80 dark:text-blue-400/80 line-clamp-2">
-                                            Buka aplikasi email dengan template subjek #{ticket.ticket_number} terisi otomatis.
+                                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-1">
+                                            Gunakan Outlook / Thunderbird / Gmail lokal
                                         </p>
                                     </div>
                                 </a>
@@ -332,25 +583,25 @@ export default function SupportTicketShow({ ticket }) {
                                         href={whatsappUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="p-4 rounded-2xl bg-[#0AB600]/10 dark:bg-[#0AB600]/10 border border-[#0AB600]/30 hover:border-[#0AB600] transition-all flex items-start gap-3 group cursor-pointer"
+                                        className="p-3.5 rounded-2xl bg-[#0AB600]/5 dark:bg-[#0AB600]/10 border border-[#0AB600]/30 hover:border-[#0AB600] transition-all flex items-start gap-3 group cursor-pointer"
                                     >
-                                        <div className="p-2.5 rounded-xl bg-[#0AB600] text-white shrink-0 group-hover:scale-105 transition-transform">
-                                            <Phone className="w-4 h-4" />
+                                        <div className="p-2 rounded-xl bg-[#0AB600] text-white shrink-0 group-hover:scale-105 transition-transform">
+                                            <Phone className="w-3.5 h-3.5" />
                                         </div>
-                                        <div className="space-y-1">
+                                        <div className="space-y-0.5">
                                             <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-[#0AB600]">
-                                                <span>Balas via WhatsApp</span>
+                                                <span>Kirim Pesan WhatsApp</span>
                                                 <ExternalLink className="w-3 h-3 text-[#0AB600]" />
                                             </div>
-                                            <p className="text-[11px] text-zinc-600 dark:text-zinc-400 line-clamp-2">
-                                                Kirim pesan instan langsung ke nomor WhatsApp pengirim ({ticket.phone}).
+                                            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-1">
+                                                Kontak instan ke {ticket.phone}
                                             </p>
                                         </div>
                                     </a>
                                 ) : (
-                                    <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200/60 dark:border-zinc-800/60 flex items-start gap-3 opacity-60">
-                                        <div className="p-2.5 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-400 shrink-0">
-                                            <Phone className="w-4 h-4" />
+                                    <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200/60 dark:border-zinc-800/60 flex items-start gap-3 opacity-60">
+                                        <div className="p-2 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-zinc-400 shrink-0">
+                                            <Phone className="w-3.5 h-3.5" />
                                         </div>
                                         <div className="space-y-0.5">
                                             <p className="text-xs font-semibold text-zinc-500">WhatsApp Tidak Tersedia</p>

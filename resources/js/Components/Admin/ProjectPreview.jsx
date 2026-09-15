@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Image, Check, Settings, Lightbulb, AlertTriangle, Layers, Columns, LayoutTemplate, FileText, BookOpen, Sparkles, Cpu, CheckCircle2, QrCode, AlignLeft } from 'lucide-react';
-import { getLayoutPreset, getDocumentFormat, getColorTheme, getPrintMode, getDesignStyle } from '../../Utils/layoutPresets';
+import { Image, Check, Settings, Lightbulb, AlertTriangle, Layers, Columns, LayoutTemplate, FileText, BookOpen, Sparkles, Cpu, CheckCircle2, QrCode, AlignLeft, ShieldCheck, Zap, Terminal } from 'lucide-react';
+import { getLayoutPreset, getDocumentFormat, getColorTheme, getPrintMode, getDesignStyle, getFlyerFont, getFlyerPattern } from '../../Utils/layoutPresets';
 import { SocialIcon, normalizeSocialLinks } from '../../Utils/socialPlatforms';
 
 
@@ -535,12 +535,17 @@ export function A4Document({ project, isLive = false, id, previewLang = 'id' }) 
     const printModeId = project.print_mode || 'light';
     const layoutPresetId = project.layout_preset || 'balanced';
     const designStyleId = project.design_style || 'classic_standard';
+    const fontId = project.font_family || project.layout_schema?.font_family || 'plus_jakarta';
+    const patternId = project.bg_pattern || project.layout_schema?.bg_pattern || 'none';
+    const customColors = project.custom_colors || project.layout_schema?.custom_colors || null;
 
     const formatConfig = getDocumentFormat(docFormatId);
-    const themeConfig = getColorTheme(colorThemeId);
+    const themeConfig = getColorTheme(colorThemeId, customColors);
     const printModeConfig = getPrintMode(printModeId);
     const presetConfig = getLayoutPreset(layoutPresetId);
     const designStyleConfig = getDesignStyle(designStyleId);
+    const fontConfig = getFlyerFont(fontId);
+    const patternConfig = getFlyerPattern(patternId);
 
     const isDark = printModeId === 'dark';
     const canvasId = id || `flyer-canvas-${project.slug || project.id || 'current'}`;
@@ -577,6 +582,11 @@ export function A4Document({ project, isLive = false, id, previewLang = 'id' }) 
 
     const partnerLogoUrls = resolvePartnerLogos(project);
     const partnerLogoUrl = partnerLogoUrls[0] || null;
+
+    const rawTeam = project?.research_team;
+    const researchTeam = Array.isArray(rawTeam)
+        ? rawTeam.filter(m => m && (m.name || m.role))
+        : (typeof rawTeam === 'string' ? (tryParseJson(rawTeam) || []) : []);
 
     const projectUrl = project.project_url || '';
     const socialLinks = normalizeSocialLinks(project);
@@ -620,7 +630,7 @@ export function A4Document({ project, isLive = false, id, previewLang = 'id' }) 
                 width: `${formatConfig.canvasWidth}px`,
                 height: `${formatConfig.canvasHeight}px`,
                 padding: formatConfig.padding,
-                fontFamily: "'Poppins', sans-serif",
+                fontFamily: fontConfig.fontFamily || "'Plus Jakarta Sans', sans-serif",
                 fontSize: styles.descFontSize || '9.5pt',
                 lineHeight: 1.45,
                 boxSizing: 'border-box',
@@ -630,6 +640,23 @@ export function A4Document({ project, isLive = false, id, previewLang = 'id' }) 
                 color: textColor,
             }}
         >
+            {/* Background Texture Pattern Overlay */}
+            {patternConfig.cssPattern !== 'none' && (
+                <div
+                    aria-hidden="true"
+                    style={{
+                        position: 'absolute',
+                        inset: 0,
+                        backgroundImage: patternConfig.cssPattern,
+                        backgroundSize: patternConfig.bgSize,
+                        opacity: patternConfig.opacity,
+                        pointerEvents: 'none',
+                        zIndex: 0,
+                        color: primaryColor,
+                    }}
+                />
+            )}
+
             <style>{`
                 .flyer-rich-content ul { list-style-type: disc !important; margin-left: 14px !important; margin-top: 2px; margin-bottom: 2px; }
                 .flyer-rich-content ol { list-style-type: decimal !important; margin-left: 14px !important; margin-top: 2px; margin-bottom: 2px; }
@@ -1455,6 +1482,225 @@ export function A4Document({ project, isLive = false, id, previewLang = 'id' }) 
                         </div>
                     )}
 
+                    {/* DESIGN STYLE 6: TECH BLUEPRINT MATRIX */}
+                    {designStyleId === 'tech_blueprint' && (
+                        <div>
+                            {/* Blueprint Top Header with Tech Metadata */}
+                            <div style={{
+                                border: `1.5px solid ${primaryColor}`,
+                                borderRadius: '4px',
+                                padding: '8px 12px',
+                                marginBottom: '10px',
+                                backgroundColor: isDark ? `${primaryColor}0d` : `${primaryColor}08`,
+                                position: 'relative',
+                            }}>
+                                {/* Corner Bracket Accent Indicators */}
+                                <div style={{ position: 'absolute', top: '-1px', left: '-1px', width: '6px', height: '6px', borderTop: `2px solid ${accentColor}`, borderLeft: `2px solid ${accentColor}` }} />
+                                <div style={{ position: 'absolute', top: '-1px', right: '-1px', width: '6px', height: '6px', borderTop: `2px solid ${accentColor}`, borderRight: `2px solid ${accentColor}` }} />
+                                <div style={{ position: 'absolute', bottom: '-1px', left: '-1px', width: '6px', height: '6px', borderBottom: `2px solid ${accentColor}`, borderLeft: `2px solid ${accentColor}` }} />
+                                <div style={{ position: 'absolute', bottom: '-1px', right: '-1px', width: '6px', height: '6px', borderBottom: `2px solid ${accentColor}`, borderRight: `2px solid ${accentColor}` }} />
+
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px dashed ${primaryColor}40`, paddingBottom: '4px', marginBottom: '6px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span style={{ fontSize: '7pt', fontWeight: 800, fontFamily: 'monospace', color: primaryColor, backgroundColor: isDark ? '#00000040' : '#ffffff80', padding: '1px 6px', borderRadius: '2px', border: `1px solid ${primaryColor}40` }}>
+                                            SYS.ID #{project.id || '01'}
+                                        </span>
+                                        <span style={{ fontSize: '7.5pt', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: mutedColor }}>
+                                            {project.category || 'ADVANCED APPLIED SCIENCES'}
+                                        </span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        {partnerLogoUrls.map((url, idx) => (
+                                            <React.Fragment key={idx}>
+                                                <img key={idx} src={url} alt={`Partner ${idx + 1}`} style={{ height: '24px', objectFit: 'contain' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                                                <div style={{ width: '1px', height: '14px', backgroundColor: primaryColor, opacity: 0.3 }} />
+                                            </React.Fragment>
+                                        ))}
+                                        <img src="/assets/img/stas.png" alt="STAS RG" style={{ height: '24px', objectFit: 'contain' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                                    </div>
+                                </div>
+
+                                <div style={{ fontSize: styles.titleFontSize || '19pt', fontWeight: 900, color: titleColor, textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.15 }}>
+                                    {title}
+                                </div>
+                                {subtitle && (
+                                    <div style={{ fontSize: '8pt', fontWeight: 700, color: primaryColor, marginTop: '3px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                        [ {subtitle} ]
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Blueprint Main Visual & Abstract Grid */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                                <div style={{
+                                    height: `${styles.imageHeight || 190}px`,
+                                    border: `1.5px solid ${cardBorder}`,
+                                    borderRadius: '4px',
+                                    overflow: 'hidden',
+                                    position: 'relative',
+                                    backgroundColor: isDark ? '#050a12' : '#ffffff',
+                                }}>
+                                    {mainImageUrl ? (
+                                        <img src={mainImageUrl} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    ) : (
+                                        <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: mutedColor }}>
+                                            <Cpu style={{ width: '32px', height: '32px', color: primaryColor, opacity: 0.6 }} />
+                                            <span style={{ fontSize: '7.5pt', fontWeight: 700, marginTop: '4px', fontFamily: 'monospace' }}>[ SYSTEM PROTOTYPE ]</span>
+                                        </div>
+                                    )}
+                                    <div style={{ position: 'absolute', bottom: '4px', left: '6px', fontSize: '6.5pt', fontFamily: 'monospace', fontWeight: 700, color: '#ffffff', backgroundColor: '#00000099', padding: '1px 5px', borderRadius: '2px' }}>
+                                        FIG.01-PROTOTYPE
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '8px 10px', borderRadius: '4px', border: `1px solid ${cardBorder}`, backgroundColor: cardBg }}>
+                                    <div>
+                                        <div style={{ fontSize: '7.5pt', fontWeight: 800, color: primaryColor, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <Terminal style={{ width: '11px', height: '11px' }} />
+                                            <span>Executive Overview</span>
+                                        </div>
+                                        <div className="flyer-rich-content" style={{ fontSize: '8.2pt', color: mutedColor, lineHeight: 1.35, textAlign: 'justify' }} dangerouslySetInnerHTML={{ __html: description || (isLive ? 'Arsitektur dan sistem inovasi terintegrasi...' : '') }} />
+                                    </div>
+
+                                    {(psProblem || psSolution || isLive) && (
+                                        <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: `1px dashed ${cardBorder}`, fontSize: '7.5pt', lineHeight: 1.3 }}>
+                                            {psProblem && <div><strong style={{ color: titleColor }}>• Issue: </strong>{psProblem.replace(/<[^>]*>?/gm, '')}</div>}
+                                            {psSolution && <div style={{ marginTop: '2px' }}><strong style={{ color: primaryColor }}>• Tech Solution: </strong>{psSolution.replace(/<[^>]*>?/gm, '')}</div>}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Technical Specs & Benefits Dual Matrix Cards */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+                                {(benefitsContent || isLive) && (
+                                    <div style={{ padding: '8px 10px', borderRadius: '4px', border: `1px solid ${cardBorder}`, backgroundColor: cardBg, position: 'relative' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: primaryColor, fontWeight: 800, fontSize: '8pt', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '3px' }}>
+                                            <Zap style={{ width: '11px', height: '11px' }} />
+                                            <span>{benefitsData.title || 'CORE BENEFITS & METRICS'}</span>
+                                        </div>
+                                        <div className="flyer-rich-content" style={{ fontSize: '8pt', color: mutedColor, lineHeight: 1.35 }} dangerouslySetInnerHTML={{ __html: benefitsContent }} />
+                                    </div>
+                                )}
+
+                                {(specsContent || isLive) && (
+                                    <div style={{ padding: '8px 10px', borderRadius: '4px', border: `1px solid ${cardBorder}`, backgroundColor: cardBg }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: primaryColor, fontWeight: 800, fontSize: '8pt', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '3px' }}>
+                                            <Cpu style={{ width: '11px', height: '11px' }} />
+                                            <span>{specsData.title || 'TECHNICAL SPECIFICATIONS'}</span>
+                                        </div>
+                                        <div className="flyer-rich-content" style={{ fontSize: '8pt', color: mutedColor, lineHeight: 1.35 }} dangerouslySetInnerHTML={{ __html: specsContent }} />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* DESIGN STYLE 7: GLASS MINIMALIST */}
+                    {designStyleId === 'glass_minimalist' && (
+                        <div>
+                            {/* Glass Minimalist Header with Soft Gradient Glow */}
+                            <div style={{
+                                padding: '10px 14px',
+                                borderRadius: '12px',
+                                background: isDark ? `linear-gradient(135deg, ${primaryColor}20 0%, #0e1624 100%)` : `linear-gradient(135deg, ${primaryColor}10 0%, #ffffff 100%)`,
+                                border: `1px solid ${primaryColor}40`,
+                                boxShadow: `0 4px 20px -5px ${primaryColor}20`,
+                                marginBottom: '10px',
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <span style={{ backgroundColor: primaryColor, color: '#ffffff', fontSize: '7.5pt', fontWeight: 800, padding: '2px 8px', borderRadius: '100px', textTransform: 'uppercase' }}>
+                                            {project.category || 'INNOVATION'}
+                                        </span>
+                                        {subtitle && (
+                                            <span style={{ fontSize: '8pt', fontWeight: 600, color: primaryColor }}>
+                                                {subtitle}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        {partnerLogoUrls.map((url, idx) => (
+                                            <React.Fragment key={idx}>
+                                                <img key={idx} src={url} alt={`Partner ${idx + 1}`} style={{ height: '28px', objectFit: 'contain' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                                                <div style={{ width: '1px', height: '16px', backgroundColor: cardBorder }} />
+                                            </React.Fragment>
+                                        ))}
+                                        <img src="/assets/img/stas.png" alt="STAS RG" style={{ height: '28px', objectFit: 'contain' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                                    </div>
+                                </div>
+
+                                <div style={{ fontSize: styles.titleFontSize || '20pt', fontWeight: 900, color: titleColor, textTransform: 'uppercase', lineHeight: 1.15 }}>
+                                    {title}
+                                </div>
+                            </div>
+
+                            {/* Main Visual Frame */}
+                            <div style={{
+                                width: '100%',
+                                height: `${styles.imageHeight || 195}px`,
+                                borderRadius: '10px',
+                                overflow: 'hidden',
+                                border: `1px solid ${cardBorder}`,
+                                marginBottom: '10px',
+                                position: 'relative',
+                                backgroundColor: cardBg,
+                            }}>
+                                {mainImageUrl ? (
+                                    <img src={mainImageUrl} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                ) : (
+                                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: mutedColor }}>
+                                        <Image style={{ width: '32px', height: '32px', opacity: 0.5 }} />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Description Pill Box */}
+                            {description && (
+                                <div style={{
+                                    padding: '8px 12px',
+                                    borderRadius: '10px',
+                                    backgroundColor: isDark ? '#11182780' : '#ffffff99',
+                                    border: `1px solid ${cardBorder}`,
+                                    backdropFilter: 'blur(8px)',
+                                    marginBottom: '8px',
+                                }}>
+                                    <div className="flyer-rich-content" style={{ fontSize: '8.5pt', color: mutedColor, lineHeight: 1.4, textAlign: 'justify' }} dangerouslySetInnerHTML={{ __html: description }} />
+                                </div>
+                            )}
+
+                            {/* Translucent Pillars for Benefits & Specs */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+                                {(benefitsContent || isLive) && (
+                                    <div style={{ padding: '8px 10px', borderRadius: '10px', backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: primaryColor, fontWeight: 700, fontSize: '8.5pt', textTransform: 'uppercase', marginBottom: '3px' }}>
+                                            <Sparkles style={{ width: '12px', height: '12px' }} />
+                                            <span>{benefitsData.title || 'MANFAAT'}</span>
+                                        </div>
+                                        <div className="flyer-rich-content" style={{ fontSize: '8pt', color: mutedColor, lineHeight: 1.35 }} dangerouslySetInnerHTML={{ __html: benefitsContent }} />
+                                    </div>
+                                )}
+
+                                {(specsContent || isLive) && (
+                                    <div style={{ padding: '8px 10px', borderRadius: '10px', backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: primaryColor, fontWeight: 700, fontSize: '8.5pt', textTransform: 'uppercase', marginBottom: '3px' }}>
+                                            <ShieldCheck style={{ width: '12px', height: '12px' }} />
+                                            <span>{specsData.title || 'SPESIFIKASI'}</span>
+                                        </div>
+                                        <div className="flyer-rich-content" style={{ fontSize: '8pt', color: mutedColor, lineHeight: 1.35 }} dangerouslySetInnerHTML={{ __html: specsContent }} />
+                                    </div>
+                                )}
+                            </div>
+
+                            {(psProblem || psSolution || isLive) && (
+                                <div style={{ padding: '8px 12px', borderRadius: '10px', backgroundColor: isDark ? `${primaryColor}14` : `${primaryColor}0a`, border: `1px solid ${primaryColor}30`, fontSize: '8pt', lineHeight: 1.35, color: mutedColor }}>
+                                    {psProblem && <div><strong style={{ color: titleColor }}>Tantangan: </strong>{psProblem.replace(/<[^>]*>?/gm, '')}</div>}
+                                    {psSolution && <div style={{ marginTop: '2px' }}><strong style={{ color: primaryColor }}>Solusi Unggulan: </strong>{psSolution.replace(/<[^>]*>?/gm, '')}</div>}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* Universal Standard Footer for A4 */}
                     <div style={{ marginTop: 'auto', borderTop: `1px solid ${cardBorder}`, paddingTop: '8px' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -1478,6 +1724,23 @@ export function A4Document({ project, isLive = false, id, previewLang = 'id' }) 
                                                 </span>
                                             ))}
                                         </div>
+                                        {researchTeam.length > 0 && (
+                                            <div style={{ marginTop: '5px', paddingTop: '4px', borderTop: `1px solid ${cardBorder}`, display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                                <span style={{ fontSize: '7pt', fontWeight: 700, color: titleColor, textTransform: 'uppercase' }}>
+                                                    {isEn ? 'Research Team:' : 'Tim Peneliti:'}
+                                                </span>
+                                                {researchTeam.slice(0, 3).map((m, idx) => (
+                                                    <span key={idx} style={{ fontSize: '7pt', color: mutedColor, fontWeight: 500 }}>
+                                                        {m.name}{idx < Math.min(researchTeam.length, 3) - 1 ? ' •' : ''}
+                                                    </span>
+                                                ))}
+                                                {researchTeam.length > 3 && (
+                                                    <span style={{ fontSize: '6.5pt', color: primaryColor, fontWeight: 700 }}>
+                                                        +{researchTeam.length - 3} lainnya
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
                                     </td>
                                     <td style={{ verticalAlign: 'middle', width: '40%', textAlign: 'right' }}>
                                         <div style={{ display: 'inline-block', textAlign: 'right' }}>

@@ -2,10 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Mail\AdminSupportTicketAlertMail;
+use App\Mail\SupportTicketReceivedMail;
+use App\Mail\SupportTicketReplyMail;
 use App\Models\SupportTicket;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -262,5 +266,94 @@ class SupportTicketTest extends TestCase
             ->where('ticket.ticket_number', 'STAS-20260914-0005')
             ->where('ticket.name', 'Show Test User')
         );
+    }
+
+    /**
+     * Test ticket submission queues receipt email to sender and alert email to admins.
+     */
+    public function test_ticket_submission_queues_receipt_and_admin_alert_emails(): void
+    {
+        Mail::fake();
+
+        $admin = User::factory()->create([
+            'email' => 'admin.support@telkomuniversity.ac.id',
+            'role' => 'admin',
+            'status' => User::STATUS_APPROVED,
+        ]);
+
+        $response = $this->post(route('support.submit'), [
+            'name' => 'Fatin Researcher',
+            'email' => 'fatin.inquiry@example.com',
+            'phone' => '+6281234567890',
+            'institution' => 'Telkom University',
+            'category' => SupportTicket::CATEGORY_GENERAL,
+            'priority' => SupportTicket::PRIORITY_HIGH,
+            'subject' => 'Konsultasi Riset AI & IoT',
+            'message' => 'Halo tim STAS-RG, kami ingin berkonsultasi mengenai kolaborasi penelitian.',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+
+        Mail::assertQueued(SupportTicketReceivedMail::class, function ($mail) {
+            return $mail->hasTo('fatin.inquiry@example.com');
+        });
+
+        Mail::assertQueued(AdminSupportTicketAlertMail::class, function ($mail) use ($admin) {
+            return $mail->hasTo($admin->email);
+        });
+    }
+
+    /**
+     * Test admin can send reply email to ticket author and update status.
+     */
+    public function test_admin_can_send_reply_email_and_update_status(): void
+    {
+        Mail::fake();
+
+        $admin = User::factory()->create([
+            'name' => 'Support Engineer',
+            'email' => 'support.eng@telkomuniversity.ac.id',
+            'role' => 'admin',
+            'status' => User::STATUS_APPROVED,
+        ]);
+
+        $ticket = SupportTicket::create([
+            'ticket_number' => 'STAS-20260915-0099',
+            'name' => 'Pengirim Tiket',
+            'email' => 'pengirim@example.com',
+            'category' => SupportTicket::CATEGORY_TECHNICAL,
+            'priority' => SupportTicket::PRIORITY_HIGH,
+            'subject' => 'Kendala Integrasi AI',
+            'message' => 'Mohon bantuan terkait error integrasi model.',
+            'status' => SupportTicket::STATUS_PENDING,
+        ]);
+
+        $replyPayload = [
+            'message' => 'Halo Pengirim, kendala integrasi AI Anda telah kami selesaikan dengan memperbarui API endpoint.',
+            'status' => SupportTicket::STATUS_RESOLVED,
+        ];
+
+        $response = $this->actingAs($admin)->post(route('support-tickets.reply', $ticket), $replyPayload);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $ticket->refresh();
+        $this->assertEquals(SupportTicket::STATUS_RESOLVED, $ticket->status);
+        $this->assertEquals($admin->id, $ticket->resolved_by);
+        $this->assertNotNull($ticket->resolved_at);
+
+        // Check reply record in database
+        $this->assertDatabaseHas('support_ticket_replies', [
+            'support_ticket_id' => $ticket->id,
+            'user_id' => $admin->id,
+            'message' => $replyPayload['message'],
+            'status_at_reply' => SupportTicket::STATUS_RESOLVED,
+        ]);
+
+        // Check reply email was queued
+        Mail::assertQueued(SupportTicketReplyMail::class, function ($mail) {
+            return $mail->hasTo('pengirim@example.com');
+        });
     }
 }

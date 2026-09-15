@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 
@@ -21,34 +22,53 @@ class SystemSetting extends Model
     ];
 
     /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (SystemSetting $setting) {
+            Cache::forget("system_setting_{$setting->key}");
+        });
+
+        static::deleted(function (SystemSetting $setting) {
+            Cache::forget("system_setting_{$setting->key}");
+        });
+    }
+
+    /**
      * Get a setting value with fallback support.
      */
     public static function get(string $key, mixed $default = null): mixed
     {
-        $setting = static::where('key', $key)->first();
+        return Cache::remember("system_setting_{$key}", 3600, function () use ($key, $default) {
+            $setting = static::where('key', $key)->first();
 
-        if (! $setting || $setting->value === null) {
-            // Environment variable fallbacks for common keys
-            if ($key === 'ai_api_key') {
-                return env('GEMINI_API_KEY') ?: env('AI_API_KEY', $default);
-            }
-            if ($key === 'ai_provider') {
-                return env('AI_PROVIDER', $default ?: 'gemini');
-            }
-            if ($key === 'ai_model') {
-                return env('AI_MODEL', $default ?: 'gemini-3.6-flash');
+            if (! $setting || $setting->value === null) {
+                // Configuration fallbacks for common keys (compatible with config:cache)
+                if ($key === 'ai_api_key') {
+                    return config('services.ai.gemini_key', $default);
+                }
+                if ($key === 'ai_provider') {
+                    return config('services.ai.provider', $default ?: 'gemini');
+                }
+                if ($key === 'ai_model') {
+                    return config('services.ai.model', $default ?: 'gemini-3.6-flash');
+                }
+                if ($key === 'ai_custom_endpoint') {
+                    return config('services.ai.custom_endpoint', $default);
+                }
+
+                return $default;
             }
 
-            return $default;
-        }
-
-        return match ($setting->type) {
-            'encrypted' => self::decryptSafely($setting->value, $default),
-            'json' => json_decode($setting->value, true) ?: $default,
-            'boolean' => filter_var($setting->value, FILTER_VALIDATE_BOOLEAN),
-            'integer' => (int) $setting->value,
-            default => $setting->value,
-        };
+            return match ($setting->type) {
+                'encrypted' => self::decryptSafely($setting->value, $default),
+                'json' => json_decode($setting->value, true) ?: $default,
+                'boolean' => filter_var($setting->value, FILTER_VALIDATE_BOOLEAN),
+                'integer' => (int) $setting->value,
+                default => $setting->value,
+            };
+        });
     }
 
     /**
@@ -66,13 +86,17 @@ class SystemSetting extends Model
             $storedValue = $value ? '1' : '0';
         }
 
-        return static::updateOrCreate(
+        $setting = static::updateOrCreate(
             ['key' => $key],
             [
                 'value' => $storedValue,
                 'type' => $type,
             ]
         );
+
+        Cache::forget("system_setting_{$key}");
+
+        return $setting;
     }
 
     /**

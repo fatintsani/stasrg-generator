@@ -47,11 +47,11 @@ class EmailNotificationTest extends TestCase
         $response = $this->post('/register', $payload);
         $response->assertRedirect('/login');
 
-        Mail::assertSent(UserRegisteredMail::class, function ($mail) {
+        Mail::assertQueued(UserRegisteredMail::class, function ($mail) {
             return $mail->hasTo('fatin.res@gmail.com');
         });
 
-        Mail::assertSent(AdminNewUserAlertMail::class, function ($mail) use ($admin) {
+        Mail::assertQueued(AdminNewUserAlertMail::class, function ($mail) use ($admin) {
             return $mail->hasTo($admin->email);
         });
     }
@@ -72,7 +72,7 @@ class EmailNotificationTest extends TestCase
         $this->actingAs($admin)
             ->post("/users/{$user->id}/approve");
 
-        Mail::assertSent(AccountApprovedMail::class, function ($mail) use ($user) {
+        Mail::assertQueued(AccountApprovedMail::class, function ($mail) use ($user) {
             return $mail->hasTo($user->email);
         });
     }
@@ -95,7 +95,7 @@ class EmailNotificationTest extends TestCase
                 'reason' => 'Bukan anggota lab STAS-RG.',
             ]);
 
-        Mail::assertSent(AccountRejectedMail::class, function ($mail) use ($user) {
+        Mail::assertQueued(AccountRejectedMail::class, function ($mail) use ($user) {
             return $mail->hasTo($user->email) && $mail->reason === 'Bukan anggota lab STAS-RG.';
         });
     }
@@ -117,7 +117,7 @@ class EmailNotificationTest extends TestCase
         $this->actingAs($admin)
             ->post("/users/{$user->id}/toggle-status");
 
-        Mail::assertSent(AccountStatusChangedMail::class, function ($mail) use ($user) {
+        Mail::assertQueued(AccountStatusChangedMail::class, function ($mail) use ($user) {
             return $mail->hasTo($user->email) && $mail->status === 'inactive';
         });
     }
@@ -138,7 +138,7 @@ class EmailNotificationTest extends TestCase
         ]);
         $otpResponse->assertOk();
 
-        Mail::assertSent(PasswordResetOtpMail::class, function ($mail) use ($user) {
+        Mail::assertQueued(PasswordResetOtpMail::class, function ($mail) use ($user) {
             return $mail->hasTo($user->email);
         });
 
@@ -160,7 +160,7 @@ class EmailNotificationTest extends TestCase
         ]);
         $resetResponse->assertRedirect('/login');
 
-        Mail::assertSent(PasswordChangedMail::class, function ($mail) use ($user) {
+        Mail::assertQueued(PasswordChangedMail::class, function ($mail) use ($user) {
             return $mail->hasTo($user->email);
         });
     }
@@ -183,7 +183,7 @@ class EmailNotificationTest extends TestCase
 
         $response->assertRedirect('/dashboard');
 
-        Mail::assertSent(LoginNotificationMail::class, function ($mail) use ($user) {
+        Mail::assertQueued(LoginNotificationMail::class, function ($mail) use ($user) {
             return $mail->hasTo($user->email);
         });
     }
@@ -209,7 +209,7 @@ class EmailNotificationTest extends TestCase
         $project = Project::where('name', 'IoT Water Monitoring')->first();
         $this->assertNotNull($project);
 
-        Mail::assertSent(ProjectNotificationMail::class, function ($mail) use ($user) {
+        Mail::assertQueued(ProjectNotificationMail::class, function ($mail) use ($user) {
             return $mail->hasTo($user->email) && $mail->eventType === 'created';
         });
 
@@ -223,21 +223,21 @@ class EmailNotificationTest extends TestCase
         $updateResponse->assertSessionHasNoErrors();
         $updateResponse->assertRedirect();
 
-        Mail::assertSent(ProjectNotificationMail::class, function ($mail) use ($user) {
+        Mail::assertQueued(ProjectNotificationMail::class, function ($mail) use ($user) {
             return $mail->hasTo($user->email) && $mail->eventType === 'published';
         });
 
         // 3. Duplicate Project
         $this->actingAs($user)->post(route('projects.duplicate', $project));
 
-        Mail::assertSent(ProjectNotificationMail::class, function ($mail) use ($user) {
+        Mail::assertQueued(ProjectNotificationMail::class, function ($mail) use ($user) {
             return $mail->hasTo($user->email) && $mail->eventType === 'duplicated';
         });
 
         // 4. Delete Project
         $this->actingAs($user)->delete(route('projects.destroy', $project));
 
-        Mail::assertSent(ProjectNotificationMail::class, function ($mail) use ($user) {
+        Mail::assertQueued(ProjectNotificationMail::class, function ($mail) use ($user) {
             return $mail->hasTo($user->email) && $mail->eventType === 'deleted';
         });
     }
@@ -258,7 +258,7 @@ class EmailNotificationTest extends TestCase
             'username' => 'new_username',
         ]);
 
-        Mail::assertSent(ProfileUpdatedMail::class, function ($mail) use ($user) {
+        Mail::assertQueued(ProfileUpdatedMail::class, function ($mail) use ($user) {
             return $mail->hasTo($user->email);
         });
     }

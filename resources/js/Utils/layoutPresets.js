@@ -167,6 +167,188 @@ export const COLOR_THEMES = {
         previewRing: 'ring-[#1E293B]',
         swatchClass: 'from-[#1E293B] to-[#475569]',
     },
+    cyber_teal: {
+        id: 'cyber_teal',
+        name: 'Cyber Teal & Neon',
+        tagline: 'Emerald & Cyan Matrix',
+        primary: '#059669',
+        primaryDark: '#022c22',
+        primaryLight: '#10b981',
+        accent: '#06b6d4',
+        badgeBg: '#059669',
+        badgeText: '#ffffff',
+        headerText: '#059669',
+        border: '#059669',
+        bgAccent: '#ecfdf5',
+        cardBorder: '#a7f3d0',
+        darkCanvasBg: '#041d17',
+        darkCardBg: '#08332b',
+        previewRing: 'ring-[#059669]',
+        swatchClass: 'from-[#059669] to-[#06b6d4]',
+    },
+    solar_amber: {
+        id: 'solar_amber',
+        name: 'Solar Amber & Orange',
+        tagline: 'Warm Energy & Agro',
+        primary: '#D97706',
+        primaryDark: '#451a03',
+        primaryLight: '#f59e0b',
+        accent: '#ea580c',
+        badgeBg: '#D97706',
+        badgeText: '#ffffff',
+        headerText: '#D97706',
+        border: '#D97706',
+        bgAccent: '#fffbeb',
+        cardBorder: '#fde68a',
+        darkCanvasBg: '#1f1304',
+        darkCardBg: '#331e07',
+        previewRing: 'ring-[#D97706]',
+        swatchClass: 'from-[#D97706] to-[#ea580c]',
+    },
+    royal_purple: {
+        id: 'royal_purple',
+        name: 'Royal Purple AI',
+        tagline: 'Deep Violet & Indigo',
+        primary: '#6D28D9',
+        primaryDark: '#2e1065',
+        primaryLight: '#8b5cf6',
+        accent: '#a855f7',
+        badgeBg: '#6D28D9',
+        badgeText: '#ffffff',
+        headerText: '#6D28D9',
+        border: '#6D28D9',
+        bgAccent: '#f5f3ff',
+        cardBorder: '#ddd6fe',
+        darkCanvasBg: '#130924',
+        darkCardBg: '#21133b',
+        previewRing: 'ring-[#6D28D9]',
+        swatchClass: 'from-[#6D28D9] to-[#8b5cf6]',
+    },
+    electric_azure: {
+        id: 'electric_azure',
+        name: 'Electric Blue & Aero',
+        tagline: 'Sapphire & Sky Blue',
+        primary: '#2563EB',
+        primaryDark: '#172554',
+        primaryLight: '#3b82f6',
+        accent: '#38bdf8',
+        badgeBg: '#2563EB',
+        badgeText: '#ffffff',
+        headerText: '#2563EB',
+        border: '#2563EB',
+        bgAccent: '#eff6ff',
+        cardBorder: '#bfdbfe',
+        darkCanvasBg: '#0a152e',
+        darkCardBg: '#122347',
+        previewRing: 'ring-[#2563EB]',
+        swatchClass: 'from-[#2563EB] to-[#38bdf8]',
+    },
+    custom: {
+        id: 'custom',
+        name: 'Custom Brand Palette',
+        tagline: 'Pilih Warna Hex Sendiri',
+        primary: '#0AB600',
+        primaryDark: '#083820',
+        primaryLight: '#15803d',
+        accent: '#10b981',
+        badgeBg: '#0AB600',
+        badgeText: '#ffffff',
+        headerText: '#0AB600',
+        border: '#0AB600',
+        bgAccent: '#ecfdf5',
+        cardBorder: '#d1fae5',
+        darkCanvasBg: '#07150e',
+        darkCardBg: '#0e241b',
+        previewRing: 'ring-indigo-500',
+        swatchClass: 'from-indigo-500 via-purple-500 to-pink-500',
+    },
+};
+
+export const FLYER_FONTS = {
+    plus_jakarta: {
+        id: 'plus_jakarta',
+        name: 'Plus Jakarta Sans',
+        tagline: 'Modern & Bersih',
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        category: 'Sans-Serif',
+        description: 'Tipografi terstandarisasi Telkom University & CoE STAS-RG yang jernih dan sangat mudah dibaca.',
+    },
+    outfit: {
+        id: 'outfit',
+        name: 'Outfit',
+        tagline: 'Kontemporer Futuristik',
+        fontFamily: "'Outfit', sans-serif",
+        category: 'Display Sans',
+        description: 'Bentuk geometris bulat modern cocok untuk display produk AI, IoT, dan teknologi masa depan.',
+    },
+    space_grotesk: {
+        id: 'space_grotesk',
+        name: 'Space Grotesk',
+        tagline: 'Tech & Engineering',
+        fontFamily: "'Space Grotesk', sans-serif",
+        category: 'Tech Grotesk',
+        description: 'Sentuhan teknikal bernuansa lab kedirgantaraan, robotika, dan riset sains terapan.',
+    },
+    inter: {
+        id: 'inter',
+        name: 'Inter',
+        tagline: 'Korporat & Netral',
+        fontFamily: "'Inter', sans-serif",
+        category: 'Universal Sans',
+        description: 'Tingkat keterbacaan micro-text tertinggi untuk poin spesifikasi padat.',
+    },
+    montserrat: {
+        id: 'montserrat',
+        name: 'Montserrat',
+        tagline: 'Bold & Impact',
+        fontFamily: "'Montserrat', sans-serif",
+        category: 'Geometric Sans',
+        description: 'Karakter judul yang tegas dan menarik perhatian di display pameran dan poster.',
+    },
+    playfair: {
+        id: 'playfair',
+        name: 'Playfair Display',
+        tagline: 'Akademis & Formal',
+        fontFamily: "'Playfair Display', Georgia, serif",
+        category: 'Modern Serif',
+        description: 'Gaya elegan berwibawa untuk prosiding ilmiah simposium dan piagam riset resmi.',
+    },
+};
+
+export const FLYER_PATTERNS = {
+    none: {
+        id: 'none',
+        name: 'Clean Flat',
+        tagline: 'Solid Minimalis',
+        description: 'Latar polos bersih tanpa motif untuk kemudahan cetak dan tampilan minimalis.',
+        cssPattern: 'none',
+    },
+    dots: {
+        id: 'dots',
+        name: 'Dot Matrix',
+        tagline: 'Titik Halus Modern',
+        description: 'Pola titik matriks berjarak halus bernuansa komputasi dan sirkuit modern.',
+        cssPattern: 'radial-gradient(currentColor 1px, transparent 1px)',
+        bgSize: '16px 16px',
+        opacity: 0.05,
+    },
+    grid: {
+        id: 'grid',
+        name: 'Blueprint Grid',
+        tagline: 'Garis Kotak Teknik',
+        description: 'Kisi-kisi grid teknik presisi seperti lembar kalkulasi arsitektur riset.',
+        cssPattern: 'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)',
+        bgSize: '24px 24px',
+        opacity: 0.04,
+    },
+    mesh: {
+        id: 'mesh',
+        name: 'Radial Mesh',
+        tagline: 'Gradasi Aura Lembut',
+        description: 'Highlight pendaran cahaya lembut di sudut atas kanvas flyer.',
+        cssPattern: 'radial-gradient(circle at 100% 0%, var(--accent-glow, rgba(10,182,0,0.08)) 0%, transparent 50%)',
+        opacity: 1,
+    },
 };
 
 export const PRINT_MODES = {
@@ -370,6 +552,22 @@ export const DESIGN_STYLES = {
         badgeColor: 'bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200 border-zinc-300',
         bestFor: 'Riset software, algoritma AI, deep tech, dan dokumentasi arsitektur sistem',
     },
+    tech_blueprint: {
+        id: 'tech_blueprint',
+        name: 'Tech Blueprint Matrix',
+        tagline: 'Aksen Teknikal & Corner Markers',
+        description: 'Desain teknis mutakhir dengan corner bracket markers, garis grid terstruktur, dan aksen badge futuristik.',
+        badgeColor: 'bg-cyan-50 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300 border-cyan-200',
+        bestFor: 'Robotika, IoT, Kedirgantaraan, Telekomunikasi & Rekayasa Perangkat Keras',
+    },
+    glass_minimalist: {
+        id: 'glass_minimalist',
+        name: 'Glass Minimalist',
+        tagline: 'Translucent & Glowing Borders',
+        description: 'Gaya modern translucent glassmorphism dengan outline kartu halus, efek kilau lembut, dan kontras tajam.',
+        badgeColor: 'bg-indigo-50 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200',
+        bestFor: 'Artificial Intelligence, SaaS, Cloud & Solusi Digital Kontemporer',
+    },
     academic_brief: {
         id: 'academic_brief',
         name: 'Academic Paper Brief',
@@ -384,8 +582,39 @@ export function getDocumentFormat(formatId) {
     return DOCUMENT_FORMATS[formatId] || DOCUMENT_FORMATS.a4_flyer;
 }
 
-export function getColorTheme(themeId) {
+export function getColorTheme(themeId, customColors = null) {
+    if (themeId === 'custom' && customColors && (customColors.primary || customColors.accent)) {
+        const primary = customColors.primary || '#0AB600';
+        const accent = customColors.accent || '#10b981';
+        return {
+            id: 'custom',
+            name: 'Custom Brand Palette',
+            tagline: 'Kustomisasi Brand Sendiri',
+            primary,
+            primaryDark: primary,
+            primaryLight: accent,
+            accent,
+            badgeBg: primary,
+            badgeText: '#ffffff',
+            headerText: primary,
+            border: primary,
+            bgAccent: `${primary}12`,
+            cardBorder: `${primary}33`,
+            darkCanvasBg: '#070c14',
+            darkCardBg: '#0e1624',
+            previewRing: 'ring-indigo-500',
+            swatchClass: 'from-indigo-500 via-purple-500 to-pink-500',
+        };
+    }
     return COLOR_THEMES[themeId] || COLOR_THEMES.stas_official;
+}
+
+export function getFlyerFont(fontId) {
+    return FLYER_FONTS[fontId] || FLYER_FONTS.plus_jakarta;
+}
+
+export function getFlyerPattern(patternId) {
+    return FLYER_PATTERNS[patternId] || FLYER_PATTERNS.none;
 }
 
 export function getPrintMode(modeId) {

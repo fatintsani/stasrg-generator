@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class ProjectTemplate extends Model
@@ -27,6 +28,9 @@ class ProjectTemplate extends Model
         'color_theme',
         'print_mode',
         'boilerplate_type',
+        'lab_affiliation',
+        'patent_number',
+        'publication_doi',
         'default_data',
         'layout_schema',
         'content_en',
@@ -72,6 +76,14 @@ class ProjectTemplate extends Model
             if ($template->isDirty('name') && ! $template->isDirty('slug')) {
                 $template->slug = static::generateUniqueSlug($template->name ?: 'template', $template->id);
             }
+        });
+
+        static::saved(function () {
+            Cache::forget('project_templates_available_categories');
+        });
+
+        static::deleted(function () {
+            Cache::forget('project_templates_available_categories');
         });
     }
 

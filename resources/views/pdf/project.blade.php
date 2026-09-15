@@ -728,6 +728,30 @@
                                 <span class="social-text-cell">{{ $project->footer_youtube ?: '@stas_rg' }}</span>
                             </span>
                         </div>
+                        @if(!empty($project->research_team) && is_array($project->research_team))
+                        <div style="margin-top: 4px; padding-top: 3px; border-top: 0.5px solid #e5e7eb; font-size: 6.8pt; color: #4b5563;">
+                            <strong style="color: #111827;">Tim Peneliti:</strong>
+                            @foreach(array_slice($project->research_team, 0, 4) as $idx => $member)
+                                <span>{{ $member['name'] ?? '' }}@if(!empty($member['role'])) ({{ $member['role'] }})@endif{{ $idx < min(count($project->research_team), 4) - 1 ? ' •' : '' }}</span>
+                            @endforeach
+                            @if(count($project->research_team) > 4)
+                                <span style="color: {{ $themeColor }}; font-weight: bold;">+{{ count($project->research_team) - 4 }} lainnya</span>
+                            @endif
+                        </div>
+                        @endif
+                        @if(!empty($project->lab_affiliation) || !empty($project->patent_number) || !empty($project->publication_doi))
+                        <div style="margin-top: 2px; font-size: 6.2pt; color: #6b7280;">
+                            @if(!empty($project->lab_affiliation))
+                                <span><strong>Lab:</strong> {{ $project->lab_affiliation }}</span>
+                            @endif
+                            @if(!empty($project->patent_number))
+                                <span> • <strong>Paten:</strong> {{ $project->patent_number }}</span>
+                            @endif
+                            @if(!empty($project->publication_doi))
+                                <span> • <strong>DOI:</strong> {{ $project->publication_doi }}</span>
+                            @endif
+                        </div>
+                        @endif
                     </td>
                     <td class="footer-right">
                         <div class="qr-wrapper">

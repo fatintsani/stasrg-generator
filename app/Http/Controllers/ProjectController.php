@@ -13,6 +13,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -114,6 +116,9 @@ class ProjectController extends Controller
                     'color_theme' => $appliedTemplate->color_theme ?? 'stas_official',
                     'print_mode' => $appliedTemplate->print_mode ?? 'light',
                     'boilerplate_type' => $appliedTemplate->boilerplate_type ?? 'stas_default',
+                    'lab_affiliation' => $appliedTemplate->lab_affiliation ?? ($defaultData['lab_affiliation'] ?? ''),
+                    'patent_number' => $appliedTemplate->patent_number ?? ($defaultData['patent_number'] ?? ''),
+                    'publication_doi' => $appliedTemplate->publication_doi ?? ($defaultData['publication_doi'] ?? ''),
                     'layout_schema' => $appliedTemplate->layout_schema ?? null,
                     'status' => 'draft',
                 ];
@@ -149,11 +154,15 @@ class ProjectController extends Controller
             'social_links' => ['nullable', 'array'],
             'partner_logo' => ['nullable'],
             'partner_logos' => ['nullable'],
+            'research_team' => ['nullable'],
+            'lab_affiliation' => ['nullable', 'string', 'max:255'],
+            'patent_number' => ['nullable', 'string', 'max:255'],
+            'publication_doi' => ['nullable', 'string', 'max:255'],
             'footer_logo' => ['nullable', 'file', 'mimes:jpeg,png,jpg,svg,webp', 'max:5120'],
             'layout_preset' => ['nullable', 'string', 'in:balanced,visual_heavy,text_heavy'],
-            'design_style' => ['nullable', 'string', 'in:classic_standard,modern_split,infographic_cards,minimal_grid,academic_brief'],
+            'design_style' => ['nullable', 'string', 'in:classic_standard,modern_split,infographic_cards,minimal_grid,academic_brief,tech_blueprint,glass_minimalist'],
             'doc_format' => ['nullable', 'string', 'in:a4_flyer,brochure_trifold,roll_banner,factsheet_2col,pitch_poster,social_feed,social_story'],
-            'color_theme' => ['nullable', 'string', 'in:stas_official,ocean_tech,crimson_innovation,slate_monochrome'],
+            'color_theme' => ['nullable', 'string', 'in:stas_official,ocean_tech,crimson_innovation,slate_monochrome,cyber_teal,solar_amber,royal_purple,electric_azure,custom'],
             'print_mode' => ['nullable', 'string', 'in:light,dark'],
             'boilerplate_type' => ['nullable', 'string', 'max:255'],
             'layout_schema' => ['nullable', 'array'],
@@ -170,6 +179,7 @@ class ProjectController extends Controller
         $processedLogos = $this->processPartnerLogos($request);
         $validated['partner_logos'] = $processedLogos;
         $validated['partner_logo'] = $processedLogos[0] ?? null;
+        $validated['research_team'] = $this->processResearchTeam($request);
 
         if ($request->hasFile('footer_logo')) {
             $validated['footer_logo'] = $request->file('footer_logo')->store('projects/logos', 'public');
@@ -192,79 +202,82 @@ class ProjectController extends Controller
         // Handle A4 Trifold Brochure with 3 Independent Projects per Kotak
         if (($validated['doc_format'] ?? '') === 'brochure_trifold' && ! empty($validated['problem_solution']['panels']) && is_array($validated['problem_solution']['panels'])) {
             $panels = $validated['problem_solution']['panels'];
-            $createdProjects = [];
             $trifoldGroupId = uniqid('trifold_');
 
-            foreach ($panels as $idx => $p) {
-                $pTitle = ! empty($p['title']) ? trim($p['title']) : ($idx === 0 ? ($validated['title'] ?? 'Inovasi Riset Kotak 1') : 'Inovasi Kotak '.($idx + 1));
-                $pName = $pTitle;
-                $pSubtitle = $p['subtitle'] ?? '';
-                $pCategory = ! empty($p['category']) ? trim($p['category']) : ($idx === 0 ? ($validated['category'] ?? 'Smart Agriculture') : 'CoE STAS-RG');
-                $pDesc = $p['description'] ?? '';
-                $pProblem = $p['problem'] ?? '';
-                $pSolution = $p['solution'] ?? '';
-                $pBenefits = $p['benefits'] ?? '';
-                $pSpecs = $p['specifications'] ?? ($p['specs'] ?? '');
-                $pProjectUrl = $p['project_url'] ?? '';
-                $pImage = null;
+            $primaryProject = DB::transaction(function () use ($request, $validated, $panels, $trifoldGroupId) {
+                $createdProjects = [];
 
-                if ($idx === 0 && isset($validated['main_image'])) {
-                    $pImage = $validated['main_image'];
-                } elseif (! empty($p['image_url'])) {
-                    if (str_starts_with($p['image_url'], 'data:image/')) {
-                        $pImage = $this->storeBase64Image($p['image_url']);
-                    } elseif (! str_starts_with($p['image_url'], 'http') && ! str_starts_with($p['image_url'], 'blob:')) {
-                        $pImage = str_replace('/storage/', '', $p['image_url']);
+                foreach ($panels as $idx => $p) {
+                    $pTitle = ! empty($p['title']) ? trim($p['title']) : ($idx === 0 ? ($validated['title'] ?? 'Inovasi Riset Kotak 1') : 'Inovasi Kotak '.($idx + 1));
+                    $pName = $pTitle;
+                    $pSubtitle = $p['subtitle'] ?? '';
+                    $pCategory = ! empty($p['category']) ? trim($p['category']) : ($idx === 0 ? ($validated['category'] ?? 'Smart Agriculture') : 'CoE STAS-RG');
+                    $pDesc = $p['description'] ?? '';
+                    $pProblem = $p['problem'] ?? '';
+                    $pSolution = $p['solution'] ?? '';
+                    $pBenefits = $p['benefits'] ?? '';
+                    $pSpecs = $p['specifications'] ?? ($p['specs'] ?? '');
+                    $pProjectUrl = $p['project_url'] ?? '';
+                    $pImage = null;
+
+                    if ($idx === 0 && isset($validated['main_image'])) {
+                        $pImage = $validated['main_image'];
+                    } elseif (! empty($p['image_url'])) {
+                        if (str_starts_with($p['image_url'], 'data:image/')) {
+                            $pImage = $this->storeBase64Image($p['image_url']);
+                        } elseif (! str_starts_with($p['image_url'], 'http') && ! str_starts_with($p['image_url'], 'blob:')) {
+                            $pImage = str_replace('/storage/', '', $p['image_url']);
+                        }
                     }
+
+                    $panelProjectData = [
+                        'name' => $pName,
+                        'title' => $pTitle,
+                        'subtitle' => $pSubtitle,
+                        'category' => $pCategory,
+                        'description' => $pDesc,
+                        'main_image' => $pImage,
+                        'partner_logo' => $validated['partner_logo'] ?? null,
+                        'partner_logos' => $validated['partner_logos'] ?? null,
+                        'footer_logo' => $validated['footer_logo'] ?? null,
+                        'benefits' => ['content' => $pBenefits],
+                        'specifications' => ['content' => $pSpecs],
+                        'problem_solution' => [
+                            'problem' => $pProblem,
+                            'solution' => $pSolution,
+                            'trifold_group' => $trifoldGroupId,
+                            'panel_index' => $idx,
+                            'panels' => $panels,
+                        ],
+                        'project_url' => $pProjectUrl,
+                        'footer_website' => $validated['footer_website'] ?? 'www.stas-rg.com',
+                        'footer_instagram' => $validated['footer_instagram'] ?? '@stas.rg',
+                        'footer_youtube' => $validated['footer_youtube'] ?? '@stas_rg',
+                        'social_links' => $validated['social_links'] ?? [],
+                        'layout_preset' => $validated['layout_preset'] ?? 'balanced',
+                        'design_style' => $validated['design_style'] ?? 'classic_standard',
+                        'doc_format' => 'brochure_trifold',
+                        'color_theme' => $validated['color_theme'] ?? 'stas_official',
+                        'print_mode' => $validated['print_mode'] ?? 'light',
+                        'boilerplate_type' => $validated['boilerplate_type'] ?? null,
+                        'status' => $validated['status'] ?? 'published',
+                    ];
+
+                    if (! empty($pProjectUrl)) {
+                        $url = $pProjectUrl;
+                        if (! preg_match('#^https?://#i', $url)) {
+                            $url = 'https://'.$url;
+                        }
+                        $panelProjectData['qr_code_path'] = $this->generateQrCode($url);
+                    }
+
+                    $panelProjectData = $this->sanitizeProjectData($panelProjectData);
+                    $newProj = $request->user()->projects()->create($panelProjectData);
+                    $createdProjects[] = $newProj;
                 }
 
-                $panelProjectData = [
-                    'name' => $pName,
-                    'title' => $pTitle,
-                    'subtitle' => $pSubtitle,
-                    'category' => $pCategory,
-                    'description' => $pDesc,
-                    'main_image' => $pImage,
-                    'partner_logo' => $validated['partner_logo'] ?? null,
-                    'partner_logos' => $validated['partner_logos'] ?? null,
-                    'footer_logo' => $validated['footer_logo'] ?? null,
-                    'benefits' => ['content' => $pBenefits],
-                    'specifications' => ['content' => $pSpecs],
-                    'problem_solution' => [
-                        'problem' => $pProblem,
-                        'solution' => $pSolution,
-                        'trifold_group' => $trifoldGroupId,
-                        'panel_index' => $idx,
-                        'panels' => $panels,
-                    ],
-                    'project_url' => $pProjectUrl,
-                    'footer_website' => $validated['footer_website'] ?? 'www.stas-rg.com',
-                    'footer_instagram' => $validated['footer_instagram'] ?? '@stas.rg',
-                    'footer_youtube' => $validated['footer_youtube'] ?? '@stas_rg',
-                    'social_links' => $validated['social_links'] ?? [],
-                    'layout_preset' => $validated['layout_preset'] ?? 'balanced',
-                    'design_style' => $validated['design_style'] ?? 'classic_standard',
-                    'doc_format' => 'brochure_trifold',
-                    'color_theme' => $validated['color_theme'] ?? 'stas_official',
-                    'print_mode' => $validated['print_mode'] ?? 'light',
-                    'boilerplate_type' => $validated['boilerplate_type'] ?? null,
-                    'status' => $validated['status'] ?? 'published',
-                ];
-
-                if (! empty($pProjectUrl)) {
-                    $url = $pProjectUrl;
-                    if (! preg_match('#^https?://#i', $url)) {
-                        $url = 'https://'.$url;
-                    }
-                    $panelProjectData['qr_code_path'] = $this->generateQrCode($url);
-                }
-
-                $panelProjectData = $this->sanitizeProjectData($panelProjectData);
-                $newProj = $request->user()->projects()->create($panelProjectData);
-                $createdProjects[] = $newProj;
-            }
-
-            $primaryProject = $createdProjects[0] ?? null;
+                return $createdProjects[0] ?? null;
+            });
 
             ActivityLogger::logProject(
                 action: 'project.created',
@@ -273,7 +286,6 @@ class ProjectController extends Controller
                 properties: [
                     'name' => $primaryProject->name,
                     'doc_format' => 'brochure_trifold',
-                    'total_panels' => count($createdProjects),
                 ],
                 user: $request->user(),
                 request: $request
@@ -366,10 +378,15 @@ class ProjectController extends Controller
             'social_links' => ['nullable', 'array'],
             'partner_logo' => ['nullable'],
             'partner_logos' => ['nullable'],
+            'research_team' => ['nullable'],
+            'lab_affiliation' => ['nullable', 'string', 'max:255'],
+            'patent_number' => ['nullable', 'string', 'max:255'],
+            'publication_doi' => ['nullable', 'string', 'max:255'],
             'footer_logo' => ['nullable'],
             'layout_preset' => ['nullable', 'string', 'in:balanced,visual_heavy,text_heavy'],
+            'design_style' => ['nullable', 'string', 'in:classic_standard,modern_split,infographic_cards,minimal_grid,academic_brief,tech_blueprint,glass_minimalist'],
             'doc_format' => ['nullable', 'string', 'in:a4_flyer,brochure_trifold,roll_banner,factsheet_2col,pitch_poster,social_feed,social_story'],
-            'color_theme' => ['nullable', 'string', 'in:stas_official,ocean_tech,crimson_innovation,slate_monochrome'],
+            'color_theme' => ['nullable', 'string', 'in:stas_official,ocean_tech,crimson_innovation,slate_monochrome,cyber_teal,solar_amber,royal_purple,electric_azure,custom'],
             'print_mode' => ['nullable', 'string', 'in:light,dark'],
             'boilerplate_type' => ['nullable', 'string', 'max:255'],
             'layout_schema' => ['nullable', 'array'],
@@ -400,6 +417,8 @@ class ProjectController extends Controller
             $validated['partner_logos'] = $processedLogos;
             $validated['partner_logo'] = $processedLogos[0] ?? null;
         }
+
+        $validated['research_team'] = $this->processResearchTeam($request, $project->research_team ?? []);
 
         if ($request->hasFile('footer_logo')) {
             $request->validate([
@@ -435,148 +454,150 @@ class ProjectController extends Controller
             $panels = $validated['problem_solution']['panels'];
             $trifoldGroupId = $project->problem_solution['trifold_group'] ?? uniqid('trifold_');
 
-            // 1. Update Kotak 1 (Primary Project)
-            $p0 = $panels[0] ?? [];
-            $validated['name'] = ! empty($p0['title']) ? trim($p0['title']) : $validated['name'];
-            $validated['title'] = ! empty($p0['title']) ? trim($p0['title']) : $validated['title'];
-            $validated['subtitle'] = $p0['subtitle'] ?? ($validated['subtitle'] ?? '');
-            $validated['category'] = ! empty($p0['category']) ? $p0['category'] : ($validated['category'] ?? 'Smart Agriculture');
-            $validated['description'] = $p0['description'] ?? ($validated['description'] ?? '');
-            $validated['benefits'] = ['content' => $p0['benefits'] ?? ($validated['benefits']['content'] ?? '')];
-            $validated['specifications'] = ['content' => $p0['specifications'] ?? ($p0['specs'] ?? ($validated['specifications']['content'] ?? ''))];
-            $validated['problem_solution'] = [
-                'problem' => $p0['problem'] ?? '',
-                'solution' => $p0['solution'] ?? '',
-                'trifold_group' => $trifoldGroupId,
-                'panel_index' => 0,
-                'panels' => $panels,
-            ];
-
-            if (! empty($p0['project_url'])) {
-                $validated['project_url'] = $p0['project_url'];
-                if ($p0['project_url'] !== $project->project_url) {
-                    if ($project->qr_code_path) {
-                        Storage::disk('public')->delete($project->qr_code_path);
-                    }
-                    $urlToEncode = ! preg_match('#^https?://#i', $p0['project_url']) ? 'https://'.$p0['project_url'] : $p0['project_url'];
-                    $validated['qr_code_path'] = $this->generateQrCode($urlToEncode);
-                }
-            }
-
-            if (! empty($p0['image_url']) && ! $request->hasFile('main_image')) {
-                if (str_starts_with($p0['image_url'], 'data:image/')) {
-                    $storedImg = $this->storeBase64Image($p0['image_url']);
-                    if ($storedImg) {
-                        if ($project->main_image) {
-                            Storage::disk('public')->delete($project->main_image);
-                        }
-                        $validated['main_image'] = $storedImg;
-                    }
-                }
-            }
-
-            $validated = $this->sanitizeProjectData($validated);
-            $project->update($validated);
-
-            // 2. Synchronize Companion Projects for Kotak 2 (panel 1) & Kotak 3 (panel 2)
-            $existingCompanions = $request->user()->projects()
-                ->where('id', '!=', $project->id)
-                ->whereJsonContains('problem_solution->trifold_group', $trifoldGroupId)
-                ->get();
-
-            foreach ([1, 2] as $idx) {
-                if (! isset($panels[$idx])) {
-                    continue;
-                }
-
-                $p = $panels[$idx];
-                $pTitle = ! empty($p['title']) ? trim($p['title']) : 'Inovasi Kotak '.($idx + 1);
-                $pName = $pTitle;
-                $pSubtitle = $p['subtitle'] ?? '';
-                $pCategory = ! empty($p['category']) ? trim($p['category']) : ($companion ? $companion->category : 'CoE STAS-RG');
-                $pDesc = $p['description'] ?? '';
-                $pProblem = $p['problem'] ?? '';
-                $pSolution = $p['solution'] ?? '';
-                $pBenefits = $p['benefits'] ?? '';
-                $pSpecs = $p['specifications'] ?? ($p['specs'] ?? '');
-                $pProjectUrl = $p['project_url'] ?? '';
-
-                $companion = $existingCompanions->first(function ($item) use ($idx) {
-                    return ($item->problem_solution['panel_index'] ?? null) == $idx;
-                });
-
-                $pImage = $companion ? $companion->main_image : null;
-                if (! empty($p['image_url'])) {
-                    if (str_starts_with($p['image_url'], 'data:image/')) {
-                        $storedImg = $this->storeBase64Image($p['image_url']);
-                        if ($storedImg) {
-                            if ($companion && $companion->main_image) {
-                                Storage::disk('public')->delete($companion->main_image);
-                            }
-                            $pImage = $storedImg;
-                        }
-                    } elseif (! str_starts_with($p['image_url'], 'http') && ! str_starts_with($p['image_url'], 'blob:')) {
-                        $pImage = str_replace('/storage/', '', $p['image_url']);
-                    }
-                }
-
-                $companionData = [
-                    'name' => $pName,
-                    'title' => $pTitle,
-                    'subtitle' => $pSubtitle,
-                    'category' => $pCategory,
-                    'description' => $pDesc,
-                    'main_image' => $pImage,
-                    'partner_logo' => $project->partner_logo,
-                    'partner_logos' => $project->partner_logos,
-                    'footer_logo' => $project->footer_logo,
-                    'benefits' => ['content' => $pBenefits],
-                    'specifications' => ['content' => $pSpecs],
-                    'problem_solution' => [
-                        'problem' => $pProblem,
-                        'solution' => $pSolution,
-                        'trifold_group' => $trifoldGroupId,
-                        'panel_index' => $idx,
-                        'panels' => $panels,
-                    ],
-                    'project_url' => $pProjectUrl,
-                    'footer_website' => $validated['footer_website'] ?? $project->footer_website,
-                    'footer_instagram' => $validated['footer_instagram'] ?? $project->footer_instagram,
-                    'footer_youtube' => $validated['footer_youtube'] ?? $project->footer_youtube,
-                    'social_links' => $validated['social_links'] ?? $project->social_links,
-                    'layout_preset' => $validated['layout_preset'] ?? $project->layout_preset,
-                    'design_style' => $validated['design_style'] ?? $project->design_style,
-                    'doc_format' => 'brochure_trifold',
-                    'color_theme' => $validated['color_theme'] ?? $project->color_theme,
-                    'print_mode' => $validated['print_mode'] ?? $project->print_mode,
-                    'boilerplate_type' => $validated['boilerplate_type'] ?? $project->boilerplate_type,
-                    'status' => $validated['status'] ?? $project->status,
+            DB::transaction(function () use ($request, $project, $validated, $panels, $trifoldGroupId) {
+                // 1. Update Kotak 1 (Primary Project)
+                $p0 = $panels[0] ?? [];
+                $validated['name'] = ! empty($p0['title']) ? trim($p0['title']) : $validated['name'];
+                $validated['title'] = ! empty($p0['title']) ? trim($p0['title']) : $validated['title'];
+                $validated['subtitle'] = $p0['subtitle'] ?? ($validated['subtitle'] ?? '');
+                $validated['category'] = ! empty($p0['category']) ? $p0['category'] : ($validated['category'] ?? 'Smart Agriculture');
+                $validated['description'] = $p0['description'] ?? ($validated['description'] ?? '');
+                $validated['benefits'] = ['content' => $p0['benefits'] ?? ($validated['benefits']['content'] ?? '')];
+                $validated['specifications'] = ['content' => $p0['specifications'] ?? ($p0['specs'] ?? ($validated['specifications']['content'] ?? ''))];
+                $validated['problem_solution'] = [
+                    'problem' => $p0['problem'] ?? '',
+                    'solution' => $p0['solution'] ?? '',
+                    'trifold_group' => $trifoldGroupId,
+                    'panel_index' => 0,
+                    'panels' => $panels,
                 ];
 
-                if (! empty($pProjectUrl)) {
-                    $url = $pProjectUrl;
-                    if (! preg_match('#^https?://#i', $url)) {
-                        $url = 'https://'.$url;
-                    }
-                    if (! $companion || $companion->project_url !== $pProjectUrl) {
-                        if ($companion && $companion->qr_code_path) {
-                            Storage::disk('public')->delete($companion->qr_code_path);
+                if (! empty($p0['project_url'])) {
+                    $validated['project_url'] = $p0['project_url'];
+                    if ($p0['project_url'] !== $project->project_url) {
+                        if ($project->qr_code_path) {
+                            Storage::disk('public')->delete($project->qr_code_path);
                         }
-                        $companionData['qr_code_path'] = $this->generateQrCode($url);
+                        $urlToEncode = ! preg_match('#^https?://#i', $p0['project_url']) ? 'https://'.$p0['project_url'] : $p0['project_url'];
+                        $validated['qr_code_path'] = $this->generateQrCode($urlToEncode);
                     }
-                } elseif ($companion && $companion->qr_code_path) {
-                    Storage::disk('public')->delete($companion->qr_code_path);
-                    $companionData['qr_code_path'] = null;
                 }
 
-                $companionData = $this->sanitizeProjectData($companionData);
-
-                if ($companion) {
-                    $companion->update($companionData);
-                } else {
-                    $request->user()->projects()->create($companionData);
+                if (! empty($p0['image_url']) && ! $request->hasFile('main_image')) {
+                    if (str_starts_with($p0['image_url'], 'data:image/')) {
+                        $storedImg = $this->storeBase64Image($p0['image_url']);
+                        if ($storedImg) {
+                            if ($project->main_image) {
+                                Storage::disk('public')->delete($project->main_image);
+                            }
+                            $validated['main_image'] = $storedImg;
+                        }
+                    }
                 }
-            }
+
+                $validated = $this->sanitizeProjectData($validated);
+                $project->update($validated);
+
+                // 2. Synchronize Companion Projects for Kotak 2 (panel 1) & Kotak 3 (panel 2)
+                $existingCompanions = $request->user()->projects()
+                    ->where('id', '!=', $project->id)
+                    ->whereJsonContains('problem_solution->trifold_group', $trifoldGroupId)
+                    ->get();
+
+                foreach ([1, 2] as $idx) {
+                    if (! isset($panels[$idx])) {
+                        continue;
+                    }
+
+                    $p = $panels[$idx];
+                    $pTitle = ! empty($p['title']) ? trim($p['title']) : 'Inovasi Kotak '.($idx + 1);
+                    $pName = $pTitle;
+                    $pSubtitle = $p['subtitle'] ?? '';
+                    $pCategory = ! empty($p['category']) ? trim($p['category']) : ($companion ? $companion->category : 'CoE STAS-RG');
+                    $pDesc = $p['description'] ?? '';
+                    $pProblem = $p['problem'] ?? '';
+                    $pSolution = $p['solution'] ?? '';
+                    $pBenefits = $p['benefits'] ?? '';
+                    $pSpecs = $p['specifications'] ?? ($p['specs'] ?? '');
+                    $pProjectUrl = $p['project_url'] ?? '';
+
+                    $companion = $existingCompanions->first(function ($item) use ($idx) {
+                        return ($item->problem_solution['panel_index'] ?? null) == $idx;
+                    });
+
+                    $pImage = $companion ? $companion->main_image : null;
+                    if (! empty($p['image_url'])) {
+                        if (str_starts_with($p['image_url'], 'data:image/')) {
+                            $storedImg = $this->storeBase64Image($p['image_url']);
+                            if ($storedImg) {
+                                if ($companion && $companion->main_image) {
+                                    Storage::disk('public')->delete($companion->main_image);
+                                }
+                                $pImage = $storedImg;
+                            }
+                        } elseif (! str_starts_with($p['image_url'], 'http') && ! str_starts_with($p['image_url'], 'blob:')) {
+                            $pImage = str_replace('/storage/', '', $p['image_url']);
+                        }
+                    }
+
+                    $companionData = [
+                        'name' => $pName,
+                        'title' => $pTitle,
+                        'subtitle' => $pSubtitle,
+                        'category' => $pCategory,
+                        'description' => $pDesc,
+                        'main_image' => $pImage,
+                        'partner_logo' => $project->partner_logo,
+                        'partner_logos' => $project->partner_logos,
+                        'footer_logo' => $project->footer_logo,
+                        'benefits' => ['content' => $pBenefits],
+                        'specifications' => ['content' => $pSpecs],
+                        'problem_solution' => [
+                            'problem' => $pProblem,
+                            'solution' => $pSolution,
+                            'trifold_group' => $trifoldGroupId,
+                            'panel_index' => $idx,
+                            'panels' => $panels,
+                        ],
+                        'project_url' => $pProjectUrl,
+                        'footer_website' => $validated['footer_website'] ?? $project->footer_website,
+                        'footer_instagram' => $validated['footer_instagram'] ?? $project->footer_instagram,
+                        'footer_youtube' => $validated['footer_youtube'] ?? $project->footer_youtube,
+                        'social_links' => $validated['social_links'] ?? $project->social_links,
+                        'layout_preset' => $validated['layout_preset'] ?? $project->layout_preset,
+                        'design_style' => $validated['design_style'] ?? $project->design_style,
+                        'doc_format' => 'brochure_trifold',
+                        'color_theme' => $validated['color_theme'] ?? $project->color_theme,
+                        'print_mode' => $validated['print_mode'] ?? $project->print_mode,
+                        'boilerplate_type' => $validated['boilerplate_type'] ?? $project->boilerplate_type,
+                        'status' => $validated['status'] ?? $project->status,
+                    ];
+
+                    if (! empty($pProjectUrl)) {
+                        $url = $pProjectUrl;
+                        if (! preg_match('#^https?://#i', $url)) {
+                            $url = 'https://'.$url;
+                        }
+                        if (! $companion || $companion->project_url !== $pProjectUrl) {
+                            if ($companion && $companion->qr_code_path) {
+                                Storage::disk('public')->delete($companion->qr_code_path);
+                            }
+                            $companionData['qr_code_path'] = $this->generateQrCode($url);
+                        }
+                    } elseif ($companion && $companion->qr_code_path) {
+                        Storage::disk('public')->delete($companion->qr_code_path);
+                        $companionData['qr_code_path'] = null;
+                    }
+
+                    $companionData = $this->sanitizeProjectData($companionData);
+
+                    if ($companion) {
+                        $companion->update($companionData);
+                    } else {
+                        $request->user()->projects()->create($companionData);
+                    }
+                }
+            });
 
             return redirect()
                 ->route('projects.show', $project)
@@ -758,35 +779,39 @@ class ProjectController extends Controller
         $this->authorizeUserOwnsProject($project);
         $user = Auth::user();
 
-        $newProject = $project->replicate(['qr_code_path']);
-        $newProject->name = $project->name.' (Copy)';
-        $newProject->slug = Project::generateUniqueSlug($newProject->name);
-        $newProject->status = 'draft';
-        $newProject->created_at = now();
-        $newProject->updated_at = now();
+        $newProject = DB::transaction(function () use ($project) {
+            $newProject = $project->replicate(['qr_code_path']);
+            $newProject->name = $project->name.' (Copy)';
+            $newProject->slug = Project::generateUniqueSlug($newProject->name);
+            $newProject->status = 'draft';
+            $newProject->created_at = now();
+            $newProject->updated_at = now();
 
-        // Duplicate main image file
-        if ($project->main_image && Storage::disk('public')->exists($project->main_image)) {
-            $extension = pathinfo($project->main_image, PATHINFO_EXTENSION);
-            $newPath = 'projects/images/'.uniqid().'.'.$extension;
-            Storage::disk('public')->copy($project->main_image, $newPath);
-            $newProject->main_image = $newPath;
-        }
+            // Duplicate main image file
+            if ($project->main_image && Storage::disk('public')->exists($project->main_image)) {
+                $extension = pathinfo($project->main_image, PATHINFO_EXTENSION);
+                $newPath = 'projects/images/'.uniqid().'.'.$extension;
+                Storage::disk('public')->copy($project->main_image, $newPath);
+                $newProject->main_image = $newPath;
+            }
 
-        // Duplicate partner logo file
-        if ($project->partner_logo && Storage::disk('public')->exists($project->partner_logo)) {
-            $extension = pathinfo($project->partner_logo, PATHINFO_EXTENSION);
-            $newPath = 'projects/logos/'.uniqid().'.'.$extension;
-            Storage::disk('public')->copy($project->partner_logo, $newPath);
-            $newProject->partner_logo = $newPath;
-        }
+            // Duplicate partner logo file
+            if ($project->partner_logo && Storage::disk('public')->exists($project->partner_logo)) {
+                $extension = pathinfo($project->partner_logo, PATHINFO_EXTENSION);
+                $newPath = 'projects/logos/'.uniqid().'.'.$extension;
+                Storage::disk('public')->copy($project->partner_logo, $newPath);
+                $newProject->partner_logo = $newPath;
+            }
 
-        // Regenerate QR code for the duplicate
-        if ($project->project_url) {
-            $newProject->qr_code_path = $this->generateQrCode($project->project_url);
-        }
+            // Regenerate QR code for the duplicate
+            if ($project->project_url) {
+                $newProject->qr_code_path = $this->generateQrCode($project->project_url);
+            }
 
-        $newProject->save();
+            $newProject->save();
+
+            return $newProject;
+        });
 
         try {
             Mail::to($user->email)->send(
@@ -999,6 +1024,10 @@ class ProjectController extends Controller
                 'partner_logos' => ! empty($project->partner_logos) && is_array($project->partner_logos)
                     ? array_map(fn ($p) => str_starts_with($p, 'http') ? $p : asset('storage/'.$p), $project->partner_logos)
                     : ($project->partner_logo ? [asset('storage/'.$project->partner_logo)] : []),
+                'research_team' => $this->formatResearchTeamForPublic($project->research_team),
+                'lab_affiliation' => $project->lab_affiliation,
+                'patent_number' => $project->patent_number,
+                'publication_doi' => $project->publication_doi,
                 'benefits' => $project->benefits,
                 'specifications' => $project->specifications,
                 'problem_solution' => $project->problem_solution,
@@ -1223,24 +1252,156 @@ class ProjectController extends Controller
      */
     private function getAvailableCategories(): array
     {
-        $defaultCategories = [
-            'Smart Agriculture',
-            'Internet of Things (IoT)',
-            'Aviation & AI',
-            'Cybersecurity',
-            'Telecommunication',
-            'Renewable Energy',
-            'Healthcare Tech',
-            'Robotics & Automation',
-            'Aquaculture / IoT',
-        ];
+        return Cache::remember('projects_available_categories', 3600, function () {
+            $defaultCategories = [
+                'Smart Agriculture',
+                'Internet of Things (IoT)',
+                'Aviation & AI',
+                'Cybersecurity',
+                'Telecommunication',
+                'Renewable Energy',
+                'Healthcare Tech',
+                'Robotics & Automation',
+                'Aquaculture / IoT',
+            ];
 
-        $dbCategories = Project::whereNotNull('category')
-            ->where('category', '!=', '')
-            ->distinct()
-            ->pluck('category')
-            ->toArray();
+            $dbCategories = Project::whereNotNull('category')
+                ->where('category', '!=', '')
+                ->distinct()
+                ->pluck('category')
+                ->toArray();
 
-        return array_values(array_unique(array_filter(array_merge($defaultCategories, $dbCategories))));
+            return array_values(array_unique(array_filter(array_merge($defaultCategories, $dbCategories))));
+        });
+    }
+
+    /**
+     * Process and store research team members (handling avatar uploads/base64).
+     *
+     * @param  array<int, mixed>  $existingTeam
+     * @return array<int, array<string, mixed>>
+     */
+    private function processResearchTeam(Request $request, array $existingTeam = []): array
+    {
+        $rawTeam = $request->input('research_team');
+        if (is_string($rawTeam)) {
+            $rawTeam = json_decode($rawTeam, true);
+        }
+
+        if (! is_array($rawTeam)) {
+            return [];
+        }
+
+        $processed = [];
+        foreach ($rawTeam as $idx => $member) {
+            if (! is_array($member) || empty($member['name'])) {
+                continue;
+            }
+
+            $name = trim((string) ($member['name'] ?? ''));
+            $role = trim((string) ($member['role'] ?? 'Anggota Peneliti'));
+            $identifier = trim((string) ($member['identifier'] ?? ''));
+            $labAffiliation = trim((string) ($member['lab_affiliation'] ?? ''));
+            $email = trim((string) ($member['email'] ?? ''));
+            $scholarUrl = trim((string) ($member['scholar_url'] ?? ''));
+            $scopusUrl = trim((string) ($member['scopus_url'] ?? ''));
+            $sintaUrl = trim((string) ($member['sinta_url'] ?? ''));
+            $orcidUrl = trim((string) ($member['orcid_url'] ?? ''));
+            $linkedinUrl = trim((string) ($member['linkedin_url'] ?? ''));
+            $avatar = $member['avatar'] ?? null;
+
+            // Check if there is an uploaded file for this index in request
+            if ($request->hasFile("research_team_avatars.{$idx}")) {
+                $file = $request->file("research_team_avatars.{$idx}");
+                if ($file && $file->isValid()) {
+                    $avatar = $file->store('projects/avatars', 'public');
+                }
+            } elseif (is_string($avatar)) {
+                if (str_starts_with($avatar, 'data:image/')) {
+                    $stored = $this->storeBase64Avatar($avatar);
+                    if ($stored) {
+                        $avatar = $stored;
+                    }
+                } elseif (str_starts_with($avatar, '/storage/')) {
+                    $avatar = str_replace('/storage/', '', $avatar);
+                }
+            }
+
+            $processed[] = [
+                'name' => $name,
+                'role' => $role,
+                'identifier' => $identifier,
+                'lab_affiliation' => $labAffiliation,
+                'email' => $email,
+                'scholar_url' => $scholarUrl,
+                'scopus_url' => $scopusUrl,
+                'sinta_url' => $sintaUrl,
+                'orcid_url' => $orcidUrl,
+                'linkedin_url' => $linkedinUrl,
+                'avatar' => $avatar,
+            ];
+        }
+
+        return $processed;
+    }
+
+    /**
+     * Store base64 data image URL specifically for author avatar.
+     */
+    private function storeBase64Avatar(?string $dataUrl): ?string
+    {
+        if (empty($dataUrl) || ! str_starts_with($dataUrl, 'data:image/')) {
+            return null;
+        }
+
+        try {
+            preg_match('#^data:image/(\w+);base64,#i', $dataUrl, $matches);
+            $extension = strtolower($matches[1] ?? 'png');
+            if ($extension === 'jpeg') {
+                $extension = 'jpg';
+            }
+
+            $data = substr($dataUrl, strpos($dataUrl, ',') + 1);
+            $decoded = base64_decode($data);
+
+            if ($decoded === false) {
+                return null;
+            }
+
+            $filename = 'projects/avatars/'.uniqid('avatar_').'.'.$extension;
+            Storage::disk('public')->put($filename, $decoded);
+
+            return $filename;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Format research team data for public display with resolved avatar URLs.
+     *
+     * @param  array<int, mixed>|null  $team
+     * @return array<int, array<string, mixed>>
+     */
+    private function formatResearchTeamForPublic(?array $team): array
+    {
+        if (empty($team) || ! is_array($team)) {
+            return [];
+        }
+
+        return array_values(array_map(function ($member) {
+            if (! is_array($member)) {
+                return $member;
+            }
+
+            $avatar = $member['avatar'] ?? null;
+            if ($avatar && is_string($avatar)) {
+                if (! str_starts_with($avatar, 'http') && ! str_starts_with($avatar, 'blob:') && ! str_starts_with($avatar, 'data:')) {
+                    $member['avatar'] = asset('storage/'.ltrim($avatar, '/'));
+                }
+            }
+
+            return $member;
+        }, $team));
     }
 }

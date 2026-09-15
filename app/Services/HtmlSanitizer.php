@@ -88,4 +88,67 @@ class HtmlSanitizer
 
         return trim($text);
     }
+
+    /**
+     * Deeply sanitize SVG markup to eliminate stored XSS risks (script tags, foreignObject, event listeners, javascript: URIs).
+     */
+    public static function cleanSvg(?string $svg): ?string
+    {
+        if ($svg === null || trim($svg) === '') {
+            return null;
+        }
+
+        $clean = trim($svg);
+
+        // 1. Remove XML declaration, DOCTYPE, and comments if needed or keep minimal
+        $clean = preg_replace('/<\?xml[^>]*\?>/i', '', $clean);
+        $clean = preg_replace('/<!DOCTYPE[^>]*>/i', '', $clean);
+
+        // 2. Remove dangerous tags and their content
+        $dangerousTags = [
+            'script',
+            'foreignObject',
+            'iframe',
+            'embed',
+            'object',
+            'link',
+            'meta',
+            'applet',
+            'audio',
+            'video',
+            'form',
+            'input',
+            'button',
+            'textarea',
+            'select',
+        ];
+
+        foreach ($dangerousTags as $tag) {
+            $clean = preg_replace('/<'.$tag.'[^>]*>[\s\S]*?<\/'.$tag.'>/i', '', $clean);
+            $clean = preg_replace('/<'.$tag.'[^>]*\/?>/i', '', $clean);
+        }
+
+        // 3. Remove inline JavaScript event handlers (e.g. onload=, onclick=, onerror=)
+        $clean = preg_replace('/\son\w+\s*=\s*(["\']).*?\1/i', '', $clean);
+        $clean = preg_replace('/\son\w+\s*=\s*[^ >]+/i', '', $clean);
+
+        // 4. Remove javascript:, vbscript:, and data: (except data:image/) in href and xlink:href attributes
+        $clean = preg_replace_callback('/(href|xlink:href)\s*=\s*(["\'])(.*?)\2/i', function ($matches) {
+            $attr = $matches[1];
+            $val = trim($matches[3]);
+            if (preg_match('/^(javascript|vbscript|data:(?!image\/))/i', $val)) {
+                return $attr.'="#"';
+            }
+
+            return $matches[0];
+        }, $clean);
+
+        // 5. Ensure svg root element is present
+        $clean = trim($clean);
+        if (! str_contains(strtolower($clean), '<svg')) {
+            return null;
+        }
+
+        return $clean !== '' ? $clean : null;
+    }
 }

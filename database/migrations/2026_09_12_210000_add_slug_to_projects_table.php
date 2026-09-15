@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\Project;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
@@ -18,19 +18,18 @@ return new class extends Migration
         });
 
         // Generate slugs for existing projects
-        $projects = Project::all();
+        $projects = DB::table('projects')->get();
         foreach ($projects as $project) {
             $baseSlug = Str::slug($project->name ?: 'project');
             $slug = $baseSlug;
             $counter = 1;
 
-            while (Project::where('slug', $slug)->where('id', '!=', $project->id)->exists()) {
+            while (DB::table('projects')->where('slug', $slug)->where('id', '!=', $project->id)->exists()) {
                 $counter++;
                 $slug = "{$baseSlug}-{$counter}";
             }
 
-            $project->slug = $slug;
-            $project->saveQuietly();
+            DB::table('projects')->where('id', $project->id)->update(['slug' => $slug]);
         }
 
         // Make slug non-nullable after populating

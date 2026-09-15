@@ -238,4 +238,33 @@ class MediaAssetTest extends TestCase
         $this->assertNotNull($asset->file_path);
         $this->assertTrue(Storage::disk('public')->exists($asset->file_path));
     }
+
+    /**
+     * Test SVG content is sanitized to prevent stored XSS vulnerabilities.
+     */
+    public function test_svg_content_is_sanitized_against_xss(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'admin',
+            'status' => User::STATUS_APPROVED,
+        ]);
+
+        $maliciousSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" onload="alert(1)"><script>alert("xss")</script><circle cx="50" cy="50" r="40" fill="red"/><a href="javascript:alert(2)"><text>Click</text></a></svg>';
+
+        $response = $this->actingAs($user)->post(route('media-assets.store'), [
+            'name' => 'Secure SVG Asset',
+            'type' => 'badge_icon',
+            'category' => 'accreditation',
+            'svg_content' => $maliciousSvg,
+        ]);
+
+        $response->assertRedirect();
+
+        $asset = MediaAsset::where('name', 'Secure SVG Asset')->first();
+        $this->assertNotNull($asset);
+        $this->assertStringNotContainsString('<script>', $asset->svg_content);
+        $this->assertStringNotContainsString('onload=', $asset->svg_content);
+        $this->assertStringNotContainsString('javascript:', $asset->svg_content);
+        $this->assertStringContainsString('<circle cx="50" cy="50" r="40" fill="red"/>', $asset->svg_content);
+    }
 }

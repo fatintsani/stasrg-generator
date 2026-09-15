@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class SupportTicket extends Model
@@ -88,6 +89,14 @@ class SupportTicket extends Model
     public function resolver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'resolved_by');
+    }
+
+    /**
+     * The communication replies / responses sent for this ticket.
+     */
+    public function replies(): HasMany
+    {
+        return $this->hasMany(SupportTicketReply::class)->latest();
     }
 
     /**

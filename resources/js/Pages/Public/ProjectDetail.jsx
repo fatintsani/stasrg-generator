@@ -25,6 +25,13 @@ import {
     Languages,
     Download,
     Layers,
+    Users,
+    GraduationCap,
+    Mail,
+    BookOpen,
+    Award,
+    ShieldCheck,
+    Copy,
 } from 'lucide-react';
 import ExportSosmedModal from '../../Components/Admin/ExportSosmedModal';
 import { SocialIcon, normalizeSocialLinks } from '../../Utils/socialPlatforms';
@@ -128,6 +135,31 @@ function ProjectDetailContent({ project, relatedProjects = [] }) {
     } else if (project.partner_logo) {
         const single = project.partner_logo;
         partnerLogoUrls = [(single.startsWith('http://') || single.startsWith('https://') || single.startsWith('blob:') || single.startsWith('data:') || single.startsWith('/')) ? single : `/storage/${single}`];
+    }
+
+    // Multi-Author & Research Team
+    let researchTeam = [];
+    let rawTeam = project.research_team;
+    if (typeof rawTeam === 'string') {
+        try {
+            rawTeam = JSON.parse(rawTeam);
+        } catch {
+            rawTeam = null;
+        }
+    }
+    if (Array.isArray(rawTeam)) {
+        researchTeam = rawTeam.filter(m => m && (m.name || m.role)).map(m => {
+            let avatar = m.avatar || null;
+            if (avatar && typeof avatar === 'string') {
+                if (!avatar.startsWith('http') && !avatar.startsWith('blob:') && !avatar.startsWith('data:')) {
+                    avatar = `/storage/${avatar.replace(/^\/?storage\//, '')}`;
+                }
+            }
+            return {
+                ...m,
+                avatar,
+            };
+        });
     }
 
     const panelMainImage = isTrifold && activePanel?.image_url ? activePanel.image_url : null;
@@ -463,6 +495,167 @@ function ProjectDetailContent({ project, relatedProjects = [] }) {
                                     </div>
                                 )}
 
+                                {/* Section D: Tim Peneliti & Dosen Pembimbing (Multi-Author) */}
+                                {researchTeam && researchTeam.length > 0 && (
+                                    <div className="bg-white dark:bg-[#121824] rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 p-6 sm:p-8 shadow-xs space-y-5">
+                                        <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                                            <div className="flex items-center gap-2">
+                                                <span className="p-1.5 rounded-xl bg-[#0AB600]/10 text-[#0AB600]">
+                                                    <Users className="w-4 h-4" />
+                                                </span>
+                                                <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                                                    {detailLang === 'en' ? 'Research Team & Academic Advisors' : 'Tim Peneliti & Dosen Pembimbing'}
+                                                </h3>
+                                            </div>
+                                            <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-[#0AB600]/15 text-[#0AB600] dark:bg-[#0AB600]/10">
+                                                {researchTeam.length} {detailLang === 'en' ? 'Members' : 'Peneliti'}
+                                            </span>
+                                        </div>
+
+                                        {/* Researchers Grid */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {researchTeam.map((member, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    className="flex items-start gap-3.5 p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/40 hover:border-[#0AB600]/40 transition-all group"
+                                                >
+                                                    {/* Avatar */}
+                                                    <div className="relative w-14 h-14 rounded-2xl overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 flex items-center justify-center shadow-xs">
+                                                        {member.avatar ? (
+                                                            <img
+                                                                src={member.avatar}
+                                                                alt={member.name}
+                                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                                            />
+                                                        ) : (
+                                                            <span className="text-sm font-extrabold text-[#0AB600] uppercase">
+                                                                {member.name ? member.name.substring(0, 2) : 'ST'}
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Info */}
+                                                    <div className="flex-1 min-w-0 space-y-1.5">
+                                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                                                                member.role && (member.role.toLowerCase().includes('principal') || member.role.toLowerCase().includes('ketua') || member.role.toLowerCase().includes('lead'))
+                                                                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                                                                    : member.role && (member.role.toLowerCase().includes('pembimbing') || member.role.toLowerCase().includes('dosen') || member.role.toLowerCase().includes('advisor'))
+                                                                    ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'
+                                                                    : member.role && (member.role.toLowerCase().includes('mahasiswa') || member.role.toLowerCase().includes('student'))
+                                                                    ? 'bg-cyan-50 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800'
+                                                                    : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                                                            }`}>
+                                                                {member.role || (detailLang === 'en' ? 'Researcher' : 'Anggota Peneliti')}
+                                                            </span>
+                                                        </div>
+
+                                                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                                                            {member.name}
+                                                        </h4>
+
+                                                        {member.identifier && (
+                                                            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">
+                                                                {member.identifier}
+                                                            </div>
+                                                        )}
+
+                                                        {member.lab_affiliation && (
+                                                            <div className="text-[11px] text-zinc-600 dark:text-zinc-300 flex items-center gap-1">
+                                                                <Building2 className="w-3 h-3 text-[#0AB600] shrink-0" />
+                                                                <span className="truncate">{member.lab_affiliation}</span>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Academic & External Profiles */}
+                                                        <div className="flex items-center gap-1.5 pt-1.5 flex-wrap">
+                                                            {/* Google Scholar */}
+                                                            {member.scholar_url && (
+                                                                <a
+                                                                    href={member.scholar_url}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 text-[10px] font-semibold hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors border border-blue-200/60 dark:border-blue-800/60"
+                                                                    title="Google Scholar Profile"
+                                                                >
+                                                                    <BookOpen className="w-3 h-3" />
+                                                                    <span>Scholar</span>
+                                                                </a>
+                                                            )}
+
+                                                            {/* Scopus */}
+                                                            {member.scopus_url && (
+                                                                <a
+                                                                    href={member.scopus_url.startsWith('http') ? member.scopus_url : `https://www.scopus.com/authid/detail.uri?authorId=${member.scopus_url}`}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 text-[10px] font-semibold hover:bg-orange-100 dark:hover:bg-orange-900/60 transition-colors border border-orange-200/60 dark:border-orange-800/60"
+                                                                    title="Scopus Author Profile"
+                                                                >
+                                                                    <span className="font-extrabold text-[9px] font-mono">SCOPUS</span>
+                                                                </a>
+                                                            )}
+
+                                                            {/* SINTA */}
+                                                            {member.sinta_url && (
+                                                                <a
+                                                                    href={member.sinta_url.startsWith('http') ? member.sinta_url : `https://sinta.kemdikbud.go.id/authors/profile/${member.sinta_url}`}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors border border-emerald-200/60 dark:border-emerald-800/60"
+                                                                    title="SINTA Profile"
+                                                                >
+                                                                    <span className="font-extrabold text-[9px] font-mono">SINTA</span>
+                                                                </a>
+                                                            )}
+
+                                                            {/* ORCID */}
+                                                            {member.orcid_url && (
+                                                                <a
+                                                                    href={member.orcid_url.startsWith('http') ? member.orcid_url : `https://orcid.org/${member.orcid_url}`}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-lime-50 dark:bg-lime-950/40 text-lime-700 dark:text-lime-400 text-[10px] font-semibold hover:bg-lime-100 dark:hover:bg-lime-900/60 transition-colors border border-lime-200/60 dark:border-lime-800/60"
+                                                                    title="ORCID iD Profile"
+                                                                >
+                                                                    <span className="font-extrabold text-[9px] font-mono">ORCID</span>
+                                                                </a>
+                                                            )}
+
+                                                            {/* LinkedIn */}
+                                                            {member.linkedin_url && (
+                                                                <a
+                                                                    href={member.linkedin_url}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 text-[10px] font-semibold hover:bg-sky-100 dark:hover:bg-sky-900/60 transition-colors border border-sky-200/60 dark:border-sky-800/60"
+                                                                    title="LinkedIn Profile"
+                                                                >
+                                                                    <SocialIcon platform="linkedin" style={{ width: '12px', height: '12px' }} />
+                                                                    <span>LinkedIn</span>
+                                                                </a>
+                                                            )}
+
+                                                            {/* Email */}
+                                                            {member.email && (
+                                                                <a
+                                                                    href={`mailto:${member.email}`}
+                                                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[10px] font-semibold hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors border border-zinc-200 dark:border-zinc-700"
+                                                                    title={`Email: ${member.email}`}
+                                                                >
+                                                                    <Mail className="w-3 h-3" />
+                                                                    <span>Email</span>
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
                             </div>
 
                             {/* RIGHT SIDEBAR: Meta, Interactive Links & QR Code (lg:col-span-4) */}
@@ -513,31 +706,75 @@ function ProjectDetailContent({ project, relatedProjects = [] }) {
 
 
 
-                                {/* 3. Institutional Information Card */}
+                                {/* 3. Institutional & IP Information Card */}
                                 <div className="bg-white dark:bg-[#121824] rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 p-6 shadow-xs space-y-4">
-                                    <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 pb-2 border-b border-zinc-100 dark:border-zinc-800">
-                                        Informasi Publikasi Riset
-                                    </h3>
+                                    <div className="flex items-center gap-2 pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                                        <Award className="w-4 h-4 text-[#0AB600]" />
+                                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-zinc-200">
+                                            {detailLang === 'en' ? 'Research Attribution & IP' : 'Atribusi Riset & HKI'}
+                                        </h3>
+                                    </div>
 
-                                    <div className="space-y-3 text-xs">
+                                    <div className="space-y-3.5 text-xs">
+                                        {/* Lab Affiliation */}
                                         <div>
-                                            <span className="text-zinc-400 block text-[11px]">Lembaga Riset:</span>
-                                            <span className="font-semibold text-slate-800 dark:text-zinc-200">
-                                                Center of Excellence STAS-RG
+                                            <span className="text-zinc-400 block text-[11px]">{detailLang === 'en' ? 'Research Laboratory:' : 'Lembaga / Laboratorium:'}</span>
+                                            <span className="font-semibold text-slate-800 dark:text-zinc-200 flex items-center gap-1.5 mt-0.5">
+                                                <Building2 className="w-3.5 h-3.5 text-[#0AB600] shrink-0" />
+                                                <span>{project.lab_affiliation || 'Center of Excellence STAS-RG'}</span>
                                             </span>
                                         </div>
 
+                                        {/* Institution */}
                                         <div>
-                                            <span className="text-zinc-400 block text-[11px]">Institusi:</span>
-                                            <span className="font-semibold text-slate-800 dark:text-zinc-200">
+                                            <span className="text-zinc-400 block text-[11px]">{detailLang === 'en' ? 'Institution:' : 'Institusi:'}</span>
+                                            <span className="font-semibold text-slate-800 dark:text-zinc-200 block mt-0.5">
                                                 Telkom University
                                             </span>
                                         </div>
 
+                                        {/* Patent / HKI */}
+                                        {project.patent_number && (
+                                            <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-1">
+                                                <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider">
+                                                    <ShieldCheck className="w-3.5 h-3.5" />
+                                                    <span>{detailLang === 'en' ? 'Registered Patent / HKI' : 'Paten / Sertifikat HKI Terdaftar'}</span>
+                                                </div>
+                                                <div className="font-mono text-xs font-bold text-slate-800 dark:text-zinc-100 break-all">
+                                                    {project.patent_number}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Scientific Publication / DOI */}
+                                        {project.publication_doi && (
+                                            <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 space-y-1">
+                                                <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider">
+                                                    <BookOpen className="w-3.5 h-3.5" />
+                                                    <span>{detailLang === 'en' ? 'Scientific Publication / DOI' : 'Publikasi Ilmiah & DOI'}</span>
+                                                </div>
+                                                <div className="text-xs font-medium text-slate-800 dark:text-zinc-100">
+                                                    {project.publication_doi.startsWith('http') || project.publication_doi.startsWith('10.') ? (
+                                                        <a
+                                                            href={project.publication_doi.startsWith('10.') ? `https://doi.org/${project.publication_doi}` : project.publication_doi}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="inline-flex items-center gap-1 text-[#0AB600] hover:underline font-mono text-[11px] break-all font-semibold"
+                                                        >
+                                                            <span>{project.publication_doi}</span>
+                                                            <ExternalLink className="w-3 h-3 shrink-0" />
+                                                        </a>
+                                                    ) : (
+                                                        <span className="font-mono text-[11px] break-all">{project.publication_doi}</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {project.subtitle && (
                                             <div>
-                                                <span className="text-zinc-400 block text-[11px]">Mitra Kolaborasi:</span>
-                                                <span className="font-semibold text-[#0AB600]">
+                                                <span className="text-zinc-400 block text-[11px]">{detailLang === 'en' ? 'Collaboration Partner:' : 'Mitra Kolaborasi:'}</span>
+                                                <span className="font-semibold text-[#0AB600] block mt-0.5">
                                                     {project.subtitle}
                                                 </span>
                                             </div>

@@ -10,6 +10,7 @@ import {
     Users,
     Activity,
     FolderHeart,
+    GraduationCap,
     LifeBuoy,
     Settings,
     LogOut,
@@ -107,6 +108,13 @@ export default function AdminSidebar({
             href: '/media-library',
             icon: FolderHeart,
             active: currentPath.startsWith('/media-library'),
+        },
+        {
+            id: 'researchers',
+            name: 'Direktori Peneliti',
+            href: '/researchers',
+            icon: GraduationCap,
+            active: currentPath.startsWith('/researchers'),
         },
         {
             id: 'users',

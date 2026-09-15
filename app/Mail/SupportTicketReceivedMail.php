@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\User;
+use App\Models\SupportTicket;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -10,31 +10,28 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class AccountStatusChangedMail extends Mailable implements ShouldQueue
+class SupportTicketReceivedMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
     public function __construct(
-        public User $user,
-        public string $status,
+        public SupportTicket $ticket,
     ) {}
 
     public function envelope(): Envelope
     {
-        $statusText = $this->status === 'active' ? 'Diaktifkan' : 'Dinonaktifkan';
-
         return new Envelope(
-            subject: "Status Akun Anda Telah {$statusText} — STAS-RG Projects",
+            subject: "[STAS-SUPPORT] Tiket Bantuan Diterima: #{$this->ticket->ticket_number} — {$this->ticket->subject}",
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.account-status',
+            view: 'emails.support-ticket-received',
             with: [
-                'user' => $this->user,
-                'status' => $this->status,
+                'ticket' => $this->ticket,
+                'portalUrl' => url('/'),
             ],
         );
     }

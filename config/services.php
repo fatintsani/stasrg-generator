@@ -41,4 +41,11 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', env('APP_URL').'/auth/google/callback'),
     ],
 
+    'ai' => [
+        'gemini_key' => env('GEMINI_API_KEY') ?: env('AI_API_KEY'),
+        'provider' => env('AI_PROVIDER', 'gemini'),
+        'model' => env('AI_MODEL', 'gemini-3.6-flash'),
+        'custom_endpoint' => env('AI_CUSTOM_ENDPOINT'),
+    ],
+
 ];

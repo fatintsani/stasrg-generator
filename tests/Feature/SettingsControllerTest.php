@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -237,5 +238,16 @@ class SettingsControllerTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors('app_font');
+    }
+
+    public function test_system_settings_are_cached_and_invalidated_on_change(): void
+    {
+        SystemSetting::set('test_cache_key', 'initial_value');
+        $this->assertEquals('initial_value', SystemSetting::get('test_cache_key'));
+        $this->assertTrue(Cache::has('system_setting_test_cache_key'));
+
+        // Update setting and verify cache is invalidated and updated
+        SystemSetting::set('test_cache_key', 'updated_value');
+        $this->assertEquals('updated_value', SystemSetting::get('test_cache_key'));
     }
 }

@@ -19,55 +19,87 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        $allUserProjects = $user->projects()->latest()->get();
+        $baseQuery = $user->projects();
 
-        $totalProjects = $allUserProjects->count();
-        $publishedProjects = $allUserProjects->where('status', 'published')->count();
-        $draftProjects = $allUserProjects->where('status', 'draft')->count();
-        $qrLinkedCount = $allUserProjects->whereNotNull('project_url')->filter(fn ($p) => ! empty($p->project_url))->count();
-        $partnerProjectsCount = $allUserProjects->whereNotNull('partner_logo')->filter(fn ($p) => ! empty($p->partner_logo))->count();
-        $monthlyCreatedCount = $allUserProjects->where('created_at', '>=', now()->startOfMonth())->count();
+        $totalProjects = (clone $baseQuery)->count();
+        $publishedProjects = (clone $baseQuery)->where('status', 'published')->count();
+        $draftProjects = (clone $baseQuery)->where('status', 'draft')->count();
+        $qrLinkedCount = (clone $baseQuery)->whereNotNull('project_url')->where('project_url', '!=', '')->count();
+        $partnerProjectsCount = (clone $baseQuery)->whereNotNull('partner_logo')->where('partner_logo', '!=', '')->count();
+        $monthlyCreatedCount = (clone $baseQuery)->where('created_at', '>=', now()->startOfMonth())->count();
 
-        // Calculate Category Breakdown & Distribution
-        $categoriesGrouped = $allUserProjects->groupBy('category');
-        $categoryDistribution = $categoriesGrouped->map(function ($items, $category) use ($totalProjects) {
-            $catName = $category ?: 'Lainnya / Umum';
-            $count = $items->count();
+        // Calculate Category Breakdown & Distribution directly via database aggregation
+        $categoryCounts = (clone $baseQuery)
+            ->selectRaw('COALESCE(NULLIF(category, ""), "Lainnya / Umum") as cat_name, COUNT(*) as count')
+            ->groupBy('cat_name')
+            ->orderByDesc('count')
+            ->get();
+
+        $categoryDistribution = $categoryCounts->map(function ($row) use ($totalProjects) {
+            $count = (int) $row->count;
             $percentage = $totalProjects > 0 ? round(($count / $totalProjects) * 100) : 0;
 
             return [
-                'name' => $catName,
+                'name' => $row->cat_name,
                 'count' => $count,
                 'percentage' => $percentage,
             ];
-        })->values()->sortByDesc('count')->values()->all();
+        })->values()->all();
 
         $categoriesCount = count($categoryDistribution);
 
-        $recentProjects = $allUserProjects->take(6)->map(function (Project $project) {
-            return [
-                'id' => $project->id,
-                'name' => $project->name,
-                'slug' => $project->slug,
-                'title' => $project->title,
-                'category' => $project->category ?? 'General',
-                'subtitle' => $project->subtitle,
-                'description' => $project->description,
-                'status' => $project->status,
-                'main_image' => $project->main_image ? asset('storage/'.$project->main_image) : null,
-                'partner_logo' => $project->partner_logo ? asset('storage/'.$project->partner_logo) : null,
-                'benefits' => $project->benefits,
-                'specifications' => $project->specifications,
-                'problem_solution' => $project->problem_solution,
-                'project_url' => $project->project_url,
-                'qr_code_path' => $project->qr_code_path ? asset('storage/'.$project->qr_code_path) : null,
-                'footer_website' => $project->footer_website,
-                'footer_instagram' => $project->footer_instagram,
-                'footer_youtube' => $project->footer_youtube,
-                'updated_at' => $project->updated_at->translatedFormat('d M Y'),
-                'created_at' => $project->created_at->translatedFormat('d M Y'),
-            ];
-        })->all();
+        $recentProjects = (clone $baseQuery)
+            ->latest()
+            ->take(6)
+            ->get([
+                'id',
+                'name',
+                'slug',
+                'title',
+                'category',
+                'subtitle',
+                'description',
+                'status',
+                'main_image',
+                'partner_logo',
+                'benefits',
+                'specifications',
+                'problem_solution',
+                'project_url',
+                'qr_code_path',
+                'footer_website',
+                'footer_instagram',
+                'footer_youtube',
+                'updated_at',
+                'created_at',
+            ])
+            ->map(function (Project $project) {
+                return [
+                    'id' => $project->id,
+                    'name' => $project->name,
+                    'slug' => $project->slug,
+                    'title' => $project->title,
+                    'category' => $project->category ?? 'General',
+                    'subtitle' => $project->subtitle,
+                    'description' => $project->description,
+                    'status' => $project->status,
+                    'main_image' => $project->main_image ? asset('storage/'.$project->main_image) : null,
+                    'partner_logo' => $project->partner_logo ? asset('storage/'.$project->partner_logo) : null,
+                    'benefits' => $project->benefits,
+                    'specifications' => $project->specifications,
+                    'problem_solution' => $project->problem_solution,
+                    'project_url' => $project->project_url,
+                    'qr_code_path' => $project->qr_code_path ? asset('storage/'.$project->qr_code_path) : null,
+                    'footer_website' => $project->footer_website,
+                    'footer_instagram' => $project->footer_instagram,
+                    'footer_youtube' => $project->footer_youtube,
+                    'updated_at' => $project->updated_at->translatedFormat('d M Y'),
+                    'created_at' => $project->created_at->translatedFormat('d M Y'),
+                ];
+            })
+            ->all();
+
+        $passkeysCount = $user->passkeys()->count();
 
         return Inertia::render('Admin/Dashboard', [
             'auth' => [
@@ -78,7 +110,7 @@ class DashboardController extends Controller
                     'role' => $user->role ?? 'admin',
                     'avatar' => $user->avatar,
                     'is_biometric_enabled' => (bool) $user->is_biometric_enabled,
-                    'passkeys_count' => $user->passkeys()->count(),
+                    'passkeys_count' => $passkeysCount,
                 ],
             ],
             'stats' => [
@@ -90,7 +122,7 @@ class DashboardController extends Controller
                 'partner_projects_count' => $partnerProjectsCount,
                 'monthly_created_count' => $monthlyCreatedCount,
                 'is_biometric_active' => (bool) $user->is_biometric_enabled,
-                'passkeys_count' => $user->passkeys()->count(),
+                'passkeys_count' => $passkeysCount,
             ],
             'category_distribution' => $categoryDistribution,
             'recent_projects' => $recentProjects,
@@ -110,6 +142,7 @@ class DashboardController extends Controller
                 ['title' => 'Dashboard Utama', 'subtitle' => 'Ringkasan metrik & statistik sistem', 'url' => route('dashboard'), 'icon' => 'LayoutDashboard', 'category' => 'Navigasi'],
                 ['title' => 'Semua Proyek Riset', 'subtitle' => 'Kelola katalog deliverable dan flyer A4', 'url' => route('projects.index'), 'icon' => 'FolderKanban', 'category' => 'Navigasi'],
                 ['title' => 'Buat Proyek Baru', 'subtitle' => 'Inisialisasi dokumen riset baru', 'url' => route('projects.create'), 'icon' => 'FilePlus2', 'category' => 'Navigasi'],
+                ['title' => 'Direktori Peneliti & Authors', 'subtitle' => 'Kelola master data peneliti & profil akademik', 'url' => route('researchers.index'), 'icon' => 'GraduationCap', 'category' => 'Navigasi'],
                 ['title' => 'User Approval', 'subtitle' => 'Verifikasi dan persetujuan akun pengguna', 'url' => route('users.index'), 'icon' => 'Users', 'category' => 'Navigasi'],
                 ['title' => 'Activity & Audit Logs', 'subtitle' => 'Riwayat perubahan dan audit trail sistem', 'url' => route('activity-logs.index'), 'icon' => 'Activity', 'category' => 'Navigasi'],
                 ['title' => 'Pengaturan & Profil', 'subtitle' => 'Keamanan akun, passkey, & pemeliharaan', 'url' => route('settings'), 'icon' => 'Settings', 'category' => 'Navigasi'],
@@ -161,6 +194,8 @@ class DashboardController extends Controller
             ['title' => 'Dashboard', 'keywords' => 'dashboard beranda statistik metrik home overview', 'subtitle' => 'Statistik dan ringkasan platform', 'url' => route('dashboard'), 'icon' => 'LayoutDashboard'],
             ['title' => 'Semua Proyek', 'keywords' => 'proyek project daftar list katalog factsheet inovasi riset', 'subtitle' => 'Daftar semua dokumen riset', 'url' => route('projects.index'), 'icon' => 'FolderKanban'],
             ['title' => 'Buat Proyek Baru', 'keywords' => 'buat tambah create new add form generator flyer dokumen', 'subtitle' => 'Formulir pembuatan proyek baru', 'url' => route('projects.create'), 'icon' => 'FilePlus2'],
+            ['title' => 'Direktori Peneliti & Authors', 'keywords' => 'peneliti researcher dosen mahasiswa author scholar scopus sinta orcid tim pi', 'subtitle' => 'Master data peneliti, dosen, & profil akademik', 'url' => route('researchers.index'), 'icon' => 'GraduationCap'],
+            ['title' => 'Asset & Media Library', 'keywords' => 'asset library logo mitra badge sertifikat hki paten media gambar', 'subtitle' => 'Master logo mitra, akreditasi & badge riset', 'url' => route('media-assets.index'), 'icon' => 'FolderHeart'],
             ['title' => 'User Approval & Akun', 'keywords' => 'user pengguna user approval persetujuan reject approve peneliti member akun anggota', 'subtitle' => 'Manajemen dan persetujuan pengguna', 'url' => route('users.index'), 'icon' => 'Users'],
             ['title' => 'Activity & Audit Logs', 'keywords' => 'activity audit log riwayat history autentikasi export print perubahan jejak audit', 'subtitle' => 'Riwayat perubahan & log keamanan', 'url' => route('activity-logs.index'), 'icon' => 'Activity'],
             ['title' => 'Pusat Tiket Dukungan & Kontak', 'keywords' => 'support kontak bantuan tiket helpdesk contact aduan keluhan error pertanyaan', 'subtitle' => 'Kelola tiket bantuan dan permohonan', 'url' => route('support-tickets.index'), 'icon' => 'LifeBuoy'],

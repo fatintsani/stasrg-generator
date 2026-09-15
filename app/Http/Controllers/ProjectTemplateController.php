@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -100,10 +101,10 @@ class ProjectTemplateController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'category' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
-            'design_style' => ['nullable', 'string', 'in:classic_standard,modern_split,infographic_cards,minimal_grid,academic_brief'],
+            'design_style' => ['nullable', 'string', 'in:classic_standard,modern_split,infographic_cards,minimal_grid,academic_brief,tech_blueprint,glass_minimalist'],
             'doc_format' => ['nullable', 'string', 'in:a4_flyer,brochure_trifold,roll_banner,factsheet_2col,pitch_poster,social_feed,social_story'],
             'layout_preset' => ['nullable', 'string', 'in:balanced,visual_heavy,text_heavy'],
-            'color_theme' => ['nullable', 'string', 'in:stas_official,ocean_tech,crimson_innovation,slate_monochrome'],
+            'color_theme' => ['nullable', 'string', 'in:stas_official,ocean_tech,crimson_innovation,slate_monochrome,cyber_teal,solar_amber,royal_purple,electric_azure,custom'],
             'print_mode' => ['nullable', 'string', 'in:light,dark'],
             'boilerplate_type' => ['nullable', 'string', 'max:255'],
             'default_data' => ['nullable', 'array'],
@@ -203,10 +204,10 @@ class ProjectTemplateController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'category' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
-            'design_style' => ['nullable', 'string', 'in:classic_standard,modern_split,infographic_cards,minimal_grid,academic_brief'],
+            'design_style' => ['nullable', 'string', 'in:classic_standard,modern_split,infographic_cards,minimal_grid,academic_brief,tech_blueprint,glass_minimalist'],
             'doc_format' => ['nullable', 'string', 'in:a4_flyer,roll_banner,factsheet_2col,pitch_poster,social_feed,social_story,brochure_trifold'],
             'layout_preset' => ['nullable', 'string', 'in:balanced,visual_heavy,text_heavy'],
-            'color_theme' => ['nullable', 'string', 'in:stas_official,ocean_tech,crimson_innovation,slate_monochrome'],
+            'color_theme' => ['nullable', 'string', 'in:stas_official,ocean_tech,crimson_innovation,slate_monochrome,cyber_teal,solar_amber,royal_purple,electric_azure,custom'],
             'print_mode' => ['nullable', 'string', 'in:light,dark'],
             'boilerplate_type' => ['nullable', 'string', 'max:255'],
             'default_data' => ['nullable', 'array'],
@@ -383,11 +384,13 @@ class ProjectTemplateController extends Controller
      */
     protected function getAvailableCategories(): array
     {
-        return ProjectTemplate::distinct('category')
-            ->whereNotNull('category')
-            ->where('category', '!=', '')
-            ->pluck('category')
-            ->values()
-            ->toArray();
+        return Cache::remember('project_templates_available_categories', 3600, function () {
+            return ProjectTemplate::distinct('category')
+                ->whereNotNull('category')
+                ->where('category', '!=', '')
+                ->pluck('category')
+                ->values()
+                ->toArray();
+        });
     }
 }

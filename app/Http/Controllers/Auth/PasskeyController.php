@@ -107,6 +107,9 @@ class PasskeyController extends Controller
         // Increment counter
         $passkey->increment('counter');
 
+        // Clean up challenge from session
+        $request->session()->forget('webauthn_challenge');
+
         // Log the user in
         Auth::login($user, true);
         $request->session()->regenerate();
@@ -201,6 +204,7 @@ class PasskeyController extends Controller
         );
 
         $user->update(['is_biometric_enabled' => true]);
+        $request->session()->forget('webauthn_register_challenge');
 
         ActivityLogger::logAuth(
             action: 'auth.passkey_registered',

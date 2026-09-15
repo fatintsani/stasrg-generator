@@ -12,6 +12,7 @@ import LayoutPresetSelector from '../../../Components/Admin/LayoutPresetSelector
 import CategoryCombobox from '../../../Components/Admin/CategoryCombobox';
 import AssetPickerModal from '../../../Components/Admin/AssetPickerModal';
 import TemplatePickerModal from '../../../Components/Admin/TemplatePickerModal';
+import ResearcherPickerModal from '../../../Components/Admin/ResearcherPickerModal';
 import { evaluateProjectLayoutLimits } from '../../../Utils/textLimits';
 import {
     ArrowLeft,
@@ -55,6 +56,12 @@ import {
     Maximize2,
     Minimize2,
     X,
+    Users,
+    GraduationCap,
+    UserCheck,
+    Mail,
+    Award,
+    ShieldCheck,
 } from 'lucide-react';
 import { downloadFlyerAsPng, printFlyer } from '../../../Utils/flyerExport';
 import { compressImage, formatFileSize } from '../../../Utils/imageCompressor';
@@ -111,6 +118,29 @@ export default function Form({ project = null, categories = [] }) {
         return `/storage/${logo}`;
     }))];
 
+    const initialResearchTeam = Array.isArray(project?.research_team)
+        ? project.research_team.map(member => ({
+            name: member.name || '',
+            role: member.role || 'Anggota Peneliti',
+            identifier: member.identifier || '',
+            lab_affiliation: member.lab_affiliation || '',
+            email: member.email || '',
+            scholar_url: member.scholar_url || '',
+            scopus_url: member.scopus_url || '',
+            sinta_url: member.sinta_url || '',
+            orcid_url: member.orcid_url || '',
+            linkedin_url: member.linkedin_url || '',
+            avatar: member.avatar || null,
+            avatar_preview: member.avatar
+                ? (member.avatar.startsWith('http') || member.avatar.startsWith('blob:') || member.avatar.startsWith('data:') ? member.avatar : `/storage/${member.avatar}`)
+                : null,
+        }))
+        : [];
+
+    const initialLayoutSchema = project?.layout_schema
+        ? (typeof project.layout_schema === 'string' ? JSON.parse(project.layout_schema) : project.layout_schema)
+        : {};
+
     const { data, setData, post, processing, errors, progress } = useForm({
         name: project?.name || '',
         category: project?.category || 'Smart Agriculture',
@@ -122,6 +152,10 @@ export default function Form({ project = null, categories = [] }) {
         partner_logos: initialPartnerLogos,
         partner_logos_preview: initialPartnerLogosPreview,
         remove_partner_logo: false,
+        research_team: initialResearchTeam,
+        lab_affiliation: project?.lab_affiliation || '',
+        patent_number: project?.patent_number || '',
+        publication_doi: project?.publication_doi || '',
         benefits: initialBenefits,
         specifications: initialSpecs,
         problem_solution: initialPS,
@@ -135,8 +169,16 @@ export default function Form({ project = null, categories = [] }) {
         doc_format: project?.doc_format || 'a4_flyer',
         color_theme: project?.color_theme || 'stas_official',
         print_mode: project?.print_mode || 'light',
+        font_family: initialLayoutSchema?.font_family || project?.font_family || 'plus_jakarta',
+        bg_pattern: initialLayoutSchema?.bg_pattern || project?.bg_pattern || 'none',
+        custom_colors: initialLayoutSchema?.custom_colors || project?.custom_colors || {
+            primary: '#0B2046',
+            secondary: '#0AB600',
+            accent: '#0AB600',
+            background: '#F8FAFC',
+        },
         boilerplate_type: project?.boilerplate_type || null,
-        layout_schema: project?.layout_schema || null,
+        layout_schema: initialLayoutSchema,
         content_en: project?.content_en || {
             title: '',
             subtitle: '',
@@ -185,6 +227,7 @@ export default function Form({ project = null, categories = [] }) {
     const [livePngLoading, setLivePngLoading] = useState(false);
     const [isExportSosmedModalOpen, setIsExportSosmedModalOpen] = useState(false);
     const [isAssetPickerOpen, setIsAssetPickerOpen] = useState(false);
+    const [isResearcherPickerOpen, setIsResearcherPickerOpen] = useState(false);
     const [assetTargetPanelIndex, setAssetTargetPanelIndex] = useState(null);
     const initialTrifoldTab = (project?.doc_format === 'brochure_trifold' && project?.problem_solution?.panel_index !== undefined)
         ? Math.min(2, Math.max(0, Number(project.problem_solution.panel_index)))
@@ -223,6 +266,7 @@ export default function Form({ project = null, categories = [] }) {
                     if (hasSubstantialData) {
                         const restoredLogos = Array.isArray(d.partner_logos) ? [...new Set(d.partner_logos.filter(Boolean))] : prev.partner_logos;
                         const restoredPreviews = Array.isArray(d.partner_logos_preview) ? [...new Set(d.partner_logos_preview.filter(Boolean))] : prev.partner_logos_preview;
+                        const restoredTeam = Array.isArray(d.research_team) ? d.research_team : prev.research_team;
                         setData((prev) => ({
                             ...prev,
                             ...d,
@@ -230,6 +274,7 @@ export default function Form({ project = null, categories = [] }) {
                             partner_logo: prev.partner_logo,
                             partner_logos: restoredLogos,
                             partner_logos_preview: restoredPreviews,
+                            research_team: restoredTeam,
                             _method: isEditing ? 'PUT' : 'POST',
                         }));
                         if (restoredPreviews && restoredPreviews.length > 0) {
@@ -258,6 +303,12 @@ export default function Form({ project = null, categories = [] }) {
                 const { main_image, partner_logo, _method, ...serializableData } = data;
                 if (Array.isArray(serializableData.partner_logos)) {
                     serializableData.partner_logos = serializableData.partner_logos.filter(l => typeof l === 'string');
+                }
+                if (Array.isArray(serializableData.research_team)) {
+                    serializableData.research_team = serializableData.research_team.map(m => ({
+                        ...m,
+                        avatar: typeof m.avatar === 'string' ? m.avatar : (m.avatar_preview || null),
+                    }));
                 }
                 const now = new Date();
                 const payload = {
@@ -301,11 +352,20 @@ export default function Form({ project = null, categories = [] }) {
                 footer_youtube: project?.footer_youtube || '@stas_rg',
                 social_links: normalizeSocialLinks(project),
                 layout_preset: project?.layout_preset || 'balanced',
+                design_style: project?.design_style || 'classic_standard',
                 doc_format: project?.doc_format || 'a4_flyer',
                 color_theme: project?.color_theme || 'stas_official',
                 print_mode: project?.print_mode || 'light',
+                font_family: initialLayoutSchema?.font_family || project?.font_family || 'plus_jakarta',
+                bg_pattern: initialLayoutSchema?.bg_pattern || project?.bg_pattern || 'none',
+                custom_colors: initialLayoutSchema?.custom_colors || project?.custom_colors || {
+                    primary: '#0B2046',
+                    secondary: '#0AB600',
+                    accent: '#0AB600',
+                    background: '#F8FAFC',
+                },
                 boilerplate_type: project?.boilerplate_type || null,
-                layout_schema: project?.layout_schema || null,
+                layout_schema: initialLayoutSchema,
                 status: project?.status || 'published',
                 _method: isEditing ? 'PUT' : 'POST',
             });
@@ -871,6 +931,90 @@ export default function Form({ project = null, categories = [] }) {
         setPartnerLogoPreviewUrl(null);
     };
 
+    // Research Team Handlers
+    const handleUpdateTeamMember = (index, field, value) => {
+        setData((prev) => {
+            const current = Array.isArray(prev.research_team) ? [...prev.research_team] : [];
+            if (!current[index]) return prev;
+            current[index] = {
+                ...current[index],
+                [field]: value,
+            };
+            return {
+                ...prev,
+                research_team: current,
+            };
+        });
+    };
+
+    const handleRemoveTeamMember = (index) => {
+        setData((prev) => {
+            const current = Array.isArray(prev.research_team) ? [...prev.research_team] : [];
+            return {
+                ...prev,
+                research_team: current.filter((_, i) => i !== index),
+            };
+        });
+    };
+
+    const handleMoveTeamMember = (index, direction) => {
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+        setData((prev) => {
+            const current = Array.isArray(prev.research_team) ? [...prev.research_team] : [];
+            if (targetIndex < 0 || targetIndex >= current.length) return prev;
+            const temp = current[index];
+            current[index] = current[targetIndex];
+            current[targetIndex] = temp;
+            return {
+                ...prev,
+                research_team: current,
+            };
+        });
+    };
+
+    const handleImportResearchers = (selectedResearchers) => {
+        if (!Array.isArray(selectedResearchers) || selectedResearchers.length === 0) return;
+
+        setData((prev) => {
+            const currentTeam = Array.isArray(prev.research_team) ? [...prev.research_team] : [];
+            const newMembers = [];
+
+            selectedResearchers.forEach((r) => {
+                const exists = currentTeam.some(
+                    (m) =>
+                        (m.name && m.name.toLowerCase() === r.name.toLowerCase()) ||
+                        (m.identifier && r.identifier && m.identifier === r.identifier)
+                );
+
+                if (!exists) {
+                    const avatarUrl = r.avatar_url || (r.avatar?.startsWith('http') ? r.avatar : (r.avatar ? `/storage/${r.avatar}` : null));
+                    newMembers.push({
+                        researcher_id: r.id || null,
+                        name: r.name || '',
+                        role: r.role || 'Anggota Peneliti',
+                        identifier: r.identifier || '',
+                        lab_affiliation: r.lab_affiliation || '',
+                        email: r.email || '',
+                        scholar_url: r.scholar_url || '',
+                        scopus_url: r.scopus_url || '',
+                        sinta_url: r.sinta_url || '',
+                        orcid_url: r.orcid_url || '',
+                        linkedin_url: r.linkedin_url || '',
+                        avatar: r.avatar || null,
+                        avatar_preview: avatarUrl,
+                    });
+                }
+            });
+
+            return {
+                ...prev,
+                research_team: [...currentTeam, ...newMembers],
+            };
+        });
+
+        showSuccess('Peneliti Ditambahkan', `${selectedResearchers.length} data peneliti berhasil ditarik ke tim proyek.`);
+    };
+
     const handleSubmit = (e, explicitStatus = null) => {
         if (e && e.preventDefault) e.preventDefault();
         
@@ -896,6 +1040,13 @@ export default function Form({ project = null, categories = [] }) {
                 data.description = firstPanel?.description || data.name || '';
             }
         }
+
+        data.layout_schema = {
+            ...(typeof data.layout_schema === 'object' && data.layout_schema !== null ? data.layout_schema : {}),
+            font_family: data.font_family,
+            bg_pattern: data.bg_pattern,
+            custom_colors: data.custom_colors,
+        };
 
         const endpoint = isEditing ? `/projects/${project.slug || project.id}` : '/projects';
 
@@ -929,6 +1080,10 @@ export default function Form({ project = null, categories = [] }) {
         partner_logos: data.remove_partner_logo ? [] : data.partner_logos,
         partner_logo_preview: (data.partner_logos_preview && data.partner_logos_preview[0]) || partnerLogoPreviewUrls[0] || null,
         partner_logo: data.remove_partner_logo ? null : (Array.isArray(data.partner_logos) ? data.partner_logos[0] : project?.partner_logo),
+        research_team: data.research_team || [],
+        lab_affiliation: data.lab_affiliation,
+        patent_number: data.patent_number,
+        publication_doi: data.publication_doi,
         benefits: data.benefits,
         specifications: data.specifications,
         problem_solution: {
@@ -945,8 +1100,16 @@ export default function Form({ project = null, categories = [] }) {
         doc_format: data.doc_format || 'a4_flyer',
         color_theme: data.color_theme || 'stas_official',
         print_mode: data.print_mode || 'light',
+        font_family: data.font_family || data.layout_schema?.font_family || 'plus_jakarta',
+        bg_pattern: data.bg_pattern || data.layout_schema?.bg_pattern || 'none',
+        custom_colors: data.custom_colors || data.layout_schema?.custom_colors,
         boilerplate_type: data.boilerplate_type,
-        layout_schema: data.layout_schema || null,
+        layout_schema: {
+            ...(typeof data.layout_schema === 'object' && data.layout_schema !== null ? data.layout_schema : {}),
+            font_family: data.font_family,
+            bg_pattern: data.bg_pattern,
+            custom_colors: data.custom_colors,
+        },
         content_en: data.content_en || null,
         previewLang: previewLang,
         active_trifold_tab: activeTrifoldTab,
@@ -963,7 +1126,12 @@ export default function Form({ project = null, categories = [] }) {
             if (tpl.color_theme) next.color_theme = tpl.color_theme;
             if (tpl.print_mode) next.print_mode = tpl.print_mode;
             if (tpl.boilerplate_type) next.boilerplate_type = tpl.boilerplate_type;
-            if (tpl.layout_schema) next.layout_schema = tpl.layout_schema;
+            if (tpl.layout_schema) {
+                next.layout_schema = tpl.layout_schema;
+                if (tpl.layout_schema.font_family) next.font_family = tpl.layout_schema.font_family;
+                if (tpl.layout_schema.bg_pattern) next.bg_pattern = tpl.layout_schema.bg_pattern;
+                if (tpl.layout_schema.custom_colors) next.custom_colors = tpl.layout_schema.custom_colors;
+            }
 
             if (tpl.default_data) {
                 const dd = tpl.default_data;
@@ -1850,11 +2018,35 @@ export default function Form({ project = null, categories = [] }) {
                             designStyleValue={data.design_style}
                             themeValue={data.color_theme}
                             printModeValue={data.print_mode}
+                            fontValue={data.font_family}
+                            patternValue={data.bg_pattern}
+                            customColors={data.custom_colors}
                             onFormatChange={(fmt) => setData('doc_format', fmt)}
                             onPresetChange={(preset) => setData('layout_preset', preset)}
                             onDesignStyleChange={(style) => setData('design_style', style)}
                             onThemeChange={(th) => setData('color_theme', th)}
                             onPrintModeChange={(pm) => setData('print_mode', pm)}
+                            onFontChange={(font) => {
+                                setData(prev => ({
+                                    ...prev,
+                                    font_family: font,
+                                    layout_schema: { ...(prev.layout_schema || {}), font_family: font }
+                                }));
+                            }}
+                            onPatternChange={(pattern) => {
+                                setData(prev => ({
+                                    ...prev,
+                                    bg_pattern: pattern,
+                                    layout_schema: { ...(prev.layout_schema || {}), bg_pattern: pattern }
+                                }));
+                            }}
+                            onCustomColorsChange={(colors) => {
+                                setData(prev => ({
+                                    ...prev,
+                                    custom_colors: colors,
+                                    layout_schema: { ...(prev.layout_schema || {}), custom_colors: colors }
+                                }));
+                            }}
                             onApplyBoilerplate={handleApplyBoilerplate}
                         />
 
@@ -2476,7 +2668,339 @@ export default function Form({ project = null, categories = [] }) {
                             )}
                         </div>
 
-                        {/* 5. URL & QR Code + Footer Info */}
+                        {/* 5. Tim Peneliti, Authorship & Publikasi Ilmiah */}
+                        <div className="bg-white dark:bg-[#121824] rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 p-5 sm:p-6 shadow-sm space-y-5">
+                            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                                <div className="flex items-center gap-2">
+                                    <span className="p-1 rounded-md bg-[#0AB600]/10 text-[#0AB600]">
+                                        <Users className="w-4 h-4" />
+                                    </span>
+                                    <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                                        {language === 'en' ? '5. Research Team, Authorship & IP' : '5. Tim Peneliti, Atribusi & HKI Riset'}
+                                    </h2>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-[#0AB600]/15 text-[#0AB600] dark:bg-[#0AB600]/10">
+                                        {Array.isArray(data.research_team) ? data.research_team.length : 0} {language === 'en' ? 'Members' : 'Peneliti Terpilih'}
+                                    </span>
+                                    <a
+                                        href="/researchers"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-[#0AB600] bg-[#0AB600]/10 hover:bg-[#0AB600]/20 border border-[#0AB600]/30 transition-colors"
+                                        title="Buka menu direktori di tab baru untuk menambah atau memperbarui profil peneliti master"
+                                    >
+                                        <ExternalLink className="w-3 h-3" />
+                                        <span>Kelola Direktori</span>
+                                    </a>
+                                </div>
+                            </div>
+
+                            {/* Notice / Guidance Banner */}
+                            <div className="flex items-start gap-3 p-3.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-800/60 text-xs">
+                                <GraduationCap className="w-4 h-4 text-[#0AB600] shrink-0 mt-0.5" />
+                                <div className="space-y-1 text-slate-700 dark:text-zinc-300">
+                                    <p className="font-semibold text-slate-900 dark:text-white">
+                                        {language === 'en'
+                                            ? 'Centralized Master Researcher Directory'
+                                            : 'Master Data Peneliti & Authors Terpusat'}
+                                    </p>
+                                    <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                        {language === 'en'
+                                            ? 'Profiles (Name, NIDN, Lab, SINTA/Scholar/Scopus links, and Photo) are managed in the Master Directory to maintain data standardization. In this project form, please pull and select researchers from the Directory.'
+                                            : 'Profil peneliti (Nama, NIDN/NIP, Afiliasi Lab, Sitasi SINTA/Scholar/Scopus, dan Foto) dikelola terpusat di menu Direktori Peneliti & Authors. Pada form proyek ini, silakan tarik data peneliti langsung dari direktori master.'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Project-Level IP & Lab Affiliation Card */}
+                            <div className="p-4 rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/60 space-y-3.5">
+                                <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-zinc-100">
+                                    <Award className="w-4 h-4 text-[#0AB600]" />
+                                    <span>{language === 'en' ? 'Project Affiliation & Intellectual Property (HKI)' : 'Afiliasi Laboratorium & Hak Kekayaan Intelektual (HKI) Proyek'}</span>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    {/* Lab Affiliation */}
+                                    <div>
+                                        <label className="block text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 mb-1 flex items-center gap-1.5">
+                                            <Building2 className="w-3.5 h-3.5 text-[#0AB600]" />
+                                            <span>{language === 'en' ? 'Lab / Research Center Affiliation' : 'Afiliasi Laboratorium Riset'}</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={data.lab_affiliation || ''}
+                                            onChange={(e) => setData('lab_affiliation', e.target.value)}
+                                            placeholder="contoh: Center of Excellence STAS-RG"
+                                            className="w-full px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs text-slate-800 dark:text-zinc-100 focus:ring-1 focus:ring-[#0AB600] focus:border-[#0AB600]"
+                                        />
+                                    </div>
+
+                                    {/* Patent / HKI Number */}
+                                    <div>
+                                        <label className="block text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 mb-1 flex items-center gap-1.5">
+                                            <ShieldCheck className="w-3.5 h-3.5 text-[#0AB600]" />
+                                            <span>{language === 'en' ? 'Patent / HKI Registration No.' : 'Nomor / Sertifikat HKI'}</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={data.patent_number || ''}
+                                            onChange={(e) => setData('patent_number', e.target.value)}
+                                            placeholder="contoh: IDS000001234 atau EC002024..."
+                                            className="w-full px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs text-slate-800 dark:text-zinc-100 focus:ring-1 focus:ring-[#0AB600] focus:border-[#0AB600]"
+                                        />
+                                    </div>
+
+                                    {/* Scientific Publication / DOI */}
+                                    <div>
+                                        <label className="block text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 mb-1 flex items-center gap-1.5">
+                                            <BookOpen className="w-3.5 h-3.5 text-[#0AB600]" />
+                                            <span>{language === 'en' ? 'Publication / DOI Link' : 'Publikasi / DOI Riset'}</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={data.publication_doi || ''}
+                                            onChange={(e) => setData('publication_doi', e.target.value)}
+                                            placeholder="contoh: 10.1109/ACCESS.2024... atau https://doi.org/..."
+                                            className="w-full px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs text-slate-800 dark:text-zinc-100 focus:ring-1 focus:ring-[#0AB600] focus:border-[#0AB600]"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Team Member Cards */}
+                            <div className="space-y-3 pt-1">
+                                {Array.isArray(data.research_team) && data.research_team.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {data.research_team.map((member, idx) => (
+                                            <div
+                                                key={idx}
+                                                className="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 shadow-xs hover:border-[#0AB600]/40 transition-all space-y-3.5"
+                                            >
+                                                {/* Header: Avatar, Name, Role in Project, Actions */}
+                                                <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                                                    <div className="flex items-center gap-3 min-w-0">
+                                                        <span className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 text-xs font-bold flex items-center justify-center shrink-0 border border-zinc-200 dark:border-zinc-700">
+                                                            #{idx + 1}
+                                                        </span>
+                                                        <div className="relative w-11 h-11 rounded-full overflow-hidden shrink-0 border-2 border-[#0AB600]/30 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                                                            {member.avatar_preview || member.avatar ? (
+                                                                <img
+                                                                    src={member.avatar_preview || (typeof member.avatar === 'string' && member.avatar.startsWith('http') ? member.avatar : `/storage/${member.avatar}`)}
+                                                                    alt={member.name || 'Avatar'}
+                                                                    className="w-full h-full object-cover"
+                                                                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                                                />
+                                                            ) : (
+                                                                <span className="text-xs font-bold text-zinc-400 uppercase">
+                                                                    {member.name ? member.name.substring(0, 2) : 'ST'}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                                                                {member.name || (language === 'en' ? `Researcher #${idx + 1}` : `Peneliti #${idx + 1}`)}
+                                                            </h4>
+                                                            <div className="flex items-center gap-1.5 mt-0.5">
+                                                                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded">
+                                                                    <CheckCircle2 className="w-2.5 h-2.5" />
+                                                                    <span>Terhubung dari Direktori</span>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Project Role Selector & Action Buttons */}
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <label className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 hidden sm:block">
+                                                                Peran di Proyek:
+                                                            </label>
+                                                            <select
+                                                                value={member.role || 'Anggota Peneliti'}
+                                                                onChange={(e) => handleUpdateTeamMember(idx, 'role', e.target.value)}
+                                                                className="px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-xs font-medium text-slate-800 dark:text-zinc-100 focus:ring-1 focus:ring-[#0AB600] focus:border-[#0AB600] cursor-pointer"
+                                                            >
+                                                                <option value="Principal Investigator / Ketua Peneliti">Ketua Peneliti (PI)</option>
+                                                                <option value="Dosen Peneliti / Pembimbing">Dosen / Pembimbing</option>
+                                                                <option value="Anggota Peneliti">Anggota Peneliti</option>
+                                                                <option value="Mahasiswa Peneliti / Asisten Riset">Mahasiswa / Asisten</option>
+                                                                <option value="Teknisi / Engineer Riset">Teknisi / Engineer</option>
+                                                                <option value="Mitra Kolaborator Eksternal">Mitra Kolaborator</option>
+                                                            </select>
+                                                        </div>
+
+                                                        <div className="flex items-center gap-1 pl-2 border-l border-zinc-200 dark:border-zinc-800">
+                                                            {idx > 0 && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleMoveTeamMember(idx, 'up')}
+                                                                    title="Geser ke atas"
+                                                                    className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                                                                >
+                                                                    <ChevronUp className="w-3.5 h-3.5" />
+                                                                </button>
+                                                            )}
+                                                            {idx < data.research_team.length - 1 && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleMoveTeamMember(idx, 'down')}
+                                                                    title="Geser ke bawah"
+                                                                    className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                                                                >
+                                                                    <ChevronDown className="w-3.5 h-3.5" />
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleRemoveTeamMember(idx)}
+                                                                title="Hapus dari tim proyek"
+                                                                className="p-1.5 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                                                            >
+                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Read-Only Details Grid */}
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 text-xs">
+                                                    {member.identifier && (
+                                                        <div className="flex items-center gap-1.5 p-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-100 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300">
+                                                            <span className="font-bold text-[10px] text-zinc-400 uppercase">ID:</span>
+                                                            <span className="font-mono text-[11px] truncate">{member.identifier}</span>
+                                                        </div>
+                                                    )}
+
+                                                    {member.lab_affiliation && (
+                                                        <div className="flex items-center gap-1.5 p-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-100 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 truncate">
+                                                            <Building2 className="w-3.5 h-3.5 text-[#0AB600] shrink-0" />
+                                                            <span className="text-[11px] truncate">{member.lab_affiliation}</span>
+                                                        </div>
+                                                    )}
+
+                                                    {member.email && (
+                                                        <div className="flex items-center gap-1.5 p-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-100 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 truncate">
+                                                            <Mail className="w-3.5 h-3.5 text-[#0AB600] shrink-0" />
+                                                            <span className="text-[11px] truncate">{member.email}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Academic Citation Links Badges */}
+                                                {(member.scholar_url || member.scopus_url || member.sinta_url || member.orcid_url || member.linkedin_url) && (
+                                                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                                                        {member.scholar_url && (
+                                                            <a
+                                                                href={member.scholar_url}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 text-[10px] font-semibold hover:bg-blue-100 transition-colors"
+                                                            >
+                                                                <span>Google Scholar</span>
+                                                                <ExternalLink className="w-2.5 h-2.5" />
+                                                            </a>
+                                                        )}
+                                                        {member.scopus_url && (
+                                                            <a
+                                                                href={member.scopus_url.startsWith('http') ? member.scopus_url : `https://www.scopus.com/authid/detail.uri?authorId=${member.scopus_url}`}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 text-[10px] font-semibold hover:bg-amber-100 transition-colors"
+                                                            >
+                                                                <span>Scopus</span>
+                                                                <ExternalLink className="w-2.5 h-2.5" />
+                                                            </a>
+                                                        )}
+                                                        {member.sinta_url && (
+                                                            <a
+                                                                href={member.sinta_url.startsWith('http') ? member.sinta_url : `https://sinta.kemdikbud.go.id/authors/profile/${member.sinta_url}`}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 text-[10px] font-semibold hover:bg-emerald-100 transition-colors"
+                                                            >
+                                                                <span>SINTA</span>
+                                                                <ExternalLink className="w-2.5 h-2.5" />
+                                                            </a>
+                                                        )}
+                                                        {member.orcid_url && (
+                                                            <a
+                                                                href={member.orcid_url.startsWith('http') ? member.orcid_url : `https://orcid.org/${member.orcid_url}`}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-lime-50 dark:bg-lime-950/50 text-lime-700 dark:text-lime-400 text-[10px] font-semibold hover:bg-lime-100 transition-colors"
+                                                            >
+                                                                <span>ORCID</span>
+                                                                <ExternalLink className="w-2.5 h-2.5" />
+                                                            </a>
+                                                        )}
+                                                        {member.linkedin_url && (
+                                                            <a
+                                                                href={member.linkedin_url.startsWith('http') ? member.linkedin_url : `https://linkedin.com/in/${member.linkedin_url}`}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-400 text-[10px] font-semibold hover:bg-sky-100 transition-colors"
+                                                            >
+                                                                <span>LinkedIn</span>
+                                                                <ExternalLink className="w-2.5 h-2.5" />
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-3.5 p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-center justify-center flex-col py-8">
+                                        <div className="w-14 h-14 rounded-full bg-[#0AB600]/10 text-[#0AB600] flex items-center justify-center">
+                                            <GraduationCap className="w-7 h-7" />
+                                        </div>
+                                        <div className="space-y-1 max-w-md">
+                                            <div className="text-sm font-bold text-slate-800 dark:text-zinc-200">
+                                                {language === 'en' ? 'No Team Members Selected' : 'Belum Ada Peneliti Dipilih'}
+                                            </div>
+                                            <div className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                                                {language === 'en'
+                                                    ? 'Select researchers directly from the master directory to include their profiles on this flyer.'
+                                                    : 'Tarik data peneliti langsung dari master Direktori Peneliti & Authors untuk ditampilkan pada flyer riset ini.'}
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsResearcherPickerOpen(true)}
+                                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0AB600] hover:bg-[#089600] text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
+                                        >
+                                            <Plus className="w-4 h-4" />
+                                            <span>{language === 'en' ? 'Pick from Researcher Directory' : 'Pilih dari Direktori Peneliti'}</span>
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Action Buttons: Pick from Directory & Manage Master Directory */}
+                                <div className="flex flex-wrap items-center gap-2.5 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsResearcherPickerOpen(true)}
+                                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0AB600] hover:bg-[#089600] text-white text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm"
+                                    >
+                                        <GraduationCap className="w-4 h-4" />
+                                        <span>{language === 'en' ? 'Pick from Researcher Directory' : 'Pilih dari Direktori Peneliti'}</span>
+                                    </button>
+
+                                    <a
+                                        href="/researchers"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 text-xs font-semibold transition-colors cursor-pointer border border-zinc-200 dark:border-zinc-700"
+                                    >
+                                        <ExternalLink className="w-3.5 h-3.5 text-[#0AB600]" />
+                                        <span>{language === 'en' ? 'Manage Master Directory' : 'Kelola Direktori Peneliti'}</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 6. URL & QR Code + Footer Info */}
                         <div className="bg-white dark:bg-[#121824] rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 p-5 sm:p-6 shadow-sm space-y-4">
                             <div className="flex items-center gap-2 pb-3 border-b border-zinc-100 dark:border-zinc-800">
                                 <span className="p-1 rounded-md bg-[#0AB600]/10 text-[#0AB600]">
@@ -2484,8 +3008,8 @@ export default function Form({ project = null, categories = [] }) {
                                 </span>
                                 <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                                     {data.doc_format === 'brochure_trifold'
-                                        ? `5. QR Code Kotak ${activeTrifoldTab + 1} & Footer Brosur`
-                                        : (language === 'en' ? '5. QR Code & External Links' : '5. QR Code & Tautan Eksternal')}
+                                        ? `6. QR Code Kotak ${activeTrifoldTab + 1} & Footer Brosur`
+                                        : (language === 'en' ? '6. QR Code & External Links' : '6. QR Code & Tautan Eksternal')}
                                 </h2>
                             </div>
 
@@ -3365,6 +3889,15 @@ export default function Form({ project = null, categories = [] }) {
                     onSelectAsset={handleSelectFromAssetLibrary}
                     type="all"
                     title={language === 'en' ? 'Verified Partner Logos & Badges Library' : 'Pustaka Logo Mitra & Badge Terverifikasi'}
+                />
+
+                {/* Researcher Directory Picker Modal */}
+                <ResearcherPickerModal
+                    isOpen={isResearcherPickerOpen}
+                    onClose={() => setIsResearcherPickerOpen(false)}
+                    onSelectResearchers={handleImportResearchers}
+                    existingMembers={data.research_team || []}
+                    title={language === 'en' ? 'Pick from Researcher Directory & Authors' : 'Pilih dari Direktori Peneliti & Authors'}
                 />
 
                 {/* Template Catalog Picker Modal */}

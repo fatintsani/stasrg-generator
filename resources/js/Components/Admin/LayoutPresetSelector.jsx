@@ -6,6 +6,8 @@ import {
     BOILERPLATES,
     LAYOUT_PRESETS,
     DESIGN_STYLES,
+    FLYER_FONTS,
+    FLYER_PATTERNS,
 } from '../../Utils/layoutPresets';
 import LayoutBlockList from './LayoutBlockList';
 import {
@@ -27,6 +29,10 @@ import {
     Smartphone,
     Grid,
     BookOpen,
+    Type,
+    Eye,
+    Maximize2,
+    Pipette,
 } from 'lucide-react';
 
 export default function LayoutPresetSelector({
@@ -34,30 +40,40 @@ export default function LayoutPresetSelector({
     presetValue = 'balanced',
     themeValue = 'stas_official',
     designStyleValue = 'classic_standard',
+    fontValue = 'plus_jakarta',
+    patternValue = 'none',
+    customColors = { primary: '#0AB600', accent: '#10b981' },
     printModeValue = 'light',
     schema = null,
     onFormatChange,
     onPresetChange,
     onThemeChange,
     onDesignStyleChange,
+    onFontChange,
+    onPatternChange,
+    onCustomColorsChange,
     onPrintModeChange,
     onSchemaChange,
     onApplyBoilerplate,
     disabled = false,
 }) {
-    const [activeTab, setActiveTab] = useState('format'); // 'format' | 'style' | 'theme' | 'boilerplate'
+    const [activeTab, setActiveTab] = useState('format'); // 'format' | 'style' | 'theme' | 'typography' | 'boilerplate' | 'blocks'
     const [appliedBoilerplateId, setAppliedBoilerplateId] = useState(null);
 
     const formatList = Object.values(DOCUMENT_FORMATS);
     const presetsList = Object.values(LAYOUT_PRESETS);
     const designStylesList = Object.values(DESIGN_STYLES);
     const themesList = Object.values(COLOR_THEMES);
+    const fontsList = Object.values(FLYER_FONTS);
+    const patternsList = Object.values(FLYER_PATTERNS);
     const printModesList = Object.values(PRINT_MODES);
     const boilerplateList = Object.values(BOILERPLATES);
 
     const currentFormat = DOCUMENT_FORMATS[formatValue] || DOCUMENT_FORMATS.a4_flyer;
     const currentTheme = COLOR_THEMES[themeValue] || COLOR_THEMES.stas_official;
     const currentDesignStyle = DESIGN_STYLES[designStyleValue] || DESIGN_STYLES.classic_standard;
+    const currentFont = FLYER_FONTS[fontValue] || FLYER_FONTS.plus_jakarta;
+    const currentPattern = FLYER_PATTERNS[patternValue] || FLYER_PATTERNS.none;
 
     const getFormatIcon = (id) => {
         switch (id) {
@@ -89,25 +105,25 @@ export default function LayoutPresetSelector({
     return (
         <div className="space-y-4 rounded-2xl bg-white dark:bg-[#121824] border border-zinc-200/80 dark:border-zinc-800 p-4 sm:p-5 shadow-xs">
             {/* Header with Navigation Tabs */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800">
-                <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                <div className="flex-1 min-w-0 pr-2">
                     <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-[#0AB600]" />
+                        <span className="w-2 h-2 rounded-full bg-[#0AB600] shrink-0" />
                         <label className="block text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                            Templates, Format & Preset Styling
+                            Templates, Format &amp; Preset Styling
                         </label>
                     </div>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                        Pilih template format dokumen, variasi gaya desain visual, palet warna, dan boilerplate.
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                        Pilih template format dokumen, gaya desain visual, palet tema warna, tipografi, dan tekstur background.
                     </p>
                 </div>
 
-                {/* Tab Pill Buttons (2 Rows: 2x2 Grid or 5 cols) */}
-                <div className={`grid ${onSchemaChange ? 'grid-cols-2 sm:grid-cols-5 sm:w-auto' : 'grid-cols-2 sm:w-72'} gap-1 bg-zinc-100/90 dark:bg-zinc-900/80 p-1 rounded-xl border border-zinc-200/60 dark:border-zinc-800 w-full shrink-0`}>
+                {/* Tab Pill Buttons (Rapi 3 Baris, 2 Kolom) */}
+                <div className="grid grid-cols-2 gap-1.5 bg-zinc-100/90 dark:bg-zinc-900/80 p-1.5 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 w-full sm:w-auto shrink-0 sm:min-w-[270px]">
                     <button
                         type="button"
                         onClick={() => setActiveTab('format')}
-                        className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                             activeTab === 'format'
                                 ? 'bg-white dark:bg-zinc-800 text-[#0AB600] shadow-xs font-bold ring-1 ring-black/5 dark:ring-white/10'
                                 : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-white/50 dark:hover:bg-zinc-800/50'
@@ -119,7 +135,7 @@ export default function LayoutPresetSelector({
                     <button
                         type="button"
                         onClick={() => setActiveTab('style')}
-                        className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                             activeTab === 'style'
                                 ? 'bg-white dark:bg-zinc-800 text-[#0AB600] shadow-xs font-bold ring-1 ring-black/5 dark:ring-white/10'
                                 : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-white/50 dark:hover:bg-zinc-800/50'
@@ -131,19 +147,31 @@ export default function LayoutPresetSelector({
                     <button
                         type="button"
                         onClick={() => setActiveTab('theme')}
-                        className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                             activeTab === 'theme'
                                 ? 'bg-white dark:bg-zinc-800 text-[#0AB600] shadow-xs font-bold ring-1 ring-black/5 dark:ring-white/10'
                                 : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-white/50 dark:hover:bg-zinc-800/50'
                         }`}
                     >
                         <Palette className="w-3.5 h-3.5 shrink-0" />
-                        <span className="whitespace-nowrap">Tema</span>
+                        <span className="whitespace-nowrap">Tema Warna</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('typography')}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                            activeTab === 'typography'
+                                ? 'bg-white dark:bg-zinc-800 text-[#0AB600] shadow-xs font-bold ring-1 ring-black/5 dark:ring-white/10'
+                                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-white/50 dark:hover:bg-zinc-800/50'
+                        }`}
+                    >
+                        <Type className="w-3.5 h-3.5 shrink-0" />
+                        <span className="whitespace-nowrap">Font &amp; Tekstur</span>
                     </button>
                     <button
                         type="button"
                         onClick={() => setActiveTab('boilerplate')}
-                        className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        className={`${!onSchemaChange ? 'col-span-2' : ''} px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                             activeTab === 'boilerplate'
                                 ? 'bg-white dark:bg-zinc-800 text-[#0AB600] shadow-xs font-bold ring-1 ring-black/5 dark:ring-white/10'
                                 : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-white/50 dark:hover:bg-zinc-800/50'
@@ -156,7 +184,7 @@ export default function LayoutPresetSelector({
                         <button
                             type="button"
                             onClick={() => setActiveTab('blocks')}
-                            className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                                 activeTab === 'blocks'
                                     ? 'bg-white dark:bg-zinc-800 text-[#0AB600] shadow-xs font-bold ring-1 ring-black/5 dark:ring-white/10'
                                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-white/50 dark:hover:bg-zinc-800/50'
@@ -447,7 +475,7 @@ export default function LayoutPresetSelector({
                     <div>
                         <div className="flex items-center justify-between mb-2.5">
                             <span className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wide">
-                                1. Palet Warna Resmi & Aksesibilitas
+                                1. Palet Warna Resmi & Tema Visual
                             </span>
                             <span className="text-[11px] text-zinc-500 font-medium">
                                 Tema aktif: <strong style={{ color: currentTheme.primary }}>{currentTheme.name}</strong>
@@ -457,6 +485,9 @@ export default function LayoutPresetSelector({
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                             {themesList.map((th) => {
                                 const isSelected = (themeValue || 'stas_official') === th.id;
+                                const displayPrimary = th.id === 'custom' ? (customColors?.primary || th.primary) : th.primary;
+                                const displayAccent = th.id === 'custom' ? (customColors?.accent || th.accent) : th.accent;
+
                                 return (
                                     <button
                                         key={th.id}
@@ -469,8 +500,8 @@ export default function LayoutPresetSelector({
                                                 : 'bg-zinc-50/70 dark:bg-zinc-900/40 border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
                                         }`}
                                         style={{
-                                            borderColor: isSelected ? th.primary : undefined,
-                                            boxShadow: isSelected ? `0 0 0 2px ${th.primary}33` : undefined,
+                                            borderColor: isSelected ? displayPrimary : undefined,
+                                            boxShadow: isSelected ? `0 0 0 2px ${displayPrimary}33` : undefined,
                                         }}
                                     >
                                         <div>
@@ -479,17 +510,17 @@ export default function LayoutPresetSelector({
                                                 <div className="flex items-center gap-1.5">
                                                     <span
                                                         className="w-4 h-4 rounded-full border border-white dark:border-zinc-800 shadow-2xs"
-                                                        style={{ backgroundColor: th.primary }}
+                                                        style={{ backgroundColor: displayPrimary }}
                                                     />
                                                     <span
                                                         className="w-3 h-3 rounded-full border border-white dark:border-zinc-800 opacity-80"
-                                                        style={{ backgroundColor: th.accent }}
+                                                        style={{ backgroundColor: displayAccent }}
                                                     />
                                                 </div>
                                                 <div
                                                     className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 text-white"
                                                     style={{
-                                                        backgroundColor: isSelected ? th.primary : 'transparent',
+                                                        backgroundColor: isSelected ? displayPrimary : 'transparent',
                                                         border: isSelected ? 'none' : '1px solid #d1d5db',
                                                     }}
                                                 >
@@ -509,15 +540,15 @@ export default function LayoutPresetSelector({
                                                 <span
                                                     className="text-[9px] font-bold px-2 py-0.5 rounded-xs"
                                                     style={{
-                                                        backgroundColor: th.badgeBg,
-                                                        color: th.badgeText,
+                                                        backgroundColor: displayPrimary,
+                                                        color: '#ffffff',
                                                     }}
                                                 >
                                                     BADGE PROYEK
                                                 </span>
                                                 <span
                                                     className="text-[9px] font-bold underline"
-                                                    style={{ color: th.primary }}
+                                                    style={{ color: displayPrimary }}
                                                 >
                                                     Link Riset
                                                 </span>
@@ -527,6 +558,92 @@ export default function LayoutPresetSelector({
                                 );
                             })}
                         </div>
+
+                        {/* Custom Color Palette Picker (Active when 'custom' theme is selected) */}
+                        {themeValue === 'custom' && (
+                            <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-indigo-50/50 via-purple-50/30 to-pink-50/50 dark:from-indigo-950/20 dark:via-purple-950/20 dark:to-pink-950/20 border border-indigo-200 dark:border-indigo-800/60 animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Pipette className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                                    <h5 className="text-xs font-bold text-slate-900 dark:text-white">
+                                        Custom Color Picker (Branding Khusus / Mitra)
+                                    </h5>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {/* Primary Color Input */}
+                                    <div className="p-3 bg-white dark:bg-zinc-800/90 rounded-lg border border-zinc-200 dark:border-zinc-700 flex items-center justify-between gap-3">
+                                        <div>
+                                            <label className="block text-[11px] font-bold text-slate-800 dark:text-zinc-200">
+                                                Warna Utama (Primary)
+                                            </label>
+                                            <span className="text-[10px] text-zinc-500 font-mono">
+                                                {customColors?.primary || '#0AB600'}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="color"
+                                                disabled={disabled}
+                                                value={customColors?.primary || '#0AB600'}
+                                                onChange={(e) => onCustomColorsChange && onCustomColorsChange({
+                                                    ...customColors,
+                                                    primary: e.target.value,
+                                                })}
+                                                className="w-8 h-8 rounded-lg border border-zinc-300 dark:border-zinc-600 cursor-pointer p-0.5 bg-transparent"
+                                            />
+                                            <input
+                                                type="text"
+                                                disabled={disabled}
+                                                maxLength={7}
+                                                value={customColors?.primary || '#0AB600'}
+                                                onChange={(e) => onCustomColorsChange && onCustomColorsChange({
+                                                    ...customColors,
+                                                    primary: e.target.value,
+                                                })}
+                                                className="w-20 px-2 py-1 text-xs font-mono font-bold rounded border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-900 dark:text-white uppercase"
+                                                placeholder="#0AB600"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Accent Color Input */}
+                                    <div className="p-3 bg-white dark:bg-zinc-800/90 rounded-lg border border-zinc-200 dark:border-zinc-700 flex items-center justify-between gap-3">
+                                        <div>
+                                            <label className="block text-[11px] font-bold text-slate-800 dark:text-zinc-200">
+                                                Warna Aksen (Highlight)
+                                            </label>
+                                            <span className="text-[10px] text-zinc-500 font-mono">
+                                                {customColors?.accent || '#10b981'}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="color"
+                                                disabled={disabled}
+                                                value={customColors?.accent || '#10b981'}
+                                                onChange={(e) => onCustomColorsChange && onCustomColorsChange({
+                                                    ...customColors,
+                                                    accent: e.target.value,
+                                                })}
+                                                className="w-8 h-8 rounded-lg border border-zinc-300 dark:border-zinc-600 cursor-pointer p-0.5 bg-transparent"
+                                            />
+                                            <input
+                                                type="text"
+                                                disabled={disabled}
+                                                maxLength={7}
+                                                value={customColors?.accent || '#10b981'}
+                                                onChange={(e) => onCustomColorsChange && onCustomColorsChange({
+                                                    ...customColors,
+                                                    accent: e.target.value,
+                                                })}
+                                                className="w-20 px-2 py-1 text-xs font-mono font-bold rounded border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-900 dark:text-white uppercase"
+                                                placeholder="#10B981"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Dark / Light Print Mode */}
@@ -566,6 +683,139 @@ export default function LayoutPresetSelector({
                                             <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">
                                                 {pm.description}
                                             </p>
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* TAB 4: TYPOGRAPHY & BACKGROUND PATTERNS */}
+            {activeTab === 'typography' && (
+                <div className="space-y-5 animate-in fade-in duration-200">
+                    {/* Typography Font Selection */}
+                    <div>
+                        <div className="flex items-center justify-between mb-2.5">
+                            <span className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wide">
+                                1. Pilihan Tipografi & Font Flyer
+                            </span>
+                            <span className="text-[11px] text-zinc-500 font-medium">
+                                Font aktif: <strong className="text-[#0AB600]">{currentFont.name}</strong> ({currentFont.category})
+                            </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {fontsList.map((f) => {
+                                const isSelected = (fontValue || 'plus_jakarta') === f.id;
+                                return (
+                                    <button
+                                        key={f.id}
+                                        type="button"
+                                        disabled={disabled}
+                                        onClick={() => onFontChange && onFontChange(f.id)}
+                                        className={`relative text-left p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between overflow-hidden ${
+                                            isSelected
+                                                ? 'bg-[#0AB600]/10 border-[#0AB600] ring-2 ring-[#0AB600]/30 shadow-xs'
+                                                : 'bg-zinc-50/70 dark:bg-zinc-900/40 border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-white dark:hover:bg-[#161e2e]'
+                                        }`}
+                                    >
+                                        <div>
+                                            <div className="flex items-center justify-between gap-2 mb-1.5">
+                                                <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 bg-zinc-200/60 dark:bg-zinc-800 px-2 py-0.5 rounded">
+                                                    {f.category}
+                                                </span>
+                                                <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+                                                    isSelected ? 'bg-[#0AB600] text-white' : 'border border-zinc-300 dark:border-zinc-700 text-transparent'
+                                                }`}>
+                                                    <Check className="w-2.5 h-2.5" />
+                                                </div>
+                                            </div>
+
+                                            <h4 className="text-sm font-bold text-slate-900 dark:text-white" style={{ fontFamily: f.fontFamily }}>
+                                                {f.name}
+                                            </h4>
+
+                                            <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-1 leading-snug">
+                                                {f.description}
+                                            </p>
+                                        </div>
+
+                                        {/* Font Sample Text */}
+                                        <div className="mt-3 p-2 bg-white dark:bg-zinc-800/80 rounded-lg border border-zinc-200/70 dark:border-zinc-700/80">
+                                            <div className="text-xs font-bold text-slate-800 dark:text-zinc-200" style={{ fontFamily: f.fontFamily }}>
+                                                Inovasi Teknologi Terapan
+                                            </div>
+                                            <div className="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">
+                                                Aa Bb Cc 1234567890
+                                            </div>
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Background Texture & Patterns */}
+                    <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
+                        <div className="flex items-center justify-between mb-2.5">
+                            <span className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wide">
+                                2. Tekstur & Pola Background Kanvas
+                            </span>
+                            <span className="text-[11px] text-zinc-500 font-medium">
+                                Tekstur: <strong className="text-[#0AB600]">{currentPattern.name}</strong>
+                            </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                            {patternsList.map((p) => {
+                                const isSelected = (patternValue || 'none') === p.id;
+                                return (
+                                    <button
+                                        key={p.id}
+                                        type="button"
+                                        disabled={disabled}
+                                        onClick={() => onPatternChange && onPatternChange(p.id)}
+                                        className={`relative text-left p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between overflow-hidden ${
+                                            isSelected
+                                                ? 'bg-[#0AB600]/10 border-[#0AB600] ring-2 ring-[#0AB600]/30 shadow-xs'
+                                                : 'bg-zinc-50/70 dark:bg-zinc-900/40 border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-white dark:hover:bg-[#161e2e]'
+                                        }`}
+                                    >
+                                        <div>
+                                            <div className="flex items-center justify-between gap-2 mb-1.5">
+                                                <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">
+                                                    {p.tagline}
+                                                </span>
+                                                <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+                                                    isSelected ? 'bg-[#0AB600] text-white' : 'border border-zinc-300 dark:border-zinc-700 text-transparent'
+                                                }`}>
+                                                    <Check className="w-2.5 h-2.5" />
+                                                </div>
+                                            </div>
+
+                                            <h5 className="text-xs font-bold text-slate-900 dark:text-white">
+                                                {p.name}
+                                            </h5>
+
+                                            <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1 leading-snug">
+                                                {p.description}
+                                            </p>
+                                        </div>
+
+                                        {/* Pattern Silhouette Box */}
+                                        <div
+                                            className="mt-2.5 h-10 rounded-lg border border-zinc-300/60 dark:border-zinc-700/60 bg-white dark:bg-zinc-800 flex items-center justify-center"
+                                            style={{
+                                                backgroundImage: p.cssPattern !== 'none' ? p.cssPattern : undefined,
+                                                backgroundSize: p.bgSize,
+                                                color: '#0AB600',
+                                            }}
+                                        >
+                                            <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase">
+                                                {p.id}
+                                            </span>
                                         </div>
                                     </button>
                                 );

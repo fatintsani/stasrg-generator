@@ -2,12 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\AdminSupportTicketAlertMail;
+use App\Mail\SupportTicketReceivedMail;
+use App\Mail\SupportTicketReplyMail;
 use App\Models\SupportTicket;
+use App\Models\SupportTicketReply;
+use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -61,6 +69,27 @@ class SupportTicketController extends Controller
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);
+
+        // Send Email Confirmation to Submitter and Alert to Admins
+        try {
+            Mail::to($ticket->email)->send(new SupportTicketReceivedMail($ticket));
+
+            $adminEmails = User::whereIn('role', ['admin', 'superadmin'])
+                ->where('status', User::STATUS_APPROVED)
+                ->pluck('email')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
+            if (! empty($adminEmails)) {
+                foreach ($adminEmails as $adminEmail) {
+                    Mail::to($adminEmail)->send(new AdminSupportTicketAlertMail($ticket));
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send support ticket email notifications: '.$e->getMessage());
+        }
 
         ActivityLogger::log(
             'support.created',
@@ -192,7 +221,10 @@ class SupportTicketController extends Controller
      */
     public function show(SupportTicket $ticket): Response
     {
-        $ticket->load('resolver:id,name,email');
+        $ticket->load([
+            'resolver:id,name,email',
+            'replies.user:id,name,email,avatar',
+        ]);
 
         $formattedTicket = [
             'id' => $ticket->id,
@@ -222,11 +254,85 @@ class SupportTicketController extends Controller
             'resolved_at' => $ticket->resolved_at ? $ticket->resolved_at->format('d M Y H:i') : null,
             'created_at' => $ticket->created_at->format('d M Y H:i'),
             'created_at_human' => $ticket->created_at->diffForHumans(),
+            'replies' => $ticket->replies->map(function (SupportTicketReply $reply) {
+                return [
+                    'id' => $reply->id,
+                    'message' => $reply->message,
+                    'status_at_reply' => $reply->status_at_reply,
+                    'created_at' => $reply->created_at->format('d M Y H:i'),
+                    'created_at_human' => $reply->created_at->diffForHumans(),
+                    'user' => $reply->user ? [
+                        'id' => $reply->user->id,
+                        'name' => $reply->user->name,
+                        'email' => $reply->user->email,
+                        'avatar' => $reply->user->avatar ? asset('storage/'.$reply->user->avatar) : null,
+                    ] : null,
+                ];
+            })->values()->all(),
         ];
 
         return Inertia::render('Admin/SupportTickets/Show', [
             'ticket' => $formattedTicket,
         ]);
+    }
+
+    /**
+     * Send an official admin reply email to the ticket author.
+     */
+    public function reply(Request $request, SupportTicket $ticket): RedirectResponse
+    {
+        $validated = $request->validate([
+            'message' => ['required', 'string', 'max:5000'],
+            'status' => ['nullable', 'string', 'in:pending,in_progress,resolved,closed'],
+        ]);
+
+        /** @var User $currentUser */
+        $currentUser = Auth::user();
+
+        $reply = DB::transaction(function () use ($validated, $ticket, $currentUser) {
+            $newStatus = $validated['status'] ?? $ticket->status;
+            $isResolving = in_array($newStatus, [SupportTicket::STATUS_RESOLVED, SupportTicket::STATUS_CLOSED], true);
+
+            if ($newStatus !== $ticket->status) {
+                $ticket->status = $newStatus;
+                if ($isResolving) {
+                    $ticket->resolved_by = $currentUser->id;
+                    $ticket->resolved_at = now();
+                }
+                $ticket->save();
+            }
+
+            /** @var SupportTicketReply $createdReply */
+            $createdReply = $ticket->replies()->create([
+                'user_id' => $currentUser->id,
+                'message' => $validated['message'],
+                'status_at_reply' => $ticket->status,
+                'is_sent_to_user' => true,
+            ]);
+
+            return $createdReply;
+        });
+
+        try {
+            Mail::to($ticket->email)->send(new SupportTicketReplyMail($ticket, $reply, $currentUser));
+        } catch (\Throwable $e) {
+            Log::warning('Failed to dispatch support ticket reply email: '.$e->getMessage());
+        }
+
+        ActivityLogger::log(
+            'support.replied',
+            'support',
+            "Admin {$currentUser->name} membalas tiket #{$ticket->ticket_number} ke {$ticket->email}",
+            $ticket,
+            [
+                'ticket_id' => $ticket->id,
+                'ticket_number' => $ticket->ticket_number,
+                'reply_id' => $reply->id,
+                'status' => $ticket->status,
+            ]
+        );
+
+        return back()->with('success', "Balasan resmi dan notifikasi email berhasil dikirimkan ke {$ticket->email}.");
     }
 
     /**

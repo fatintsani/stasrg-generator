@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MediaAsset;
+use App\Services\HtmlSanitizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -103,12 +104,16 @@ class MediaAssetController extends Controller
             $filePath = $request->file('file')->store('assets/library', 'public');
         }
 
+        $svgContent = ! empty($validated['svg_content'])
+            ? HtmlSanitizer::cleanSvg($validated['svg_content'])
+            : null;
+
         MediaAsset::create([
             'name' => $validated['name'],
             'type' => $validated['type'],
             'category' => $validated['category'],
             'file_path' => $filePath,
-            'svg_content' => $validated['svg_content'] ?? null,
+            'svg_content' => $svgContent,
             'tags' => $validated['tags'] ?? [],
             'is_verified' => true,
             'is_system_preset' => false,
@@ -153,7 +158,7 @@ class MediaAssetController extends Controller
             $updateData['file_path'] = $request->file('file')->store('assets/library', 'public');
             $updateData['svg_content'] = null;
         } elseif ($request->filled('svg_content')) {
-            $updateData['svg_content'] = $request->input('svg_content');
+            $updateData['svg_content'] = HtmlSanitizer::cleanSvg($request->input('svg_content'));
         }
 
         $mediaAsset->update($updateData);

@@ -200,7 +200,7 @@ class ProjectControllerTest extends TestCase
         $response = $this->actingAs($user)->delete("/projects/{$project->slug}");
 
         $response->assertRedirect(route('projects.index'));
-        $this->assertDatabaseMissing('projects', ['id' => $project->id]);
+        $this->assertSoftDeleted('projects', ['id' => $project->id]);
     }
 
     public function test_user_can_create_and_update_project_with_layout_presets(): void
@@ -305,5 +305,59 @@ class ProjectControllerTest extends TestCase
         $kotak2->refresh();
         $this->assertEquals('Autonomous IoT Rover', $kotak2->title);
         $this->assertEquals('Advanced IoT & Robotics', $kotak2->category);
+    }
+
+    /**
+     * Test project is soft deleted instead of immediately hard deleted.
+     */
+    public function test_project_is_soft_deleted_when_destroyed(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'admin',
+            'status' => User::STATUS_APPROVED,
+        ]);
+
+        $project = Project::factory()->create([
+            'user_id' => $user->id,
+            'name' => 'Soft Delete Target Project',
+            'slug' => 'soft-delete-target-project',
+        ]);
+
+        $response = $this->actingAs($user)->delete("/projects/{$project->slug}");
+        $response->assertRedirect(route('projects.index'));
+
+        $this->assertSoftDeleted('projects', [
+            'id' => $project->id,
+            'slug' => 'soft-delete-target-project',
+        ]);
+    }
+
+    /**
+     * Test unique slug generation prevents collision even with soft deleted projects.
+     */
+    public function test_slug_generation_remains_unique_with_soft_deleted_projects(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'admin',
+            'status' => User::STATUS_APPROVED,
+        ]);
+
+        $project1 = Project::factory()->create([
+            'user_id' => $user->id,
+            'name' => 'Smart Irrigation System',
+            'slug' => 'smart-irrigation-system',
+        ]);
+
+        $project1->delete(); // Soft delete
+
+        // Create new project with the exact same name
+        $project2 = Project::factory()->create([
+            'user_id' => $user->id,
+            'name' => 'Smart Irrigation System',
+            'slug' => null,
+        ]);
+
+        $this->assertNotEquals($project1->slug, $project2->slug);
+        $this->assertEquals('smart-irrigation-system-2', $project2->slug);
     }
 }
