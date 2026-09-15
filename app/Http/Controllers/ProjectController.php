@@ -157,6 +157,7 @@ class ProjectController extends Controller
             'print_mode' => ['nullable', 'string', 'in:light,dark'],
             'boilerplate_type' => ['nullable', 'string', 'max:255'],
             'layout_schema' => ['nullable', 'array'],
+            'content_en' => ['nullable', 'array'],
             'status' => ['nullable', 'in:draft,published'],
         ]);
 
@@ -372,6 +373,7 @@ class ProjectController extends Controller
             'print_mode' => ['nullable', 'string', 'in:light,dark'],
             'boilerplate_type' => ['nullable', 'string', 'max:255'],
             'layout_schema' => ['nullable', 'array'],
+            'content_en' => ['nullable', 'array'],
             'status' => ['nullable', 'in:draft,published'],
         ]);
 
@@ -669,6 +671,30 @@ class ProjectController extends Controller
             }
         }
 
+        if (isset($validated['content_en']) && is_array($validated['content_en'])) {
+            if (isset($validated['content_en']['description'])) {
+                $validated['content_en']['description'] = HtmlSanitizer::clean($validated['content_en']['description']);
+            }
+            if (isset($validated['content_en']['problem_solution']) && is_array($validated['content_en']['problem_solution'])) {
+                if (isset($validated['content_en']['problem_solution']['problem'])) {
+                    $validated['content_en']['problem_solution']['problem'] = HtmlSanitizer::clean($validated['content_en']['problem_solution']['problem']);
+                }
+                if (isset($validated['content_en']['problem_solution']['solution'])) {
+                    $validated['content_en']['problem_solution']['solution'] = HtmlSanitizer::clean($validated['content_en']['problem_solution']['solution']);
+                }
+            }
+            if (isset($validated['content_en']['benefits']) && is_array($validated['content_en']['benefits'])) {
+                if (isset($validated['content_en']['benefits']['content'])) {
+                    $validated['content_en']['benefits']['content'] = HtmlSanitizer::clean($validated['content_en']['benefits']['content']);
+                }
+            }
+            if (isset($validated['content_en']['specifications']) && is_array($validated['content_en']['specifications'])) {
+                if (isset($validated['content_en']['specifications']['content'])) {
+                    $validated['content_en']['specifications']['content'] = HtmlSanitizer::clean($validated['content_en']['specifications']['content']);
+                }
+            }
+        }
+
         return $validated;
     }
 
@@ -884,6 +910,52 @@ class ProjectController extends Controller
     }
 
     /**
+     * AI Assistant: Translate project content into Academic/Scientific English.
+     */
+    public function aiTranslateProject(Request $request): JsonResponse
+    {
+        $projectData = $request->input('project') ?: $request->all();
+
+        if (empty($projectData['title']) && empty($projectData['name'])) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Silakan isi Judul atau Nama Proyek terlebih dahulu sebelum melakukan penerjemahan.',
+            ], 422);
+        }
+
+        try {
+            $layoutPreset = $request->input('layout_preset') ?: ($projectData['layout_preset'] ?? 'balanced');
+            $targetLang = $request->input('target_lang', 'en');
+
+            $translated = AiAssistantService::translateProjectContent($projectData, $targetLang, $layoutPreset);
+
+            ActivityLogger::logProject(
+                action: 'project.ai_translated',
+                description: 'Menerjemahkan konten proyek riset "'.($projectData['name'] ?? 'Proyek').'" ke Bahasa Inggris',
+                project: null,
+                properties: [
+                    'project_name' => $projectData['name'] ?? null,
+                    'target_lang' => $targetLang,
+                    'layout_preset' => $layoutPreset,
+                ],
+                user: $request->user(),
+                request: $request
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Konten proyek berhasil diterjemahkan ke Bahasa Inggris!',
+                'data' => $translated,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
      * Display public detail view of a published project.
      */
     public function publicShow(Project $project): Response
@@ -908,6 +980,7 @@ class ProjectController extends Controller
                     'subtitle' => $p->subtitle,
                     'description' => $p->description,
                     'main_image' => $p->main_image ? asset('storage/'.$p->main_image) : null,
+                    'content_en' => $p->content_en,
                     'updated_at' => $p->updated_at->format('d M Y'),
                 ];
             });
@@ -936,6 +1009,7 @@ class ProjectController extends Controller
                 'footer_youtube' => $project->footer_youtube,
                 'social_links' => $project->social_links,
                 'layout_preset' => $project->layout_preset ?? 'balanced',
+                'content_en' => $project->content_en,
                 'status' => $project->status,
                 'created_at' => $project->created_at->translatedFormat('d M Y'),
                 'updated_at' => $project->updated_at->translatedFormat('d M Y'),

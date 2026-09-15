@@ -29,6 +29,7 @@ class ProjectTemplate extends Model
         'boilerplate_type',
         'default_data',
         'layout_schema',
+        'content_en',
         'preview_image',
         'is_system',
         'usage_count',
@@ -42,6 +43,7 @@ class ProjectTemplate extends Model
         return [
             'default_data' => 'array',
             'layout_schema' => 'array',
+            'content_en' => 'array',
             'is_system' => 'boolean',
             'usage_count' => 'integer',
         ];

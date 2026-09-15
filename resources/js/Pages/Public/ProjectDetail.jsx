@@ -22,6 +22,7 @@ import {
     Clock,
     ChevronRight,
     Globe,
+    Languages,
     Download,
     Layers,
 } from 'lucide-react';
@@ -29,7 +30,8 @@ import ExportSosmedModal from '../../Components/Admin/ExportSosmedModal';
 import { SocialIcon, normalizeSocialLinks } from '../../Utils/socialPlatforms';
 
 function ProjectDetailContent({ project, relatedProjects = [] }) {
-    const { t } = useApp();
+    const { t, language } = useApp();
+    const [detailLang, setDetailLang] = useState(language || 'id');
     const [copied, setCopied] = useState(false);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
@@ -64,29 +66,68 @@ function ProjectDetailContent({ project, relatedProjects = [] }) {
 
     if (!project) return null;
 
+    const hasEnContent = Boolean(project.content_en?.title || project.content_en?.description);
+    const isEn = detailLang === 'en' && hasEnContent;
+
+    const displayTitle = isEn
+        ? (project.content_en?.title || project.title || project.name)
+        : (isTrifold && activePanel?.title ? activePanel.title : (project.title || project.name));
+
+    const displaySubtitle = isEn
+        ? (project.content_en?.subtitle || project.subtitle)
+        : (activePanel?.subtitle || project.subtitle);
+
+    const displayCategory = isEn
+        ? (project.content_en?.category || project.category)
+        : (activePanel?.category || project.category);
+
+    const displayDescription = isEn
+        ? (project.content_en?.description || project.description)
+        : (activePanel?.description || project.description);
+
+    const displayBenefits = isEn
+        ? (project.content_en?.benefits?.content || project.benefits?.content)
+        : (activePanel?.benefits || project.benefits?.content);
+
+    const displaySpecs = isEn
+        ? (project.content_en?.specifications?.content || project.specifications?.content)
+        : (activePanel?.specifications || project.specifications?.content);
+
+    const displayProblem = isEn
+        ? (project.content_en?.problem_solution?.problem || project.problem_solution?.problem)
+        : (activePanel?.problem || project.problem_solution?.problem);
+
+    const displaySolution = isEn
+        ? (project.content_en?.problem_solution?.solution || project.problem_solution?.solution)
+        : (activePanel?.solution || project.problem_solution?.solution);
+
     const pageTitle = isTrifold && activePanel?.title
         ? `${activePanel.title} (Kotak ${activePanelIdx + 1}) - STAS RG Showcase`
-        : `${project.title || project.name} - STAS RG Showcase`;
-    const rawPageDesc = (isTrifold && activePanel?.description) || project.subtitle || project.description || 'Publikasi hasil riset dan inovasi teknologi terapan CoE STAS-RG Telkom University.';
+        : `${displayTitle} - STAS RG Showcase`;
+    const rawPageDesc = displayDescription || displaySubtitle || 'Publikasi hasil riset dan inovasi teknologi terapan CoE STAS-RG Telkom University.';
     const cleanPageDesc = stripHtml(rawPageDesc);
 
-    // Multi-partner logos resolution
+    // Multi-partner logos resolution (Only user-inputted partner logos, default is STAS only)
     let partnerLogoUrls = [];
-    if (Array.isArray(project.partner_logos) && project.partner_logos.length > 0) {
-        partnerLogoUrls = project.partner_logos.filter(Boolean).map(logo => {
+    let rawPartnerLogos = project.partner_logos;
+    if (typeof rawPartnerLogos === 'string') {
+        try {
+            rawPartnerLogos = JSON.parse(rawPartnerLogos);
+        } catch {
+            rawPartnerLogos = null;
+        }
+    }
+
+    if (Array.isArray(rawPartnerLogos) && rawPartnerLogos.length > 0) {
+        partnerLogoUrls = [...new Set(rawPartnerLogos.filter(Boolean))].map(logo => {
             if (logo.startsWith('http://') || logo.startsWith('https://') || logo.startsWith('blob:') || logo.startsWith('data:') || logo.startsWith('/')) {
                 return logo;
             }
             return `/storage/${logo}`;
         });
-    }
-    if (partnerLogoUrls.length === 0) {
+    } else if (project.partner_logo) {
         const single = project.partner_logo;
-        if (single) {
-            partnerLogoUrls = [(single.startsWith('http') || single.startsWith('blob:') || single.startsWith('data:') || single.startsWith('/')) ? single : `/storage/${single}`];
-        } else {
-            partnerLogoUrls = ['/assets/img/telu.png'];
-        }
+        partnerLogoUrls = [(single.startsWith('http://') || single.startsWith('https://') || single.startsWith('blob:') || single.startsWith('data:') || single.startsWith('/')) ? single : `/storage/${single}`];
     }
 
     const panelMainImage = isTrifold && activePanel?.image_url ? activePanel.image_url : null;
@@ -100,12 +141,12 @@ function ProjectDetailContent({ project, relatedProjects = [] }) {
         <>
             <Head title={pageTitle}>
                 <meta name="description" content={cleanPageDesc.slice(0, 160)} />
-                <meta property="og:title" content={`${project.title || project.name} — STAS RG Showcase`} />
+                <meta property="og:title" content={`${displayTitle} — STAS RG Showcase`} />
                 <meta property="og:description" content={cleanPageDesc.slice(0, 200)} />
                 <meta property="og:image" content={mainImageUrl || '/assets/img/stas.png'} />
                 <meta property="og:type" content="article" />
                 <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content={`${project.title || project.name} — STAS RG Showcase`} />
+                <meta name="twitter:title" content={`${displayTitle} — STAS RG Showcase`} />
                 <meta name="twitter:description" content={cleanPageDesc.slice(0, 200)} />
                 <meta name="twitter:image" content={mainImageUrl || '/assets/img/stas.png'} />
             </Head>
@@ -123,19 +164,51 @@ function ProjectDetailContent({ project, relatedProjects = [] }) {
                         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4">
                             <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 overflow-x-auto whitespace-nowrap">
                                 <Link href="/" className="hover:text-[#089600] transition-colors">
-                                    Beranda
+                                    {detailLang === 'en' ? 'Home' : 'Beranda'}
                                 </Link>
                                 <ChevronRight className="w-3.5 h-3.5 shrink-0 text-zinc-300 dark:text-zinc-600" />
                                 <a href="/#projects-showcase" className="hover:text-[#089600] transition-colors">
-                                    Showcase Riset
+                                    {detailLang === 'en' ? 'Research Showcase' : 'Showcase Riset'}
                                 </a>
                                 <ChevronRight className="w-3.5 h-3.5 shrink-0 text-zinc-300 dark:text-zinc-600" />
-                                <span className="font-semibold text-slate-800 dark:text-zinc-200 truncate max-w-[200px] sm:max-w-xs">
-                                    {project.name}
+                                <span className="font-semibold text-slate-800 dark:text-zinc-200 truncate max-w-[160px] sm:max-w-xs">
+                                    {displayTitle}
                                 </span>
                             </div>
 
                             <div className="flex items-center gap-2 shrink-0">
+                                {/* Dual Language Switcher (ID / EN) */}
+                                <div className="inline-flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl p-0.5 border border-zinc-200/80 dark:border-zinc-700/80 shadow-2xs">
+                                    <Languages className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 ml-1.5 mr-0.5" />
+                                    <button
+                                        type="button"
+                                        onClick={() => setDetailLang('id')}
+                                        className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+                                            detailLang === 'id'
+                                                ? 'bg-[#0AB600] text-white shadow-xs'
+                                                : 'text-zinc-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white'
+                                        }`}
+                                        title="Tampilkan Bahasa Indonesia"
+                                    >
+                                        ID
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setDetailLang('en')}
+                                        className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer relative ${
+                                            detailLang === 'en'
+                                                ? 'bg-[#0AB600] text-white shadow-xs'
+                                                : 'text-zinc-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white'
+                                        }`}
+                                        title="Read in English"
+                                    >
+                                        <span>EN</span>
+                                        {hasEnContent && (
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
+                                        )}
+                                    </button>
+                                </div>
+
                                 <button
                                     type="button"
                                     onClick={() => setIsExportModalOpen(true)}
@@ -143,7 +216,7 @@ function ProjectDetailContent({ project, relatedProjects = [] }) {
                                     title="Unduh Flyer A4 atau Format Media Sosial (1:1, 9:16)"
                                 >
                                     <Share2 className="w-3.5 h-3.5 text-[#0AB600]" />
-                                    <span>Unduh Flyer / Sosmed</span>
+                                    <span className="hidden sm:inline">{detailLang === 'en' ? 'Download Flyer' : 'Unduh Flyer / Sosmed'}</span>
                                 </button>
 
                                 <button
@@ -152,7 +225,7 @@ function ProjectDetailContent({ project, relatedProjects = [] }) {
                                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-xs font-semibold text-slate-700 dark:text-zinc-200 transition-all cursor-pointer"
                                 >
                                     {copied ? <Check className="w-3.5 h-3.5 text-[#0AB600]" /> : <Share2 className="w-3.5 h-3.5" />}
-                                    <span>{copied ? 'Tautan Disalin!' : 'Bagikan'}</span>
+                                    <span className="hidden sm:inline">{copied ? (detailLang === 'en' ? 'Link Copied!' : 'Tautan Disalin!') : (detailLang === 'en' ? 'Share' : 'Bagikan')}</span>
                                 </button>
                             </div>
                         </div>
@@ -209,29 +282,29 @@ function ProjectDetailContent({ project, relatedProjects = [] }) {
                         <div className="space-y-4">
                             {/* Badges Bar */}
                             <div className="flex flex-wrap items-center gap-2">
-                                {(activePanel?.category || project.category) && (
+                                {displayCategory && (
                                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#0AB600]/10 border border-[#0AB600]/30 text-[#0AB600] uppercase tracking-wider">
                                         <span className="w-1.5 h-1.5 rounded-full bg-[#0AB600] dark:bg-[#0AB600]"></span>
-                                        <span>{activePanel?.category || project.category}</span>
+                                        <span>{displayCategory}</span>
                                     </span>
                                 )}
 
                                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                                     <Calendar className="w-3 h-3" />
-                                    <span>Dipublikasikan: {project.updated_at}</span>
+                                    <span>{detailLang === 'en' ? 'Published:' : 'Dipublikasikan:'} {project.updated_at}</span>
                                 </span>
                             </div>
 
                             {/* Main Title / Headline */}
                             <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight uppercase leading-[1.15]">
-                                {activePanel?.title || project.title || project.name}
+                                {displayTitle}
                             </h1>
 
                             {/* Subtitle / Partner info */}
-                            {(activePanel?.subtitle || project.subtitle) && (
+                            {displaySubtitle && (
                                 <p className="text-sm sm:text-lg font-semibold text-[#0AB600] flex items-center gap-2">
                                     <Building2 className="w-4 h-4 shrink-0" />
-                                    <span>{activePanel?.subtitle || project.subtitle}</span>
+                                    <span>{displaySubtitle}</span>
                                 </p>
                             )}
                         </div>
@@ -242,7 +315,7 @@ function ProjectDetailContent({ project, relatedProjects = [] }) {
                                 <div className="w-full aspect-[16/9] sm:aspect-[16/10] max-h-[540px] bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center overflow-hidden relative">
                                     <img
                                         src={mainImageUrl}
-                                        alt={activePanel?.title || project.title || project.name}
+                                        alt={displayTitle}
                                         className="w-full h-full object-cover"
                                     />
                                     {/* Subtle gradient overlay at top for logo contrast */}
@@ -251,7 +324,7 @@ function ProjectDetailContent({ project, relatedProjects = [] }) {
                             ) : (
                                 <div className="py-24 text-center space-y-3 bg-zinc-100 dark:bg-zinc-900">
                                     <FolderKanban className="w-12 h-12 text-zinc-400 mx-auto opacity-40" />
-                                    <p className="text-sm font-medium text-zinc-500">Foto Prototype / Diagram Sistem</p>
+                                    <p className="text-sm font-medium text-zinc-500">{detailLang === 'en' ? 'Prototype Photo / System Architecture' : 'Foto Prototype / Diagram Sistem'}</p>
                                 </div>
                             )}
 
@@ -270,7 +343,9 @@ function ProjectDetailContent({ project, relatedProjects = [] }) {
                                             }}
                                         />
                                     ))}
-                                    <div className="h-4 sm:h-5 w-px bg-zinc-200 dark:bg-zinc-700" />
+                                    {partnerLogoUrls.length > 0 && (
+                                        <div className="h-4 sm:h-5 w-px bg-zinc-200 dark:bg-zinc-700" />
+                                    )}
                                     {/* STAS RG Logo */}
                                     <img
                                         src="/assets/img/stas.png"
@@ -288,64 +363,64 @@ function ProjectDetailContent({ project, relatedProjects = [] }) {
                             <div className="lg:col-span-8 space-y-8">
                                 
                                 {/* Section A: Deskripsi Singkat Sistem */}
-                                {(activePanel?.description || project.description) && (
+                                {displayDescription && (
                                     <div className="bg-white dark:bg-[#121824] rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 p-6 sm:p-8 shadow-xs space-y-4">
                                         <div className="flex items-center gap-2 pb-3 border-b border-zinc-100 dark:border-zinc-800">
                                             <span className="p-1.5 rounded-xl bg-[#0AB600]/10 text-[#0AB600]">
                                                 <FileText className="w-4 h-4" />
                                             </span>
                                             <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                                                Ringkasan Sistem &amp; Inovasi {isTrifold ? `Kotak ${activePanelIdx + 1}` : 'Riset'}
+                                                {detailLang === 'en' ? 'System Overview & Research Innovation' : `Ringkasan Sistem & Inovasi ${isTrifold ? `Kotak ${activePanelIdx + 1}` : 'Riset'}`}
                                             </h2>
                                         </div>
 
                                         <div
-                                            dangerouslySetInnerHTML={{ __html: activePanel?.description || project.description }}
+                                            dangerouslySetInnerHTML={{ __html: displayDescription }}
                                             className="text-sm sm:text-base text-slate-700 dark:text-zinc-300 leading-relaxed space-y-2.5 prose dark:prose-invert max-w-none"
                                         />
                                     </div>
                                 )}
 
                                 {/* Section B: Manfaat & Dampak Terapan */}
-                                {(activePanel?.benefits || (project.benefits && project.benefits.content)) && (
+                                {displayBenefits && (
                                     <div className="bg-white dark:bg-[#121824] rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 p-6 sm:p-8 shadow-xs space-y-4">
                                         <div className="flex items-center gap-2 pb-3 border-b border-zinc-100 dark:border-zinc-800">
                                             <span className="p-1.5 rounded-xl bg-[#0AB600]/10 text-[#0AB600]">
                                                 <CheckCircle2 className="w-4 h-4" />
                                             </span>
                                             <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                                                Manfaat &amp; Dampak Penerapan
+                                                {detailLang === 'en' ? 'Key Benefits & Applied Impacts' : 'Manfaat & Dampak Penerapan'}
                                             </h2>
                                         </div>
 
                                         <div
-                                            dangerouslySetInnerHTML={{ __html: activePanel?.benefits || project.benefits.content }}
+                                            dangerouslySetInnerHTML={{ __html: displayBenefits }}
                                             className="text-xs sm:text-sm text-slate-700 dark:text-zinc-300 leading-relaxed prose dark:prose-invert max-w-none"
                                         />
                                     </div>
                                 )}
 
                                 {/* Section C: Spesifikasi Teknologi & Hardware */}
-                                {(activePanel?.specifications || (project.specifications && project.specifications.content)) && (
+                                {displaySpecs && (
                                     <div className="bg-white dark:bg-[#121824] rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 p-6 sm:p-8 shadow-xs space-y-4">
                                         <div className="flex items-center gap-2 pb-3 border-b border-zinc-100 dark:border-zinc-800">
                                             <span className="p-1.5 rounded-xl bg-[#0AB600]/10 text-[#0AB600]">
                                                 <Wrench className="w-4 h-4" />
                                             </span>
                                             <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                                                Spesifikasi Teknologi &amp; Komponen
+                                                {detailLang === 'en' ? 'Technical Specifications & Components' : 'Spesifikasi Teknologi & Komponen'}
                                             </h2>
                                         </div>
 
                                         <div
-                                            dangerouslySetInnerHTML={{ __html: activePanel?.specifications || project.specifications.content }}
+                                            dangerouslySetInnerHTML={{ __html: displaySpecs }}
                                             className="text-xs sm:text-sm text-slate-700 dark:text-zinc-300 leading-relaxed prose dark:prose-invert max-w-none"
                                         />
                                     </div>
                                 )}
 
                                 {/* Section D: Problem & Solution Comparative Matrix */}
-                                {((activePanel?.problem || activePanel?.solution) || (project.problem_solution && (project.problem_solution.problem || project.problem_solution.solution))) && (
+                                {(displayProblem || displaySolution) && (
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2">
                                             <span className="p-1.5 rounded-xl bg-[#0AB600]/10 text-[#0AB600]">
@@ -358,28 +433,28 @@ function ProjectDetailContent({ project, relatedProjects = [] }) {
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             {/* Problem Card */}
-                                            {(activePanel?.problem || project.problem_solution?.problem) && (
+                                            {displayProblem && (
                                                 <div className="p-6 rounded-3xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200/80 dark:border-rose-900/40 space-y-3">
                                                     <div className="inline-flex items-center gap-2 text-xs font-bold text-rose-800 dark:text-rose-300 uppercase tracking-wider">
                                                         <span className="w-2 h-2 rounded-full bg-rose-500" />
-                                                        <span>Tantangan / Permasalahan</span>
+                                                        <span>{detailLang === 'en' ? 'Challenges & Problem Statement' : 'Tantangan / Permasalahan'}</span>
                                                     </div>
                                                     <div
-                                                        dangerouslySetInnerHTML={{ __html: activePanel?.problem || project.problem_solution.problem }}
+                                                        dangerouslySetInnerHTML={{ __html: displayProblem }}
                                                         className="text-xs sm:text-sm text-rose-950 dark:text-rose-200/90 leading-relaxed prose dark:prose-invert max-w-none"
                                                     />
                                                 </div>
                                             )}
 
                                             {/* Solution Card */}
-                                            {(activePanel?.solution || project.problem_solution?.solution) && (
+                                            {displaySolution && (
                                                 <div className="p-6 rounded-3xl bg-[#0AB600]/10/50 dark:bg-[#0AB600]/10 border border-[#0AB600]/30 dark:border-emerald-900/40 space-y-3">
                                                     <div className="inline-flex items-center gap-2 text-xs font-bold text-[#0AB600] uppercase tracking-wider">
                                                         <span className="w-2 h-2 rounded-full bg-[#0AB600]" />
-                                                        <span>Solusi Inovasi Teknologi</span>
+                                                        <span>{detailLang === 'en' ? 'Technological Innovation Solution' : 'Solusi Inovasi Teknologi'}</span>
                                                     </div>
                                                     <div
-                                                        dangerouslySetInnerHTML={{ __html: activePanel?.solution || project.problem_solution.solution }}
+                                                        dangerouslySetInnerHTML={{ __html: displaySolution }}
                                                         className="text-xs sm:text-sm text-slate-900 dark:text-[#0AB600]/90 leading-relaxed prose dark:prose-invert max-w-none"
                                                     />
                                                 </div>

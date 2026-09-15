@@ -166,6 +166,7 @@ Route::middleware(['auth', 'approved'])->group(function () {
     Route::post('/projects/{project}/duplicate', [ProjectController::class, 'duplicate'])->name('projects.duplicate');
     Route::post('/projects/ai-generate', [ProjectController::class, 'aiGenerateProject'])->name('projects.ai-generate');
     Route::post('/projects/ai-section', [ProjectController::class, 'aiPolishSection'])->name('projects.ai-section');
+    Route::post('/projects/ai-translate', [ProjectController::class, 'aiTranslateProject'])->name('projects.ai-translate');
 
     // Project Template Management & Custom Template Builder
     Route::resource('templates', ProjectTemplateController::class);

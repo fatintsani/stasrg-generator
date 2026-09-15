@@ -27,6 +27,7 @@ import {
     Lightbulb,
     QrCode,
     Globe,
+    Languages,
     Building2,
     Trash2,
     Printer,
@@ -99,17 +100,16 @@ export default function Form({ project = null, categories = [] }) {
         ? (typeof project.problem_solution === 'string' ? JSON.parse(project.problem_solution) : project.problem_solution)
         : { title: 'PROBLEM–SOLUTION', problem: '', solution: '' };
 
-    const initialPartnerLogos = (Array.isArray(project?.partner_logos) && project.partner_logos.length > 0)
+    const initialPartnerLogos = [...new Set(((Array.isArray(project?.partner_logos) && project.partner_logos.length > 0)
         ? project.partner_logos
-        : (project?.partner_logo ? [project.partner_logo] : []);
+        : (project?.partner_logo ? [project.partner_logo] : [])).filter(Boolean))];
 
-    const initialPartnerLogosPreview = initialPartnerLogos.map(logo => {
-        if (!logo) return '/assets/img/telu.png';
+    const initialPartnerLogosPreview = [...new Set(initialPartnerLogos.map(logo => {
         if (logo.startsWith('http://') || logo.startsWith('https://') || logo.startsWith('blob:') || logo.startsWith('data:') || logo.startsWith('/')) {
             return logo;
         }
         return `/storage/${logo}`;
-    });
+    }))];
 
     const { data, setData, post, processing, errors, progress } = useForm({
         name: project?.name || '',
@@ -137,9 +137,23 @@ export default function Form({ project = null, categories = [] }) {
         print_mode: project?.print_mode || 'light',
         boilerplate_type: project?.boilerplate_type || null,
         layout_schema: project?.layout_schema || null,
+        content_en: project?.content_en || {
+            title: '',
+            subtitle: '',
+            category: '',
+            description: '',
+            benefits: { title: 'KEY BENEFITS', content: '' },
+            specifications: { title: 'TECHNICAL SPECIFICATIONS', content: '' },
+            problem_solution: { title: 'PROBLEM & SOLUTION', problem: '', solution: '' },
+        },
         status: project?.status || 'published',
         _method: isEditing ? 'PUT' : 'POST',
     });
+
+    // Dual-Language States (Form Editing & Live Preview)
+    const [activeFormLang, setActiveFormLang] = useState('id'); // 'id' | 'en'
+    const [previewLang, setPreviewLang] = useState('id'); // 'id' | 'en'
+    const [isTranslatingAi, setIsTranslatingAi] = useState(false);
 
     // Preview state for uploaded main image
     const [imagePreviewUrl, setImagePreviewUrl] = useState(
@@ -207,17 +221,19 @@ export default function Form({ project = null, categories = [] }) {
                     );
 
                     if (hasSubstantialData) {
+                        const restoredLogos = Array.isArray(d.partner_logos) ? [...new Set(d.partner_logos.filter(Boolean))] : prev.partner_logos;
+                        const restoredPreviews = Array.isArray(d.partner_logos_preview) ? [...new Set(d.partner_logos_preview.filter(Boolean))] : prev.partner_logos_preview;
                         setData((prev) => ({
                             ...prev,
                             ...d,
                             main_image: prev.main_image,
                             partner_logo: prev.partner_logo,
-                            partner_logos: d.partner_logos || prev.partner_logos,
-                            partner_logos_preview: d.partner_logos_preview || prev.partner_logos_preview,
+                            partner_logos: restoredLogos,
+                            partner_logos_preview: restoredPreviews,
                             _method: isEditing ? 'PUT' : 'POST',
                         }));
-                        if (Array.isArray(d.partner_logos_preview) && d.partner_logos_preview.length > 0) {
-                            setPartnerLogoPreviewUrls(d.partner_logos_preview);
+                        if (restoredPreviews && restoredPreviews.length > 0) {
+                            setPartnerLogoPreviewUrls(restoredPreviews);
                         }
                         setDraftRestoredNotice(true);
                         setLastSavedDraftTime(parsed.updatedAt ? new Date(parsed.updatedAt) : new Date());
@@ -424,6 +440,74 @@ export default function Form({ project = null, categories = [] }) {
         }
     };
 
+    const handleAiTranslate = async () => {
+        if (!data.title && !data.name && !data.description) {
+            showError('Data Belum Lengkap', 'Silakan isi Judul atau Deskripsi proyek dalam Bahasa Indonesia terlebih dahulu.');
+            return;
+        }
+
+        setIsTranslatingAi(true);
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            const res = await fetch('/projects/ai-translate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    project: {
+                        ...data,
+                        layout_preset: data.layout_preset,
+                    },
+                    layout_preset: data.layout_preset,
+                    target_lang: 'en',
+                }),
+            });
+
+            const resData = await res.json();
+            if (resData.success && resData.data) {
+                setData((prev) => ({
+                    ...prev,
+                    content_en: resData.data,
+                }));
+                setActiveFormLang('en');
+                setPreviewLang('en');
+                showSuccess('AI Translate Berhasil', 'Seluruh konten proyek berhasil diterjemahkan ke Bahasa Inggris dan diterapkan ke tab English!');
+            } else {
+                showError('AI Translate Gagal', resData.error || resData.message || 'Gagal menerjemahkan konten.');
+            }
+        } catch (err) {
+            showError('Koneksi AI Gagal', err.message || 'Terjadi kesalahan saat berkomunikasi dengan server AI.');
+        } finally {
+            setIsTranslatingAi(false);
+        }
+    };
+
+    const handleUpdateContentEn = (field, value) => {
+        setData((prev) => ({
+            ...prev,
+            content_en: {
+                ...(prev.content_en || {}),
+                [field]: value,
+            },
+        }));
+    };
+
+    const handleUpdateContentEnNested = (section, subField, value) => {
+        setData((prev) => ({
+            ...prev,
+            content_en: {
+                ...(prev.content_en || {}),
+                [section]: {
+                    ...(prev.content_en?.[section] || {}),
+                    [subField]: value,
+                },
+            },
+        }));
+    };
+
     const handleLiveDownloadPng = async () => {
         if (livePngLoading) return;
         setLivePngLoading(true);
@@ -571,6 +655,10 @@ export default function Form({ project = null, categories = [] }) {
             }
 
             if (fileToAdd && previewToAdd) {
+                if (partnerLogoPreviewUrls.includes(previewToAdd)) {
+                    showError('Logo Sudah Ada', `Logo "${asset.name}" sudah ada dalam daftar mitra.`);
+                    return;
+                }
                 setData((prev) => {
                     const nextLogos = Array.isArray(prev.partner_logos) ? [...prev.partner_logos, fileToAdd] : [fileToAdd];
                     const nextPreviews = Array.isArray(prev.partner_logos_preview) ? [...prev.partner_logos_preview, previewToAdd] : [previewToAdd];
@@ -588,6 +676,10 @@ export default function Form({ project = null, categories = [] }) {
         } catch (err) {
             console.error('Error selecting asset:', err);
             if (asset.resolved_url) {
+                if (partnerLogoPreviewUrls.includes(asset.resolved_url)) {
+                    showError('Logo Sudah Ada', `Logo "${asset.name}" sudah ada dalam daftar mitra.`);
+                    return;
+                }
                 setData((prev) => {
                     const nextLogos = Array.isArray(prev.partner_logos) ? [...prev.partner_logos, asset.resolved_url] : [asset.resolved_url];
                     const nextPreviews = Array.isArray(prev.partner_logos_preview) ? [...prev.partner_logos_preview, asset.resolved_url] : [asset.resolved_url];
@@ -855,6 +947,8 @@ export default function Form({ project = null, categories = [] }) {
         print_mode: data.print_mode || 'light',
         boilerplate_type: data.boilerplate_type,
         layout_schema: data.layout_schema || null,
+        content_en: data.content_en || null,
+        previewLang: previewLang,
         active_trifold_tab: activeTrifoldTab,
     };
 
@@ -1210,7 +1304,245 @@ export default function Form({ project = null, categories = [] }) {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                                  {/* LEFT PANEL: Form Sections (lg:col-span-7) */}
                     <div className="lg:col-span-7 space-y-5">
-                        
+
+                        {/* DUAL-LANGUAGE (ID / EN) SELECTOR & AI AUTO-TRANSLATE BAR */}
+                        <div className="p-4 rounded-2xl bg-white dark:bg-[#121824] border border-zinc-200/80 dark:border-zinc-800/80 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-xs font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-1.5">
+                                    <Languages className="w-4 h-4 text-[#0AB600]" />
+                                    {language === 'en' ? 'Flyer Language:' : 'Bahasa Konten Flyer:'}
+                                </span>
+                                <div className="inline-flex p-1 bg-zinc-100 dark:bg-zinc-800/80 rounded-xl border border-zinc-200 dark:border-zinc-700">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setActiveFormLang('id');
+                                            setPreviewLang('id');
+                                        }}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                                            activeFormLang === 'id'
+                                                ? 'bg-[#0AB600] text-white shadow-xs'
+                                                : 'text-zinc-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white'
+                                        }`}
+                                    >
+                                        <span className="font-mono text-[10px] font-black uppercase px-1 py-0.5 rounded bg-black/10 dark:bg-white/10">ID</span>
+                                        <span>Indonesia</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setActiveFormLang('en');
+                                            setPreviewLang('en');
+                                        }}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                                            activeFormLang === 'en'
+                                                ? 'bg-[#0AB600] text-white shadow-xs'
+                                                : 'text-zinc-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white'
+                                        }`}
+                                    >
+                                        <span className="font-mono text-[10px] font-black uppercase px-1 py-0.5 rounded bg-black/10 dark:bg-white/10">EN</span>
+                                        <span>English</span>
+                                        {Boolean(data.content_en?.title) && (
+                                            <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" title="English content available" />
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={handleAiTranslate}
+                                disabled={isTranslatingAi || (!data.title && !data.name && !data.description)}
+                                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#0AB600] to-emerald-600 hover:from-[#089600] hover:to-emerald-700 text-white text-xs font-bold transition-all cursor-pointer disabled:opacity-40 shadow-xs active:scale-95 shrink-0"
+                                title="Otomatis terjemahkan seluruh konten flyer ke Bahasa Inggris Akademis menggunakan AI"
+                            >
+                                {isTranslatingAi ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span>{language === 'en' ? 'Translating...' : 'Menerjemahkan AI...'}</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles className="w-4 h-4" />
+                                        <span>{language === 'en' ? 'AI Translate to English' : 'Terjemahkan AI ke English'}</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
+
+                        {activeFormLang === 'en' ? (
+                            /* ENGLISH VERSION FORM CONTENT */
+                            <div className="space-y-5 animate-in fade-in duration-200">
+                                {/* English Main Info */}
+                                <div className="bg-white dark:bg-[#121824] rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 p-5 sm:p-6 shadow-sm space-y-4">
+                                    <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                                        <div className="flex items-center gap-2">
+                                            <span className="p-1 rounded-md bg-[#0AB600]/10 text-[#0AB600]">
+                                                <FolderKanban className="w-4 h-4" />
+                                            </span>
+                                            <div>
+                                                <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                                                    1. English Research Identity (EN)
+                                                </h2>
+                                                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                                                    Research title and summary in English for international expos and partners.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={handleAiTranslate}
+                                            disabled={isTranslatingAi}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0AB600]/10 hover:bg-[#0AB600]/15 text-[#0AB600] border border-[#0AB600]/30 text-xs font-bold transition-all cursor-pointer disabled:opacity-40"
+                                        >
+                                            {isTranslatingAi ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                                            <span>Re-Translate AI</span>
+                                        </button>
+                                    </div>
+
+                                    {/* English Title & Subtitle */}
+                                    <div className="space-y-3.5">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                                                Innovation Title in English <span className="text-rose-500">*</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={data.content_en?.title || ''}
+                                                onChange={(e) => handleUpdateContentEn('title', e.target.value)}
+                                                placeholder="e.g. SMART WATER QUALITY MONITORING & TELEMETRY SYSTEM"
+                                                className="w-full px-3 py-2 text-xs font-bold uppercase bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white focus:border-[#0AB600] focus:outline-none"
+                                            />
+                                            <TextLimitMeter value={data.content_en?.title} limitKey="title" preset={data.layout_preset} docFormat={data.doc_format} />
+                                        </div>
+
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                            <div>
+                                                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                                                    English Subtitle / Tagline
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={data.content_en?.subtitle || ''}
+                                                    onChange={(e) => handleUpdateContentEn('subtitle', e.target.value)}
+                                                    placeholder="e.g. Real-Time Aquaculture Telemetry Automation"
+                                                    className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white focus:border-[#0AB600] focus:outline-none"
+                                                />
+                                                <TextLimitMeter value={data.content_en?.subtitle} limitKey="subtitle" preset={data.layout_preset} docFormat={data.doc_format} />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                                                    English Category Name
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={data.content_en?.category || ''}
+                                                    onChange={(e) => handleUpdateContentEn('category', e.target.value)}
+                                                    placeholder="e.g. Smart Agriculture / IoT"
+                                                    className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-slate-900 dark:text-white focus:border-[#0AB600] focus:outline-none"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* English Description */}
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                                                Research Summary / Description in English
+                                            </label>
+                                            <RichTextEditor
+                                                value={data.content_en?.description || ''}
+                                                onChange={(val) => handleUpdateContentEn('description', val)}
+                                                placeholder="Concise English summary explaining research urgency and system architecture..."
+                                                minHeight="80px"
+                                            />
+                                            <TextLimitMeter value={data.content_en?.description} limitKey="description" preset={data.layout_preset} docFormat={data.doc_format} />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Problem - Solution in English */}
+                                <div className="bg-white dark:bg-[#121824] rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 p-5 sm:p-6 shadow-sm space-y-4">
+                                    <div className="flex items-center gap-2 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                                        <span className="p-1 rounded-md bg-[#0AB600]/10 text-[#0AB600]">
+                                            <Lightbulb className="w-4 h-4" />
+                                        </span>
+                                        <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                                            2. Problem &amp; Solution (English)
+                                        </h2>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                                                Problem Statement (English):
+                                            </label>
+                                            <RichTextEditor
+                                                value={data.content_en?.problem_solution?.problem || ''}
+                                                onChange={(val) => handleUpdateContentEnNested('problem_solution', 'problem', val)}
+                                                placeholder="Short problem statement in English..."
+                                                minHeight="70px"
+                                            />
+                                            <TextLimitMeter value={data.content_en?.problem_solution?.problem} limitKey="problem" preset={data.layout_preset} docFormat={data.doc_format} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                                                Applied Solution (English):
+                                            </label>
+                                            <RichTextEditor
+                                                value={data.content_en?.problem_solution?.solution || ''}
+                                                onChange={(val) => handleUpdateContentEnNested('problem_solution', 'solution', val)}
+                                                placeholder="Applied innovation solution in English..."
+                                                minHeight="70px"
+                                            />
+                                            <TextLimitMeter value={data.content_en?.problem_solution?.solution} limitKey="solution" preset={data.layout_preset} docFormat={data.doc_format} />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Benefits & Specifications in English */}
+                                <div className="bg-white dark:bg-[#121824] rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 p-5 sm:p-6 shadow-sm space-y-4">
+                                    <div className="flex items-center gap-2 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                                        <span className="p-1 rounded-md bg-[#0AB600]/10 text-[#0AB600]">
+                                            <Layers className="w-4 h-4" />
+                                        </span>
+                                        <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                                            3. Key Benefits &amp; Technical Specifications (English)
+                                        </h2>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                                                Key Benefits (Bullet points in English):
+                                            </label>
+                                            <RichTextEditor
+                                                value={data.content_en?.benefits?.content || ''}
+                                                onChange={(val) => handleUpdateContentEnNested('benefits', 'content', val)}
+                                                placeholder="<ul><li><strong>Efficiency:</strong> Saves 60% operational time.</li></ul>"
+                                                minHeight="70px"
+                                            />
+                                            <TextLimitMeter value={data.content_en?.benefits?.content} limitKey="benefits" preset={data.layout_preset} docFormat={data.doc_format} />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                                                Technical Specifications (Bullet points in English):
+                                            </label>
+                                            <RichTextEditor
+                                                value={data.content_en?.specifications?.content || ''}
+                                                onChange={(val) => handleUpdateContentEnNested('specifications', 'content', val)}
+                                                placeholder="<ul><li><strong>MCU:</strong> STM32 ARM Cortex-M4</li></ul>"
+                                                minHeight="70px"
+                                            />
+                                            <TextLimitMeter value={data.content_en?.specifications?.content} limitKey="specifications" preset={data.layout_preset} docFormat={data.doc_format} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            /* INDONESIAN FORM SECTIONS */
+                            <>
                         {/* STEP NAVIGATION WIZARD (KHUSUS BROSUR A4 LIPAT 3) */}
                         {data.doc_format === 'brochure_trifold' && (
                             <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#121824] border-2 border-[#0AB600]/40 dark:border-[#0AB600]/30 shadow-sm space-y-3">
@@ -1566,7 +1898,7 @@ export default function Form({ project = null, categories = [] }) {
                                                     src={url} 
                                                     alt={`Logo Mitra ${idx + 1}`} 
                                                     className="max-h-9 max-w-[80px] object-contain"
-                                                    onError={(e) => { e.currentTarget.src = '/assets/img/telu.png'; }}
+                                                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                                 />
                                                 {/* Reorder and Delete Toolbar on Hover */}
                                                 <div className="absolute -top-2 -right-2 flex items-center gap-1 opacity-90 group-hover:opacity-100 transition-opacity">
@@ -1606,17 +1938,17 @@ export default function Form({ project = null, categories = [] }) {
                                     <div className="flex items-center gap-3.5 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800">
                                         <div className="w-20 h-14 shrink-0 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-1.5 flex items-center justify-center">
                                             <img
-                                                src="/assets/img/telu.png"
-                                                alt="Telkom University"
-                                                className="max-h-10 max-w-full object-contain dark:brightness-0 dark:invert"
+                                                src="/assets/img/stas.png"
+                                                alt="CoE STAS-RG"
+                                                className="max-h-10 max-w-full object-contain"
                                             />
                                         </div>
                                         <div>
                                             <div className="text-xs font-bold text-slate-800 dark:text-zinc-200">
-                                                Logo Default Telkom University Aktif
+                                                Logo Default STAS-RG Aktif
                                             </div>
                                             <div className="text-[11px] text-zinc-400">
-                                                Klik tombol di bawah untuk menambahkan satu atau lebih logo mitra riset lainnya.
+                                                Flyer akan menampilkan logo resmi CoE STAS-RG. Klik tombol di bawah jika ingin menambahkan logo mitra / institusi kolaborasi.
                                             </div>
                                         </div>
                                     </div>
@@ -1670,7 +2002,7 @@ export default function Form({ project = null, categories = [] }) {
                                                     className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                                                 >
                                                     <RefreshCw className="w-3.5 h-3.5" />
-                                                    <span>{language === 'en' ? 'Reset to Default (Tel-U)' : 'Reset ke Default (Tel-U)'}</span>
+                                                    <span>{language === 'en' ? 'Reset to Default (STAS-RG)' : 'Reset ke Default (STAS-RG)'}</span>
                                                 </button>
                                             )}
                                         </div>
@@ -2723,6 +3055,8 @@ export default function Form({ project = null, categories = [] }) {
                                 </div>
                             ) : null}
                         </div>
+                        </>
+                        )}
 
                     </div>
 
@@ -2740,6 +3074,34 @@ export default function Form({ project = null, categories = [] }) {
                             </div>
                             
                             <div className="flex flex-wrap items-center gap-1.5">
+                                {/* Language Preview Switcher (ID / EN) */}
+                                <div className="inline-flex items-center bg-zinc-100 dark:bg-zinc-800 rounded-lg p-0.5 border border-zinc-200/80 dark:border-zinc-700/80 shadow-2xs">
+                                    <button
+                                        type="button"
+                                        onClick={() => setPreviewLang('id')}
+                                        className={`px-2 py-0.5 text-[10px] font-bold rounded transition-colors cursor-pointer ${
+                                            previewLang === 'id'
+                                                ? 'bg-[#0AB600] text-white shadow-2xs'
+                                                : 'text-zinc-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white'
+                                        }`}
+                                        title="Preview Bahasa Indonesia"
+                                    >
+                                        ID
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setPreviewLang('en')}
+                                        className={`px-2 py-0.5 text-[10px] font-bold rounded transition-colors cursor-pointer ${
+                                            previewLang === 'en'
+                                                ? 'bg-[#0AB600] text-white shadow-2xs'
+                                                : 'text-zinc-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white'
+                                        }`}
+                                        title="Preview English Version"
+                                    >
+                                        EN
+                                    </button>
+                                </div>
+
                                 {/* Zoom Controls Toolbar */}
                                 <div className="inline-flex items-center bg-zinc-100 dark:bg-zinc-800 rounded-lg p-0.5 border border-zinc-200/80 dark:border-zinc-700/80 shadow-2xs">
                                     <button

@@ -10,6 +10,7 @@ import {
     Trash2,
     Calendar,
     Globe,
+    Languages,
     ExternalLink,
     CheckCircle,
     FileText,
@@ -26,6 +27,7 @@ export default function Show({ project }) {
     const { showConfirm } = useAlert();
     const [pngLoading, setPngLoading] = useState(false);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const [previewLang, setPreviewLang] = useState('id');
 
     if (!project) return null;
 
@@ -61,7 +63,8 @@ export default function Show({ project }) {
 
         try {
             const canvasId = `flyer-canvas-${project.slug || project.id}`;
-            const filename = `${project.name.replace(/\s+/g, '_').toLowerCase()}_flyer_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.png`;
+            const langSuffix = previewLang === 'en' ? '_EN' : '_ID';
+            const filename = `${project.name.replace(/\s+/g, '_').toLowerCase()}${langSuffix}_flyer_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.png`;
             await downloadFlyerAsPng(canvasId, filename);
         } catch (error) {
             console.error('PNG download error:', error);
@@ -72,8 +75,10 @@ export default function Show({ project }) {
 
     const handlePrint = () => {
         const canvasId = `flyer-canvas-${project.slug || project.id}`;
-        printFlyer(canvasId, `Flyer - ${project.title || project.name}`);
+        printFlyer(canvasId, `Flyer (${previewLang.toUpperCase()}) - ${project.title || project.name}`);
     };
+
+    const hasEnContent = Boolean(project.content_en?.title || project.content_en?.description);
 
     return (
         <AdminLayout title={`Preview - ${project.name}`} currentPath="/projects">
@@ -169,8 +174,40 @@ export default function Show({ project }) {
                             </button>
                         </div>
 
-                        {/* Right Group: Export & Print Actions */}
-                        <div className="flex items-center gap-2">
+                        {/* Right Group: Language Switcher & Export Actions */}
+                        <div className="flex flex-wrap items-center gap-2">
+                            {/* Dual-Language Preview Switcher */}
+                            <div className="inline-flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl p-1 border border-zinc-200/80 dark:border-zinc-700/80 shadow-2xs">
+                                <Languages className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 ml-1.5 mr-0.5" />
+                                <button
+                                    type="button"
+                                    onClick={() => setPreviewLang('id')}
+                                    className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+                                        previewLang === 'id'
+                                            ? 'bg-[#0AB600] text-white shadow-xs'
+                                            : 'text-zinc-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white'
+                                    }`}
+                                    title="Tampilkan Bahasa Indonesia"
+                                >
+                                    ID
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setPreviewLang('en')}
+                                    className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer relative ${
+                                        previewLang === 'en'
+                                            ? 'bg-[#0AB600] text-white shadow-xs'
+                                            : 'text-zinc-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white'
+                                    }`}
+                                    title="Tampilkan Versi English"
+                                >
+                                    <span>EN</span>
+                                    {hasEnContent && (
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
+                                    )}
+                                </button>
+                            </div>
+
                             <button
                                 type="button"
                                 onClick={() => setIsExportModalOpen(true)}
@@ -188,7 +225,7 @@ export default function Show({ project }) {
                                 title="Cetak langsung atau Simpan sebagai PDF via browser Print dialog (Ctrl+P)"
                             >
                                 <Printer className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
-                                <span>Print / Simpan PDF</span>
+                                <span>Print / PDF ({previewLang.toUpperCase()})</span>
                             </button>
 
                             <button
@@ -206,7 +243,7 @@ export default function Show({ project }) {
                                 ) : (
                                     <>
                                         <ImageIcon className="w-3.5 h-3.5" />
-                                        <span>Download PNG</span>
+                                        <span>Download PNG ({previewLang.toUpperCase()})</span>
                                     </>
                                 )}
                             </button>
@@ -216,7 +253,7 @@ export default function Show({ project }) {
 
                 {/* Main Preview Container */}
                 <div className="max-w-4xl mx-auto w-full">
-                    <ProjectPreview project={project} />
+                    <ProjectPreview project={project} previewLang={previewLang} />
                 </div>
 
                 {/* Export Multi-Format & Media Sosial Modal */}

@@ -17,11 +17,11 @@ function tryParseJson(str) {
 }
 
 export function resolvePartnerLogos(project) {
-    if (!project) return ['/assets/img/telu.png'];
+    if (!project) return [];
 
     // 1. Preview URLs (array from local blob / base64 preview during form editing)
     if (Array.isArray(project.partner_logos_preview) && project.partner_logos_preview.length > 0) {
-        const valid = project.partner_logos_preview.filter(Boolean);
+        const valid = [...new Set(project.partner_logos_preview.filter(Boolean))];
         if (valid.length > 0) return valid;
     }
 
@@ -31,7 +31,7 @@ export function resolvePartnerLogos(project) {
         logos = tryParseJson(logos);
     }
     if (Array.isArray(logos) && logos.length > 0) {
-        const mapped = logos.filter(Boolean).map(logo => {
+        const mapped = [...new Set(logos.filter(Boolean))].map(logo => {
             if (logo.startsWith('http://') || logo.startsWith('https://') || logo.startsWith('blob:') || logo.startsWith('data:') || logo.startsWith('/')) {
                 return logo;
             }
@@ -53,7 +53,7 @@ export function resolvePartnerLogos(project) {
         return [`/storage/${single}`];
     }
 
-    return ['/assets/img/telu.png'];
+    return [];
 }
 
 /**
@@ -527,7 +527,7 @@ export function CustomBlockLayoutRenderer({
 /**
  * Universal Multi-Format Document Canvas (A4 Flyer, Roll-up Banner, Factsheet 2-Kolom, Pitch Poster)
  */
-export function A4Document({ project, isLive = false, id }) {
+export function A4Document({ project, isLive = false, id, previewLang = 'id' }) {
     if (!project) return null;
 
     const docFormatId = project.doc_format || 'a4_flyer';
@@ -545,27 +545,38 @@ export function A4Document({ project, isLive = false, id }) {
     const isDark = printModeId === 'dark';
     const canvasId = id || `flyer-canvas-${project.slug || project.id || 'current'}`;
 
+    // Dual-language normalization
+    const activeLang = project.previewLang || previewLang || 'id';
+    const isEn = activeLang === 'en';
+    const contentEn = typeof project.content_en === 'string' 
+        ? (tryParseJson(project.content_en) || {}) 
+        : (project.content_en || {});
+
     // Normalization of JSON / Object data
-    const benefitsData = typeof project.benefits === 'string' 
-        ? (tryParseJson(project.benefits) || { content: project.benefits })
-        : (project.benefits || {});
+    const rawBenefits = isEn && contentEn.benefits ? contentEn.benefits : project.benefits;
+    const benefitsData = typeof rawBenefits === 'string' 
+        ? (tryParseJson(rawBenefits) || { content: rawBenefits })
+        : (rawBenefits || {});
     
-    const specsData = typeof project.specifications === 'string'
-        ? (tryParseJson(project.specifications) || { content: project.specifications })
-        : (project.specifications || {});
+    const rawSpecs = isEn && contentEn.specifications ? contentEn.specifications : project.specifications;
+    const specsData = typeof rawSpecs === 'string'
+        ? (tryParseJson(rawSpecs) || { content: rawSpecs })
+        : (rawSpecs || {});
 
-    const psData = typeof project.problem_solution === 'string'
-        ? (tryParseJson(project.problem_solution) || { problem: '', solution: project.problem_solution })
-        : (project.problem_solution || {});
+    const rawPS = isEn && contentEn.problem_solution ? contentEn.problem_solution : project.problem_solution;
+    const psData = typeof rawPS === 'string'
+        ? (tryParseJson(rawPS) || { problem: '', solution: rawPS })
+        : (rawPS || {});
 
-    const title = project.title || (isLive ? 'JUDUL PROJECT RISET' : '');
-    const subtitle = project.subtitle || '';
-    const description = project.description || '';
+    const title = (isEn && contentEn.title) ? contentEn.title : (project.title || (isLive ? (isEn ? 'RESEARCH INNOVATION TITLE' : 'JUDUL PROJECT RISET') : ''));
+    const subtitle = (isEn && contentEn.subtitle !== undefined && contentEn.subtitle !== '') ? contentEn.subtitle : (project.subtitle || '');
+    const description = (isEn && contentEn.description) ? contentEn.description : (project.description || '');
+    const category = (isEn && contentEn.category) ? contentEn.category : (project.category || '');
     
     const mainImageUrl = project.main_image_preview || (project.main_image ? (project.main_image.startsWith('http') || project.main_image.startsWith('blob:') || project.main_image.startsWith('data:') ? project.main_image : `/storage/${project.main_image}`) : null);
 
     const partnerLogoUrls = resolvePartnerLogos(project);
-    const partnerLogoUrl = partnerLogoUrls[0] || '/assets/img/telu.png';
+    const partnerLogoUrl = partnerLogoUrls[0] || null;
 
     const projectUrl = project.project_url || '';
     const socialLinks = normalizeSocialLinks(project);
@@ -589,6 +600,17 @@ export function A4Document({ project, isLive = false, id }) {
     const mutedColor = isDark ? '#9ca3af' : '#4b5563';
     const cardBg = isDark ? themeConfig.darkCardBg : '#f9fafb';
     const cardBorder = isDark ? '#1f293d' : '#e5e7eb';
+
+    // Section title overrides based on language
+    if (!benefitsData.title || benefitsData.title === 'MANFAAT' || benefitsData.title === 'KEY BENEFITS') {
+        benefitsData.title = isEn ? 'KEY BENEFITS' : 'MANFAAT';
+    }
+    if (!specsData.title || specsData.title === 'SPESIFIKASI' || specsData.title === 'TECHNICAL SPECIFICATIONS') {
+        specsData.title = isEn ? 'TECHNICAL SPECIFICATIONS' : 'SPESIFIKASI';
+    }
+    if (!psData.title || psData.title === 'PROBLEM–SOLUTION' || psData.title === 'PROBLEM & SOLUTION') {
+        psData.title = isEn ? 'PROBLEM & SOLUTION' : 'PROBLEM–SOLUTION';
+    }
 
     return (
         <div 
@@ -2467,7 +2489,7 @@ export function A4Document({ project, isLive = false, id }) {
  * ProjectPreview:
  * Auto-scaled container accommodating all document formats (A4, Banner, Factsheet, 16:9 Pitch)
  */
-export default function ProjectPreview({ project, isLive = false, id }) {
+export default function ProjectPreview({ project, isLive = false, id, previewLang = 'id' }) {
     const containerRef = useRef(null);
     const [containerWidth, setContainerWidth] = useState(0);
 
@@ -2519,7 +2541,7 @@ export default function ProjectPreview({ project, isLive = false, id }) {
                     }}
                     className="rounded-sm shrink-0"
                 >
-                    <A4Document project={project} isLive={isLive} id={id} />
+                    <A4Document project={project} isLive={isLive} id={id} previewLang={previewLang} />
                 </div>
             </div>
         </div>
