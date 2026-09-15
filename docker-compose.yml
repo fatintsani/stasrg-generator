@@ -1,0 +1,18 @@
+services:
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: tanifest
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      # host:container
+      - '3307:3306'
+    volumes:
+      - aquaculture:/var/lib/mysql
+
+
+volumes:
+  aquaculture:
